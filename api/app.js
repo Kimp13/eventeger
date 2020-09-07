@@ -3,6 +3,7 @@ require('dotenv').config();
 
 // all dependencies
 const Koa = require('koa');
+const bodyParser = require('koa-bodyparser');
 const app = new Koa();
 const knex = require('knex')({
   client: process.env.DB_CLIENT || 'mysql',
@@ -45,7 +46,8 @@ const main = () => {
       mg.paths = new Object();
       mg.models = new Object();
       mg.services = new Object();
-  
+      mg.cache = new Object();
+      
       for (let i = 0; i < files.length; i += 1) {
         let currentPath = path.join(modelsPath, files[i]),
             modelPath = path.join(currentPath, 'model.js'),
@@ -65,6 +67,13 @@ const main = () => {
                 requireFetch: false,
                 ...model
               });
+
+              if (files[i].toLowerCase() === 'user') {
+                mg
+                  .models[files[i]]
+                  .count()
+                  .then(count => (mg.cache.usersCount = count));
+              }
             }
           });
         });
@@ -107,6 +116,9 @@ const main = () => {
         });
       }
     });
+
+    // using body parser
+    app.use(bodyParser());
   
     // logging out info about all requests
     app.use(async (ctx, next) => {

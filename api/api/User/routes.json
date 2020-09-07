@@ -8,5 +8,15 @@
     "method": "GET",
     "path": "/count",
     "handler": "count"
+  },
+  {
+    "method": "POST",
+    "path": "/signup",
+    "handler": "signUp"
+  },
+  {
+    "method": "POST",
+    "path": "/signin",
+    "handler": "signIn"
   }
 ]

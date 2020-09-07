@@ -3,13 +3,15 @@ const _ = require('lodash');
 const mg = global.mg;
 
 module.exports = {
-  issue: (payload, jwtOptions = {}) => jwt.sign(
-    _.clone(payload),
-    _.get(mg, ['config', 'jwtSecret']),
-    _.defaults(jwtOptions, pick(mg, ['config', 'jwt']))
-  ),
+  issue: (payload, jwtOptions = {}) => {
+    return jwt.sign(
+      _.clone(payload),
+      _.get(mg, ['config', 'jwtSecret']),
+      _.defaults(jwtOptions, _.get(mg, ['config', 'jwtConfig']))
+    );
+  },
   verify: token => {
-    return new Response((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       jwt.verify(
         token,
         _.get(mg, ['config', 'jwtSecret']),

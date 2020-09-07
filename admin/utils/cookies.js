@@ -34,10 +34,7 @@ module.exports = {
   setCookie: (
     cookie,
     value,
-    { maxAge, expires, path, httpOnly, sameSite } = {
-      path: '/',
-      sameSite: 'Lax'
-    }
+    { maxAge, expires, path, httpOnly, sameSite } = {}
   ) => {
     let finalCookie;
   
@@ -53,13 +50,21 @@ module.exports = {
       finalCookie += `; Expires=${expires}`;
     }
   
-    finalCookie += `; Path=${path}`;
+    if (path) {
+      finalCookie += `; Path=${path}`;
+    } else {
+      finalCookie += '`; Path=/';
+    }
   
     if (httpOnly) {
       finalCookie += `; HttpOnly`;
     }
-  
-    finalCookie += `; SameSite=${sameSite}`;
+    
+    if (sameSite) {
+      finalCookie += `; SameSite=${sameSite}`;
+    } else {
+      finalCookie += `; SameSite=Lax`;
+    }
   
     document.cookie = finalCookie;
   }

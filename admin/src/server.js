@@ -15,7 +15,7 @@ polka() // You can also use Express
 		sirv('static', { dev }),
 		sapper.middleware({
       session: () => ({
-        apiUrl: process.env.API_URL
+        apiUrl: process.env.API_URL || 'http://localhost:3000'
       })
     })
 	)

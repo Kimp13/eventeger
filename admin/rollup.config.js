@@ -3,12 +3,10 @@ import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import svelte from 'rollup-plugin-svelte';
 import sveltePreprocess from 'svelte-preprocess';
-import stylus from 'stylus';
 import babel from '@rollup/plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 import config from 'sapper/config/rollup.js';
 import pkg from './package.json';
-import path from 'path';
 
 const mode = process.env.NODE_ENV;
 const dev = mode === 'development';
@@ -23,7 +21,7 @@ const onwarn = (warning, onwarn) =>
  * svelte-preprocess
  */
 const preprocess = sveltePreprocess({
-  stylus: {
+  scss: {
     includePaths: ['src']
   },
   postcss: {

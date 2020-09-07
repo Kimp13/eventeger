@@ -1,21 +1,3 @@
-<script context=module>
-
-  export async function preload (page, session) {
-    try {
-      const init = await (await this.fetch(session.apiUrl + '/connects', {
-        credentials: 'include'
-      })).json();
-
-      if (init.redirect) {
-        this.redirect(307, (init.redirectUrl || '/auth'));
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-</script>
-
 <h1>
   Hello, World!
 </h1>
@@ -27,8 +9,8 @@
   onMount(() => setCookie('jwt', 'hello'));
 </script>
 
-<style lang="stylus">
+<style lang="sass">
   h1
-    color #aaa
-    text-align center
+    color: #aaa
+    text-align: center
 </style>
