@@ -2,15 +2,22 @@
 
   export async function preload (page, session) {
     try {
-      const user = await (await this.fetch(session.apiUrl + '/connects', {
+      const user = (await (await this.fetch(session.apiUrl + '/connects', {
         credentials: 'include'
-      })).json();
+      })).json()).user;
 
-      if (user.isAuthenticated) {
-        this.redirect(307, (page.query.redirectTo || '/'));
-      } else if (page.path.substring(0, 5) !== '/auth') {
+      if (
+        !user.isAuthenticated &&
+        page.path.substring(0, 5) !== '/auth'
+      ) {
         this.redirect(307, ('/auth'));
+
+        return {};
       }
+
+      return {
+        user
+      };
     } catch (e) {
       console.log(e);
     }
@@ -19,8 +26,16 @@
 </script>
 
 <main>
-	<slot></slot>
+	<slot />
 </main>
+
+<script>
+  import { setContext } from 'svelte';
+
+  export let user;
+
+  setContext('user', user);
+</script>
 
 <style global lang="sass">
   @font-face

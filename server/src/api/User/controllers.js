@@ -2,27 +2,29 @@ const bcrypt = require('bcrypt');
 const mg = global.mg;
 
 module.exports = {
-  find: async ctx => {
+  find: async (req, res) => {
+    res.end('OK');
+
     return;
   },
 
-  count: async ctx => {
-    ctx.status = 200;
-    ctx.body = {
+  count: async (req, res) => {
+    res.status = 200;
+    res.end(JSON.stringify({
       count: mg.cache.usersCount
-    };
+    }));
 
     return;
   },
 
-  signUp: async ctx => {
-    const { username, password } = ctx.request.body;
+  signUp: async (req, res) => {
+    const { username, password } = req.body;
 
     if (
       /[^0-9a-zA-Z#$*_]/.test(username) ||
       password.length < 8
     ) {
-      ctx.status = 400;
+      res.status = 400;
       return;
     }
 
@@ -40,10 +42,10 @@ module.exports = {
         });
 
         if (jwt) {
-          ctx.status = 200;
-          ctx.body = {
+          res.status = 200;
+          res.end(JSON.stringify({
             jwt
-          };
+          }));
 
           mg.cache.usersCount += 1;
 
@@ -52,20 +54,20 @@ module.exports = {
 
         console.log(`Jwt test failed! It's ${jwt}`);
 
-        ctx.status = 500;
+        res.status = 500;
       } else {
 
       }
     } catch (e) {
       console.log(e);
 
-      ctx.status = 500;
+      res.status = 500;
 
       return;
     }
   },
 
-  signIn: async ctx => {
-    const { username, password } = ctx.request.body;
+  signIn: async (req, res) => {
+    const { username, password } = req.body;
   }
 };

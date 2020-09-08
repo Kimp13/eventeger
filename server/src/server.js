@@ -1,11 +1,29 @@
-// configuring .env
-require('dotenv').config();
+// server dependencies
+import dotenv from 'dotenv';
+import sirv from 'sirv';
+import polka from 'polka';
+import cookie from 'cookie';
+import bodyParser from 'body-parser';
+import compression from 'compression';
+import * as sapper from '@sapper/server';
 
-// all dependencies
-const Koa = require('koa');
-const bodyParser = require('koa-bodyparser');
-const app = new Koa();
-const knex = require('knex')({
+// database
+import Knex from 'knex';
+import Bookshelf from 'bookshelf';
+
+// filesystem
+import path from 'path';
+import fs from 'fs';
+
+// utilities
+import _ from 'lodash';
+import getRouteName from '../utils/getRouteName';
+import { createContext } from 'vm';
+
+dotenv.config();
+
+// bookshelf instance
+const knex = new Knex({
   client: process.env.DB_CLIENT || 'mysql',
   connection: {
     host: process.env.DB_HOST || 'localhost',
@@ -15,17 +33,20 @@ const knex = require('knex')({
     charset: process.env.DB_CHARSET || 'utf8'
   }
 });
-const bookshelf = require('bookshelf')(knex);
-const path = require('path');
-const fs = require('fs');
-const _ = require('lodash');
-
-// utilities
-const getRouteName = require('./utils/getRouteName');
+const bookshelf = new Bookshelf(knex);
 
 // working with filesystem
-const modelsPath = path.join(__dirname, 'api');
-const configPath = path.join(__dirname, 'config');
+const srcPath = path.join(process.cwd(), 'src');
+const modelsPath = path.join(srcPath, 'api');
+const configPath = path.join(srcPath, 'config');
+
+// environment
+const { PORT, NODE_ENV, API_URL } = process.env;
+const dev = NODE_ENV === 'development';
+
+if (!API_URL) {
+  API_URL = 'http://localhost:3000';
+}
 
 /**
  * Global variable containing server cache, plugins, models, functions
@@ -117,46 +138,58 @@ const main = () => {
       }
     });
 
-    // using body parser
-    app.use(bodyParser());
-  
-    // logging out info about all requests
-    app.use(async (ctx, next) => {
-      const start = new Date();
-  
-      await next();
-  
-      const ms = Date.now() - start.getTime();
-  
-      console.log(
-        `${start.toLocaleString()} | ${ctx.status} ${ctx.method} request on ` +
-        ctx.url + ' took ' + ms + ' milliseconds'
-      );
-    });
-  
-    // main server function
-    app.use(async ctx => {
-      let location = /((\/\w*)+)\??(.*)/.exec(ctx.url);
-  
-      ctx.location = {
-        path: location[1] + (location[2].length === 1 ? '' : '/'),
-        search: location[3]
-      };
-  
-      if (
-        mg.paths.hasOwnProperty(ctx.method) &&
-        mg.paths[ctx.method].hasOwnProperty(ctx.location.path)
-      ) {
-        await mg.paths[ctx.method][ctx.location.path](ctx);
-      } else {
-        ctx.status = 404;
-      }
-  
-      return;
-    });
-  
-    // setting listening port
-    app.listen(1856);
+    polka()
+      .use(compression({ threshold: 0 }))
+      .use(sirv('static', { dev }))
+      .use(bodyParser.urlencoded({ extended: true }))
+      .use(async (req, res, next) => {
+        const start = new Date();
+    
+        await next();
+    
+        const ms = Date.now() - start.getTime();
+    
+        console.log(
+          `${start.toLocaleString()} | ${req.method} on ` +
+          req.url + ' took ' + ms + ' ms'
+        );
+      })
+      .use(async (req, res, next) => {
+        const path = /^\/api((\/([\w_\.~-]|(%[\dA-F]))*)+)?(?=\?|$)/.exec(req.url);
+
+        if (path) {
+          req.path = path[1] ? (
+            path[1].charAt(path[1].length - 1) === '/' ?
+            path[1] :
+            path[1] + '/'
+          ) : '/';
+
+          if (
+            mg.paths.hasOwnProperty(req.method) &&
+            mg.paths[req.method].hasOwnProperty(req.path)
+          ) {
+            req.cookies = cookie.parse(req.headers.cookie || '');
+
+            await mg.paths[req.method][req.path](req, res);
+          } else {
+            res.status = 404;
+          }
+        } else {
+          await next();
+        }
+
+        return;
+      })
+      .use(sapper.middleware({
+        session: () => {
+          return {
+            apiUrl: API_URL
+          };
+        }
+      }))
+      .listen(PORT, err => {
+        if (err) console.log('error', err);
+      });
   });
 };
 
