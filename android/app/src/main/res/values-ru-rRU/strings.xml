@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Гимназия в лучах славы</string>
+    <string name="username_hint">Логин</string>
+    <string name="password_hint">Пароль</string>
+    <string name="sign_in">Войти</string>
+</resources>
