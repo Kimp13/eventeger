@@ -1,4 +1,4 @@
-<script context=module>
+<script context="module">
   export async function preload(page, session) {
     return {
       props: await (await this.fetch(session.apiUrl + "/users/count")).json(),

@@ -1,4 +1,4 @@
-<script context=module>
+<script context="module">
   export async function preload(page, session) {
     if (!session.user.isAuthenticated && page.path.substring(0, 5) !== "/auth") {
       this.redirect(307, "/auth");

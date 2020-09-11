@@ -1,6 +1,24 @@
+<!DOCTYPE resources [
+    <!ENTITY app_name "Modern Gymnasium">
+    <!ENTITY sign_in  "Sign In">
+]>
+
 <resources>
-    <string name="app_name">Modern Gymnasium</string>
+    <!-- Utility strings -->
+    <string name="utility_shared_preference_file_key" translatable="false">
+        ru.labore.moderngymnasium.PREFERENCE_FILE_KEY
+    </string>
+    <string name="api_url" translatable="false">
+        http://192.168.1.8:3000/api/
+    </string>
+
+    <!-- User Interface strings -->
+    <string name="app_name">&app_name;</string>
+    <string name="login_activity_label">&sign_in;&#09;•&#09;&app_name;</string>
     <string name="username_hint">Username</string>
     <string name="password_hint">Password</string>
-    <string name="sign_in">Sign In</string>
+    <string name="sign_in">&sign_in;</string>
+    <string name="menu_create">Announce</string>
+    <string name="menu_inbox">Announcements</string>
+    <string name="menu_profile">Profile</string>
 </resources>

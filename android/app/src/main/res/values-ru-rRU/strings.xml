@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE resources [
+    <!ENTITY app_name "Гимназия в лучах славы">
+    <!ENTITY sign_in  "Войти">
+    ]>
+
 <resources>
-    <string name="app_name">Гимназия в лучах славы</string>
+    <string name="app_name">&app_name;</string>
+    <string name="login_activity_label">&sign_in;&#09;•&#09;&app_name;</string>
     <string name="username_hint">Логин</string>
     <string name="password_hint">Пароль</string>
-    <string name="sign_in">Войти</string>
+    <string name="sign_in">&sign_in;</string>
+    <string name="menu_create">Объявить</string>
+    <string name="menu_inbox">Объявления</string>
+    <string name="menu_profile">Профиль</string>
 </resources>

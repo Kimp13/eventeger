@@ -1,4 +1,4 @@
-const set = require('lodash/set');
+const parsePermissions = require('./permissionArrayToObject');
 
 module.exports = async jwt => {
   if (jwt) {
@@ -9,14 +9,8 @@ module.exports = async jwt => {
         withRelated: ['role.permissions']
       })).toJSON();
 
-      let permissions = new Object();
-
-      for (let permission of user.role.permissions) {
-        set(permissions, permission.name.split('_'), true);
-      }
-
+      user.permissions = parsePermissions(user.role.permissions);
       delete user.role;
-      user.permissions = permissions;
 
       return user;
     }

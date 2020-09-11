@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/menuCreateFragment">
+
+    <fragment
+        android:id="@+id/menuCreateFragment"
+        android:name="ru.labore.moderngymnasium.create.menuCreateFragment"
+        android:label="menu_create_fragment"
+        tools:layout="@layout/menu_create_fragment" />
+    <fragment
+        android:id="@+id/menuProfileFragment"
+        android:name="ru.labore.moderngymnasium.profile.menuProfileFragment"
+        android:label="menu_profile_fragment"
+        tools:layout="@layout/menu_profile_fragment" />
+    <fragment
+        android:id="@+id/menuInboxFragment"
+        android:name="ru.labore.moderngymnasium.inbox.menuInboxFragment"
+        android:label="menu_inbox_fragment"
+        tools:layout="@layout/menu_inbox_fragment" />
+</navigation>

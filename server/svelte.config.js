@@ -1,5 +1,5 @@
 module.exports = {
-  preprocess: sveltePreprocess({
+  preprocess: require('svelte-preprocess')({
     scss: {
       includePaths: ['src'],
     },

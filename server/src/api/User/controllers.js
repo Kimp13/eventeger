@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const pick = require('lodash/pick');
+const parsePermissions = require('../../../utils/permissionArrayToObject');
 
 module.exports = {
   find: async (req, res) => {
@@ -77,5 +78,47 @@ module.exports = {
 
   signIn: async (req, res) => {
     const { username, password } = req.body;
+
+    if (
+      password &&
+      username &&
+      password.length > 8 &&
+      !/[^0-9a-zA-Z#$*_]/.test(username)
+    ) {
+      const user = (await mg.models.User.where({
+        username
+      }).fetch({
+        withRelated: ['role.permissions']
+      })).toJSON();
+
+      if (
+        user &&
+        await bcrypt.compare(password, user.password.toString())
+      ) {
+        const jwt = mg.services.jwt.issue({
+          id: user.id
+        });
+
+        user.permissions = parsePermissions(user.role.permissions);
+
+        res.status = 200;
+        res.end(JSON.stringify({
+          jwt,
+          data: pick(user, ['first_name', 'last_name', 'username', 'permissions'])
+        }));
+
+        return;
+      }
+
+      res.status = 401;
+      res.end('Unauthorized');
+
+      return;
+    }
+
+    res.status = 400;
+    res.end('Bad Request');
+
+    return;
   }
 };
