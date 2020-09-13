@@ -1,30 +1,31 @@
 package ru.labore.moderngymnasium.ui
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.network.AppNetwork
 import ru.labore.moderngymnasium.data.network.ClientConnectionException
 import ru.labore.moderngymnasium.data.network.ClientErrorException
+import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.utils.hideKeyboard
 import java.net.ConnectException
 
-class LoginActivity : AppCompatActivity() {
-    private lateinit var network: AppNetwork
+class LoginActivity : AppCompatActivity(), DIAware {
+    override val di: DI by lazy { (applicationContext as DIAware).di }
+
+    private val repository: AppRepository by instance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-
-        network = AppNetwork(this)
 
         apiRequestButton.setOnClickListener {
             val username = usernameField.text
@@ -51,16 +52,7 @@ class LoginActivity : AppCompatActivity() {
 
                 GlobalScope.launch(Dispatchers.Main) {
                     try {
-                        val user = network.signUserIn(username.toString(), password.toString())
-
-                        val editor = this@LoginActivity.getSharedPreferences(
-                            getString(R.string.utility_shared_preference_file_key),
-                            Context.MODE_PRIVATE
-                        ).edit()
-
-                        editor.putString("user", Gson().toJson(user))
-
-                        editor.apply()
+                        repository.signIn(username.toString(), password.toString())
 
                         startActivity(Intent(
                                 this@LoginActivity,

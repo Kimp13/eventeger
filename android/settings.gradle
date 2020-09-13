@@ -1,2 +1,3 @@
 include ':app'
 rootProject.name = "Modern Gymnasium"
+enableFeaturePreview("GRADLE_METADATA")

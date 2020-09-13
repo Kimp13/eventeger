@@ -1,4 +1,4 @@
-package ru.labore.moderngymnasium.data.user
+package ru.labore.moderngymnasium.data.sharedpreferences.entities
 import com.google.gson.annotations.SerializedName
 
 data class PermissionsForRoles(
@@ -35,9 +35,6 @@ data class UserData(
     @SerializedName("last_name")
     val lastName: String? = null,
     val username: String,
-    @SerializedName("class")
-    val schoolClass: String,
-    val role: String,
     val permissions: AllPermissions? = null
 )
 

@@ -1,4 +1,4 @@
-package ru.labore.moderngymnasium.create
+package ru.labore.moderngymnasium.ui.create
 
 import androidx.lifecycle.ViewModel
 

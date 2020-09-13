@@ -1,4 +1,4 @@
-package ru.labore.moderngymnasium.profile
+package ru.labore.moderngymnasium.ui.create
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -8,24 +8,24 @@ import android.view.View
 import android.view.ViewGroup
 import ru.labore.moderngymnasium.R
 
-class menuProfileFragment : Fragment() {
+class menuCreateFragment : Fragment() {
 
     companion object {
-        fun newInstance() = menuProfileFragment()
+        fun newInstance() = menuCreateFragment()
     }
 
-    private lateinit var viewModel: MenuProfileViewModel
+    private lateinit var viewModel: MenuCreateViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.menu_profile_fragment, container, false)
+        return inflater.inflate(R.layout.menu_create_fragment, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(MenuProfileViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(MenuCreateViewModel::class.java)
         // TODO: Use the ViewModel
     }
 

@@ -2,17 +2,28 @@ package ru.labore.moderngymnasium.data.network
 
 import android.content.Context
 import android.net.ConnectivityManager
+import androidx.lifecycle.MutableLiveData
 import okhttp3.Interceptor
 import okhttp3.Response
-import ru.labore.moderngymnasium.data.user.User
+import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
+import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 
 class AppNetwork(context: Context): Interceptor {
     private val appContext = context.applicationContext
+    val fetchedAnnouncementEntity = MutableLiveData<Array<AnnouncementEntity>>()
 
-    suspend fun signUserIn(username: String, password: String): User? {
-        return UserSignIn(appContext, this)
-                .signIn(UserCredentials(username, password))
-    }
+    suspend fun fetchAnnouncements(
+        jwt: String,
+        offset: Int,
+        limit: Int
+    ) = fetchedAnnouncementEntity.postValue(FetchAnnouncements(
+            appContext,
+            this,
+            jwt,
+            offset,
+            limit
+        ))
+
 
     override fun intercept(chain: Interceptor.Chain): Response {
         if (isOnline()) {

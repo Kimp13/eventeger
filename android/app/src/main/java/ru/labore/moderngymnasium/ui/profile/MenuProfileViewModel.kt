@@ -1,4 +1,4 @@
-package ru.labore.moderngymnasium.profile
+package ru.labore.moderngymnasium.ui.profile
 
 import androidx.lifecycle.ViewModel
 

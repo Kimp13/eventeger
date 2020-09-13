@@ -3,8 +3,8 @@ const getUser = require("../../../utils/getUser");
 
 module.exports = {
   find: async (req, res) => {
-    let { jwt, limit, offset } = jsonify(req.search);
-    let user = await getUser(jwt);
+    let { limit, offset } = jsonify(req.search);
+    let user = await getUser(req.headers.authentication);
 
     if (!limit) {
       limit = 10;
@@ -54,9 +54,7 @@ module.exports = {
 
   count: async(req, res) => {
     const { jwt } = jsonify(req.search);
-    let user = {
-      id: 1
-    }//await getUser(search.jwt);
+    let user = await getUser(search.jwt);
 
     if (user) {
       user = (await mg.knex('user').where({

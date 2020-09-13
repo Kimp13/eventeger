@@ -3,11 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".inbox.menuInboxFragment">
+    tools:context=".ui.inbox.menuInboxFragment">
 
     <TextView
+        android:id="@+id/mainTextView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Inbox" />
+        android:layout_height="match_parent" />
 
 </FrameLayout>
