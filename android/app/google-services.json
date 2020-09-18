@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1083599767890",
+    "firebase_url": "https://modern-gymnasium.firebaseio.com",
+    "project_id": "modern-gymnasium",
+    "storage_bucket": "modern-gymnasium.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083599767890:android:a699d45ef1c7179f13928b",
+        "android_client_info": {
+          "package_name": "ru.labore.moderngymnasium"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1083599767890-s43sc0gak205f0mse0687cfd60qmb6jl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPtihzNjArcucwNZHedI3sQBEI77Y6u3M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1083599767890-s43sc0gak205f0mse0687cfd60qmb6jl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

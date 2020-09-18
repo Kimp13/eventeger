@@ -1,6 +1,8 @@
 package ru.labore.moderngymnasium
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import com.jakewharton.threetenabp.AndroidThreeTen
 import org.kodein.di.*
 import org.kodein.di.android.x.androidXModule
@@ -10,7 +12,7 @@ import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.create.MenuCreateViewModelFactory
 import ru.labore.moderngymnasium.ui.inbox.MenuInboxViewModelFactory
 
-class MGApplication() : Application(), DIAware {
+class MGApplication : Application(), DIAware {
     override val di = DI.lazy {
         import(androidXModule(this@MGApplication))
 

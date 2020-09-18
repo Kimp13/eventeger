@@ -18,6 +18,8 @@ data class UserCredentials(val username: String, val password: String)
 
 data class AnnouncementText(val text: String)
 
+data class TokenPayload(val token: String)
+
 interface SignIn {
     @POST("users/signin")
     suspend fun signIn(@Body body: UserCredentials): User?
@@ -83,6 +85,44 @@ interface CreateAnnouncement {
                 .createAnnouncement(
                     jwt,
                     AnnouncementText(text)
+                )
+        }
+    }
+}
+
+interface PushToken {
+    @POST("tokens/add")
+    suspend fun pushToken(
+        @Header("Authentication") jwt: String,
+        @Body body: TokenPayload
+    )
+
+    companion object {
+        suspend operator fun invoke(
+            context: Context,
+            requestInterceptor: Interceptor,
+            jwt: String,
+            token: String
+        ) {
+            val okHttpClient = OkHttpClient
+                .Builder()
+                .addInterceptor(requestInterceptor)
+                .build()
+
+            Retrofit
+                .Builder()
+                .client(okHttpClient)
+                .baseUrl(
+                    context
+                        .resources
+                        .getString(R.string.api_url)
+                )
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(PushToken::class.java)
+                .pushToken(
+                    jwt,
+                    TokenPayload(token)
                 )
         }
     }

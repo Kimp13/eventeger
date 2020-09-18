@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.menu_create_fragment.*
 import kotlinx.coroutines.launch
 import org.kodein.di.DIAware
@@ -35,6 +36,16 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
         viewModel = ViewModelProviders
             .of(this, viewModelFactory)
             .get(MenuCreateViewModel::class.java)
+
+        FirebaseInstanceId.getInstance().instanceId
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    println(it.result?.token)
+                    Toast.makeText(this.requireActivity(), "Token is ${it.result?.token}", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this.requireActivity(), "Task failed", Toast.LENGTH_SHORT).show()
+                }
+            }
 
         createAnnouncementButton.setOnClickListener {createAnnouncement()}
     }

@@ -71,7 +71,9 @@ const main = () => {
         mg.paths = new Object();
         mg.models = new Object();
         mg.services = new Object();
-        mg.cache = new Object();
+        mg.cache = {
+          usersTokens: new Object()
+        };
 
         Promise.all(
           files.map(file => new Promise((resolve, reject) => {

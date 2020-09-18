@@ -11,6 +11,9 @@
     <string name="api_url" translatable="false">
         http://192.168.1.8:3000/api/
     </string>
+    <string name="default_notification_channel_id" translatable="false">
+        1056
+    </string>
 
     <!-- User Interface strings -->
         <!-- Global strings -->

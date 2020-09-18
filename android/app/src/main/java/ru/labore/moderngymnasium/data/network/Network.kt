@@ -23,6 +23,16 @@ class AppNetwork(context: Context) : Interceptor {
     val fetchedRoleEntity = MutableLiveData<RoleEntity>()
     val fetchedClassEntity = MutableLiveData<ClassEntity>()
 
+    suspend fun pushToken(
+        jwt: String,
+        token: String
+    ) = PushToken(
+        appContext,
+        this,
+        jwt,
+        token
+    )
+
     suspend fun fetchAnnouncements(
         jwt: String,
         offset: Int,

@@ -52,6 +52,8 @@ class AppRepository(
     private val classEntityDao: ClassEntityDao,
     private val appNetwork: AppNetwork
 ) {
+    private var token = ""
+
     private val gson = GsonBuilder()
         .registerTypeAdapter(ZonedDateTime::class.java, JsonSerializerImpl())
         .registerTypeAdapter(ZonedDateTime::class.java, JsonDeserializerImpl())
@@ -87,9 +89,25 @@ class AppRepository(
         }
     }
 
+    fun pushToken(tkn: String) {
+        println("Got new token as $tkn")
+        if (user?.jwt != null) {
+            println("Launching it!")
+            GlobalScope.launch {
+                appNetwork.pushToken(user!!.jwt, token)
+            }
+        } else {
+            token = tkn
+        }
+    }
+
     suspend fun signIn(username: String, password: String) {
         user = SignIn(context, appNetwork, username, password)
         val editor = sharedPreferences.edit()
+
+        if (token.isNotEmpty()) {
+            pushToken(token)
+        }
 
         editor.putString("user", gson.toJson(user))
         editor.apply()
