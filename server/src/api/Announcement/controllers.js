@@ -114,66 +114,95 @@ module.exports = {
         user &&
         permission
       ) {
-        await new Promise((resolve, reject) => {
-          mg.knex.transaction(t => {
-            const date = new Date();
-
-            mg.knex('announcement')
-              .transacting(t)
-              .insert({
-                text: req.body.text,
-                created_at: date,
-                author_id: user.id
-              }).then(announcement => {
-                const resolveContext = () => {
-                  mg.knex
-                    .transacting(t)
-                    .insert(recipientsArray)
-                    .into('announcement_class_role')
-                    .then(result => {
-                      t.commit();
-                      resolve();
-                    });
-                };
-
-                const recipientsArray = new Array();
-
-                if (permission instanceof Array) {
-
-                  for (let role of permission) {
-                    recipientsArray.push({
-                      announcement_id: announcement[0],
-                      class_id: user.class_id,
-                      role_id: role
-                    });
-                  }
-
-                  resolveContext();
-                } else {
-                  mg.knex
-                    .transacting(t)
-                    .select('id')
-                    .from('role')
-                    .then(roles => {
-                      for (let role of roles) {
-                        recipientsArray.push({
-                          announcement_id: announcement[0],
-                          class_id: user.class_id,
-                          role_id: role.id
+        try {
+          const announcementId = await new Promise((resolve, reject) => {
+            mg.knex.transaction(t => {
+              const date = new Date();
+  
+              mg.knex('announcement')
+                .transacting(t)
+                .insert({
+                  text: req.body.text,
+                  created_at: date,
+                  author_id: user.id
+                }).then(announcement => {
+                  const resolveContext = () => {
+                    mg.knex
+                      .transacting(t)
+                      .insert(recipientsArray)
+                      .into('announcement_class_role')
+                      .then(result => {
+                        t.commit().then(commited => {
+                          resolve(announcement[0]);
                         });
-                      }
-
-                      resolveContext();
-                    });
-                }
-              }, e => {
-                console.log(e);
-                t.rollback()
-              });
+                      });
+                  };
+  
+                  const recipientsCriteria = new Array();
+                  const recipientsArray = new Array();
+  
+                  if (permission instanceof Array) {
+  
+                    for (let role of permission) {
+                      recipientsArray.push({
+                        announcement_id: announcement[0],
+                        class_id: user.class_id,
+                        role_id: role
+                      });
+                    }
+  
+                    resolveContext();
+                  } else {
+                    mg.knex
+                      .transacting(t)
+                      .select('id')
+                      .from('role')
+                      .then(roles => {
+                        for (let role of roles) {
+                          recipientsArray.push({
+                            announcement_id: announcement[0],
+                            class_id: user.class_id,
+                            role_id: role.id
+                          });
+                        }
+  
+                        resolveContext();
+                      });
+                  }
+                }, e => {
+                  console.log(e);
+                  t.rollback();
+                });
+            });
           });
-        });
 
-        res.statusCode = 200;
+          const data =
+            await mg.services.announcement.getAnnouncementAtId(announcementId);
+
+          data.created_at = data.created_at.toISOString();
+          data.id = String(data.id);
+          data.author_id = String(data.author_id);
+
+          const tokens = await mg
+            .services
+            .announcement
+            .getUsersTokens(announcementId);
+
+          const message = {
+            data,
+            tokens
+          };
+
+          const response = await mg.firebaseAdmin.messaging().sendMulticast(message);
+          console.log(response.successCount + ' messages were sent successfully');
+
+          res.statusCode = 200;
+        } catch(e) {
+          console.log(e);
+
+          res.statusCode = 500;
+        }
+
         res.end('{}');
         return;
       }

@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     if (user) {
       if (mg.cache.usersTokens.hasOwnProperty(user.id)) {
         if (has(mg.cache.usersTokens[user.id], req.body.token) === -1) {
-          mg.cache.usersTokens.push(
+          mg.cache.usersTokens[user.id].push(
             req.body.token
           );
         }

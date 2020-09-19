@@ -8,11 +8,13 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.ui.inbox.MenuInboxViewModelFactory
 
 class MyFirebaseMessagingService : FirebaseMessagingService(), DIAware {
     override val di: DI by lazy { (applicationContext as DIAware).di }
 
     private val repository: AppRepository by instance()
+    private val viewModel: MenuInboxViewModelFactory by instance()
 
     override fun onNewToken(token: String) {
         repository.pushToken(token)

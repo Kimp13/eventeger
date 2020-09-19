@@ -41,7 +41,7 @@ const modelsPath = path.join(srcPath, 'api');
 const configPath = path.join(srcPath, 'config');
 
 // environment
-const { PORT, NODE_ENV, API_URL } = process.env;
+const { PORT, NODE_ENV, API_URL, PATH_TO_FIREBASE_KEY } = process.env;
 const dev = NODE_ENV === 'development';
 
 if (!API_URL) {
@@ -54,6 +54,10 @@ if (!API_URL) {
  */
 global.mg = new Object();
 mg.knex = knex;
+
+// Firebase
+mg.firebaseAdmin = require('firebase-admin');
+const firebaseServiceAccount = require(process.cwd() + PATH_TO_FIREBASE_KEY);
 
 /**
  * Main function of the server.
@@ -76,6 +80,7 @@ const main = () => {
         };
 
         Promise.all(
+          // Initialize server filesystem dependencies
           files.map(file => new Promise((resolve, reject) => {
             let currentPath = path.join(modelsPath, file),
                 modelPath = path.join(currentPath, 'model.js'),
@@ -164,6 +169,12 @@ const main = () => {
             ]).then(resolve);
           }))
         ).then(() => {
+          // Initialize Firebase
+          mg.firebaseAdmin.initializeApp({
+            credential: mg.firebaseAdmin.credential.cert(firebaseServiceAccount),
+            databaseURL: 'https://modern-gymnasium.firebaseio.com'
+          });
+
           polka()
             .use(bodyParser.json({ extended: true }))
             .use(async (req, res, next) => {
