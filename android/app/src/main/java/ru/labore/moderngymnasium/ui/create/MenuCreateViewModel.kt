@@ -11,7 +11,6 @@ class MenuCreateViewModel(
         appRepository.getUserRoles().filterNotNull()
     }
 
-    suspend fun createAnnouncement(text: String, recipients: Array<Int>) {
+    suspend fun createAnnouncement(text: String, recipients: Array<Int>) =
         appRepository.createAnnouncement(text, recipients)
-    }
 }

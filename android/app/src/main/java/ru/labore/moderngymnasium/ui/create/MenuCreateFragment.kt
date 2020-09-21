@@ -9,7 +9,6 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.widget.addTextChangedListener
 import kotlinx.android.synthetic.main.menu_create_fragment.*
 import kotlinx.coroutines.launch
 import org.kodein.di.DIAware
@@ -24,8 +23,9 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
     private val viewModelFactory:
             MenuCreateViewModelFactory by instance()
 
+    private var checkedRoles: MutableList<Int>? = null
+    private var announcementText: String? = null
     private lateinit var viewModel: MenuCreateViewModel
-    private lateinit var checkedRoles: MutableList<Int>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,25 +34,51 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
         return inflater.inflate(R.layout.menu_create_fragment, container, false)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        checkedRoles = savedInstanceState
+            ?.getIntArray("checked_roles")
+            ?.toList() as MutableList<Int>?
+
+        announcementText = savedInstanceState
+            ?.getString("announcement_text")
+
         viewModel = ViewModelProviders
             .of(this, viewModelFactory)
             .get(MenuCreateViewModel::class.java)
+    }
 
-        loadRoles()
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putIntArray("checked_roles", checkedRoles?.toIntArray())
+        outState.putString("announcement_text", createAnnouncementEditText.text.toString())
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        loadUI()
 
         createAnnouncementButton.setOnClickListener {createAnnouncement()}
     }
 
-    private fun loadRoles() = launch {
+    private fun loadUI() = launch {
         val roles = viewModel.roles.await()
         val activity = requireActivity()
-        checkedRoles = MutableList(roles.size) {
-            roles[it].id
+
+        if (announcementText != null) {
+            createAnnouncementEditText.setText(announcementText)
         }
 
-        val roleCheckboxes = Array(roles.size) { it ->
+        if (checkedRoles == null) {
+            checkedRoles = MutableList(roles.size) {
+                roles[it].id
+            }
+        }
+
+        for (it in roles) {
             val checkboxLayout = LinearLayout(activity)
             val checkboxCaption = TextView(activity)
             val checkbox = CheckBox(activity)
@@ -63,7 +89,7 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
 
-            checkbox.isChecked = true
+            checkbox.isChecked = checkedRoles!!.indexOf(it.id) != -1
             checkbox.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -76,15 +102,15 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
             )
 
             checkboxCaption.text = when(Locale.getDefault().language) {
-                "ru" -> roles[it].nameRu
-                else -> roles[it].name
+                "ru" -> it.nameRu
+                else -> it.name
             }
 
             checkbox.setOnClickListener {view ->
                 if ((view as CheckBox).isChecked) {
-                    checkedRoles.add(roles[it].id)
+                    checkedRoles!!.add(it.id)
                 } else {
-                    checkedRoles.remove(roles[it].id)
+                    checkedRoles!!.remove(it.id)
                 }
             }
 
@@ -92,39 +118,41 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
             checkboxLayout.addView(checkbox)
 
             createAnnouncementRoleChoose.addView(checkboxLayout)
-
-            checkbox
         }
     }
 
     private fun createAnnouncement() {
-        if (checkedRoles.isEmpty()) {
-            Toast.makeText(
-                requireActivity(),
-                getString(R.string.choose_recipient_role),
-                Toast.LENGTH_SHORT
-            ).show()
+        if (checkedRoles == null) {
+            loadUI()
         } else {
-            val text = createAnnouncementEditText
-                .text
-                .toString()
-                .trim()
-
-            if (text.isEmpty()) {
+            if (checkedRoles!!.isEmpty()) {
                 Toast.makeText(
                     requireActivity(),
-                    getString(R.string.enter_announcement_text),
+                    getString(R.string.choose_recipient_role),
                     Toast.LENGTH_SHORT
                 ).show()
             } else {
-                launch {
-                    viewModel.createAnnouncement(text, checkedRoles.toTypedArray())
+                val text = createAnnouncementEditText
+                    .text
+                    .toString()
+                    .trim()
 
+                if (text.isEmpty()) {
                     Toast.makeText(
-                        this@MenuCreateFragment.requireContext(),
-                        "Got it! Check your server response.",
+                        requireActivity(),
+                        getString(R.string.enter_announcement_text),
                         Toast.LENGTH_SHORT
                     ).show()
+                } else {
+                    launch {
+                        viewModel.createAnnouncement(text, checkedRoles!!.toTypedArray())
+
+                        Toast.makeText(
+                            this@MenuCreateFragment.requireContext(),
+                            "Got it! Check your server response.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }

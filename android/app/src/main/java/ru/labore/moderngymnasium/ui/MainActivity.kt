@@ -3,8 +3,10 @@ package ru.labore.moderngymnasium.ui
 import android.content.Intent
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
@@ -22,7 +24,7 @@ import ru.labore.moderngymnasium.utils.hideKeyboard
 class MainActivity : AppCompatActivity(), DIAware {
     override val di: DI by lazy { (applicationContext as DIAware).di }
 
-    private lateinit var navController : NavController
+    private lateinit var viewPagerAdapter: MainFragmentPagerAdapter
     private val repository: AppRepository by instance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,16 +38,31 @@ class MainActivity : AppCompatActivity(), DIAware {
             Toast.makeText(this, repository.user.toString(), Toast.LENGTH_SHORT).show()
 
             // Navigation Setup
-            navController = Navigation.findNavController(this, R.id.navHostFragment)
             setSupportActionBar(toolbar)
-            bottomNav.setupWithNavController(navController)
-            NavigationUI.setupActionBarWithNavController(this, navController)
+
+            viewPagerAdapter = MainFragmentPagerAdapter(supportFragmentManager, lifecycle)
+            navHostFragment.adapter = viewPagerAdapter
+
+            bottomNav.setOnNavigationItemSelectedListener {
+                loadFragment(it)
+            }
+
+            bottomNav.setOnNavigationItemReselectedListener {
+                loadFragment(it)
+            }
         }
 
         rootMainLayout.setOnClickListener {hideKeyboard()}
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp()
+    private fun loadFragment(menuItem: MenuItem): Boolean {
+        for (i in 0..viewPagerAdapter.itemCount) {
+            if (bottomNav.menu.getItem(i).itemId == menuItem.itemId) {
+                navHostFragment.currentItem = i
+                return true
+            }
+        }
+
+        return false
     }
 }

@@ -1,12 +1,15 @@
 package ru.labore.moderngymnasium.ui
 
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import ru.labore.moderngymnasium.ui.create.MenuCreateFragment
 import ru.labore.moderngymnasium.ui.inbox.MenuInboxFragment
 import ru.labore.moderngymnasium.ui.profile.MenuProfileFragment
 
-class MainFragmentPagerAdapter(fm: Fragment) : FragmentStateAdapter(fm) {
+class MainFragmentPagerAdapter(fm: FragmentManager, lifecycle: Lifecycle) :
+    FragmentStateAdapter(fm, lifecycle) {
     companion object {
         private val BASE_FRAGMENTS = arrayOf(
             MenuCreateFragment(),
@@ -68,7 +71,5 @@ class MainFragmentPagerAdapter(fm: Fragment) : FragmentStateAdapter(fm) {
 
     override fun getItemCount() = BASE_FRAGMENTS.size
 
-    override fun createFragment(position: Int): Fragment {
-        TODO("Not yet implemented")
-    }
+    override fun createFragment(position: Int) = getItem(position)
 }
