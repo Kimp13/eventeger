@@ -15,6 +15,7 @@ interface AnnouncementEntityDao {
 
     @Query("""
         select * from announcement
+        order by createdAt desc
         limit 1 offset :offset
     """)
     suspend fun getAnnouncementAtOffset(offset: Int): AnnouncementEntity?
@@ -22,6 +23,7 @@ interface AnnouncementEntityDao {
     @Transaction
     @Query("""
         select * from announcement
+        order by createdAt desc
         limit :limit offset :offset
     """)
     suspend fun getAnnouncements(offset: Int, limit: Int): Array<AnnouncementEntity>

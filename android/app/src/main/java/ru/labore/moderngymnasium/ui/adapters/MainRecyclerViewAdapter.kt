@@ -13,7 +13,7 @@ import java.util.*
 
 class MainRecyclerViewAdapter(
     private val resources: Resources,
-    private val announcements: Array<AnnouncementEntity>
+    private var announcements: MutableList<AnnouncementEntity>
 ) : RecyclerView.Adapter<MainRecyclerViewAdapter.MainViewHolder>() {
     class MainViewHolder(val layout: LinearLayout) : RecyclerView.ViewHolder(layout)
 
@@ -29,8 +29,6 @@ class MainRecyclerViewAdapter(
         val roleView = (holder.layout.getChildAt(1) as TextView)
         val classView = (holder.layout.getChildAt(2) as TextView)
         val textView = (holder.layout.getChildAt(3) as TextView)
-
-        println(announcements[position].toString())
 
         if (announcements[position].author == null) {
             authorView.visibility = View.GONE
@@ -84,4 +82,25 @@ class MainRecyclerViewAdapter(
     }
 
     override fun getItemCount() = announcements.size
+
+    fun prependAnnouncement(
+        announcement: AnnouncementEntity
+    ) {
+        announcements.add(0, announcement)
+
+        notifyItemInserted(0)
+    }
+
+    fun pushAnnouncements(
+        newAnnouncements: Array<AnnouncementEntity>
+    ) {
+        val positionStart = itemCount
+
+        announcements.addAll(newAnnouncements)
+
+        notifyItemRangeInserted(
+            positionStart,
+            newAnnouncements.size
+        )
+    }
 }

@@ -37,7 +37,7 @@
             <string name="enter_password">Enter password</string>
             <string name="password_too_short">Password must contain at least 8 characters</string>
             <string name="invalid_credentials">Couldn\'t log in: wrong username or password</string>
-            <string name="sign_in">&sign_in;Sign In</string>
+            <string name="sign_in">&sign_in;</string>
 
         <!-- Main Activity strings -->
             <!-- Fragment strings -->

@@ -2,19 +2,18 @@ package ru.labore.moderngymnasium.data
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.google.gson.Gson
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.repository.AppRepository
-import ru.labore.moderngymnasium.ui.inbox.MenuInboxViewModelFactory
 
 class MyFirebaseMessagingService : FirebaseMessagingService(), DIAware {
     override val di: DI by lazy { (applicationContext as DIAware).di }
 
     private val repository: AppRepository by instance()
-    private val viewModel: MenuInboxViewModelFactory by instance()
+    private val gson = Gson()
 
     override fun onNewToken(token: String) {
         repository.pushToken(token)
@@ -25,6 +24,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService(), DIAware {
 
         if (remoteMessage.data.isNotEmpty()) {
             println("Message data payload: ${remoteMessage.data}")
+
+            repository.pushNewAnnouncement(remoteMessage.data)
         }
 
         remoteMessage.notification?.let {

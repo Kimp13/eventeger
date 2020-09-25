@@ -1,8 +1,7 @@
 package ru.labore.moderngymnasium.data.repository
 
 import android.content.Context
-import android.widget.Toast
-import com.google.firebase.messaging.RemoteMessage
+import androidx.lifecycle.MutableLiveData
 import com.google.gson.*
 import kotlinx.coroutines.*
 import org.threeten.bp.Instant
@@ -25,7 +24,8 @@ data class UpdatedAnnouncementInfo(
 )
 
 data class AnnouncementsWithCount(
-    val amount: Int,
+    val overallCount: Int,
+    var currentCount: Int,
     val data: Array<AnnouncementEntity>
 )
 
@@ -66,6 +66,9 @@ class AppRepository(
     private val appNetwork: AppNetwork
 ) {
     private var token = ""
+
+    val inboxAnnouncement: MutableLiveData<AnnouncementEntity> =
+        MutableLiveData()
 
     private val gson = GsonBuilder()
         .registerTypeAdapter(ZonedDateTime::class.java, JsonSerializerImpl())
@@ -141,11 +144,117 @@ class AppRepository(
         }
     }
 
-    suspend fun getAnnouncements(offset: Int = 0, limit: Int = 25): AnnouncementsWithCount {
+    private suspend fun populateAnnouncementEntity(
+        entity: AnnouncementEntity,
+        oneDayBefore: ZonedDateTime = ZonedDateTime.now().minusDays(1),
+        updated: UpdatedAnnouncementInfo = UpdatedAnnouncementInfo(
+            HashMap(),
+            HashMap(),
+            HashMap()
+        )
+    ) {
+        entity.author = userEntityDao
+            .getUser(entity.authorId)
+
+        if (
+            entity.author
+                ?.updatedAt
+                ?.isBefore(oneDayBefore) != false &&
+            !updated.users.containsKey(entity.authorId)
+        ) {
+            updated.users[entity.authorId] = true
+
+            entity.author = appNetwork.fetchUser(entity.authorId)
+        }
+
+        if (entity.author != null) {
+            val weekBefore = ZonedDateTime.now().minusWeeks(1)
+
+            if (
+                entity.author!!.roleId != null &&
+                !updated.roles.containsKey(entity.author!!.roleId)
+            ) {
+                updated.roles[entity.author!!.roleId!!] = true
+
+                entity.authorRole = roleEntityDao.getRole(
+                    entity.author!!.roleId!!
+                )
+
+                if (
+                    entity.authorRole
+                        ?.updatedAt
+                        ?.isBefore(weekBefore) != false
+                ) {
+                    entity.authorRole = appNetwork.fetchRole(
+                        entity.author!!.roleId!!
+                    )
+
+                    if (entity.authorRole != null) {
+                        persistFetchedRole(
+                            entity.authorRole!!
+                        )
+                    }
+                }
+            }
+
+            if (
+                entity.author!!.classId != null &&
+                !updated.classes.containsKey(entity.author!!.classId)
+            ) {
+                updated.classes[entity.author!!.classId!!] = true
+
+                entity.authorClass = classEntityDao.getClass(
+                    entity.author!!.classId!!
+                )
+
+                if (
+                    entity.authorClass
+                        ?.updatedAt
+                        ?.isBefore(weekBefore) != false
+                ) {
+                    entity.authorClass = appNetwork.fetchClass(
+                        entity.author!!.classId!!
+                    )
+
+                    if (entity.authorClass != null) {
+                        persistFetchedClass(
+                            entity.authorClass!!
+                        )
+                    }
+                }
+            }
+
+            persistFetchedUser(entity.author!!)
+        }
+    }
+
+    fun pushNewAnnouncement(map: Map<String, String>) {
+        if (
+            map["id"] != null &&
+            map["text"] != null &&
+            map["created_at"] != null &&
+            map["author_id"] != null
+        ) {
+            GlobalScope.launch {
+                val entity =  AnnouncementEntity(
+                    (map["id"] ?: error("")).toInt(),
+                    ZonedDateTime.parse(map["created_at"]),
+                    (map["author_id"] ?: error("")).toInt(),
+                    map["text"] ?: error("")
+                )
+
+                populateAnnouncementEntity(entity)
+
+                inboxAnnouncement.postValue(entity)
+            }
+        }
+    }
+
+    suspend fun getAnnouncements(offset: Int = 0, limit: Int = 2): AnnouncementsWithCount {
         val announcements: AnnouncementsWithCount
 
         if (user == null) {
-            return AnnouncementsWithCount(0, emptyArray())
+            return AnnouncementsWithCount(0, 0, emptyArray())
         }
 
         val announcement =
@@ -160,6 +269,7 @@ class AppRepository(
         ) {
             announcements = AnnouncementsWithCount(
                 appNetwork.countAnnouncements(user!!.jwt),
+                0,
                 appNetwork.fetchAnnouncements(
                     user!!.jwt,
                     offset,
@@ -168,15 +278,19 @@ class AppRepository(
                 )
             )
 
+            announcements.currentCount = announcements.data.size
+
             persistFetchedAnnouncements(announcements.data)
         } else {
             announcements = AnnouncementsWithCount(
                 announcementEntityDao.countAnnouncements(),
+                0,
                 announcementEntityDao.getAnnouncements(offset, limit)
             )
+
+            announcements.currentCount = announcements.data.size
         }
 
-        val oneDayBefore = ZonedDateTime.now().minusDays(1)
         val updated = UpdatedAnnouncementInfo(
             HashMap(),
             HashMap(),
@@ -185,81 +299,11 @@ class AppRepository(
 
         List(announcements.data.size) {
             GlobalScope.launch {
-                announcements.data[it].author = userEntityDao
-                    .getUser(announcements.data[it].authorId)
-
-                if (
-                    announcements.data[it].author
-                        ?.updatedAt
-                        ?.isBefore(oneDayBefore) != false &&
-                    !updated.users.containsKey(announcements.data[it].authorId)
-                ) {
-                    updated.users[announcements.data[it].authorId] = true
-
-                    announcements.data[it].author = appNetwork.fetchUser(
-                        announcements.data[it].authorId
-                    )
-                }
-
-                if (announcements.data[it].author != null) {
-                    val weekBefore = ZonedDateTime.now().minusWeeks(1)
-
-                    if (
-                        announcements.data[it].author!!.roleId != null &&
-                        !updated.roles.containsKey(announcements.data[it].author!!.roleId)
-                    ) {
-                        updated.roles[announcements.data[it].author!!.roleId!!] = true
-
-                        announcements.data[it].authorRole = roleEntityDao.getRole(
-                            announcements.data[it].author!!.roleId!!
-                        )
-
-                        if (
-                            announcements.data[it].authorRole
-                                ?.updatedAt
-                                ?.isBefore(weekBefore) != false
-                        ) {
-                            announcements.data[it].authorRole = appNetwork.fetchRole(
-                                announcements.data[it].author!!.roleId!!
-                            )
-
-                            if (announcements.data[it].authorRole != null) {
-                                persistFetchedRole(
-                                    announcements.data[it].authorRole!!
-                                )
-                            }
-                        }
-                    }
-
-                    if (
-                        announcements.data[it].author!!.classId != null &&
-                        !updated.classes.containsKey(announcements.data[it].author!!.classId)
-                    ) {
-                        updated.classes[announcements.data[it].author!!.classId!!] = true
-
-                        announcements.data[it].authorClass = classEntityDao.getClass(
-                            announcements.data[it].author!!.classId!!
-                        )
-
-                        if (
-                            announcements.data[it].authorClass
-                                ?.updatedAt
-                                ?.isBefore(weekBefore) != false
-                        ) {
-                            announcements.data[it].authorClass = appNetwork.fetchClass(
-                                announcements.data[it].author!!.classId!!
-                            )
-
-                            if (announcements.data[it].authorClass != null) {
-                                persistFetchedClass(
-                                    announcements.data[it].authorClass!!
-                                )
-                            }
-                        }
-                    }
-
-                    persistFetchedUser(announcements.data[it].author!!)
-                }
+                populateAnnouncementEntity(
+                    announcements.data[it],
+                    ZonedDateTime.now().minusDays(1),
+                    updated
+                )
             }
         }.joinAll()
 
@@ -269,12 +313,12 @@ class AppRepository(
     }
 
     suspend fun getUserRoles(): Array<RoleEntity?> = if (
-            user?.data?.permissions?.announcement?.create != null
-        ) {
-            getRoles(user!!.data.permissions!!.announcement!!.create!!)
-        } else {
-            emptyArray()
-        }
+        user?.data?.permissions?.announcement?.create != null
+    ) {
+        getRoles(user!!.data.permissions!!.announcement!!.create!!)
+    } else {
+        emptyArray()
+    }
 
     private suspend fun getRoles(rolesIds: Array<Int>): Array<RoleEntity?> {
         val result: Array<RoleEntity?> = arrayOfNulls(rolesIds.size)
