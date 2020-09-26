@@ -1,14 +1,20 @@
 package ru.labore.moderngymnasium.ui.inbox
 
-import androidx.lifecycle.MutableLiveData
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.utils.lazyDeferred
 
 class MenuInboxViewModel(
-    val appRepository: AppRepository
-) : ViewModel() {
+    application: Application
+) : AndroidViewModel(application), DIAware {
+    override val di: DI by lazy { (application as DIAware).di }
+    val appRepository: AppRepository by instance()
+
     val announcements by lazyDeferred {
         appRepository.getAnnouncements()
     }

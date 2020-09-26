@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.lifecycle.ViewModelProviders
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.menu_inbox_fragment.*
@@ -22,7 +22,7 @@ import kotlin.properties.Delegates
 class MenuInboxFragment : ScopedFragment(), DIAware {
     override val di: DI by lazy { (context as DIAware).di }
 
-    private val viewModelFactory: MenuInboxViewModelFactory by instance()
+    private val viewModel: MenuInboxViewModel by viewModels()
     private val viewManager: LinearLayoutManager by lazy {
         LinearLayoutManager(requireActivity())
     }
@@ -30,7 +30,6 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
     private var loading = true
     private var overallCount by Delegates.notNull<Int>()
     private var currentCount by Delegates.notNull<Int>()
-    private lateinit var viewModel: MenuInboxViewModel
     private lateinit var viewAdapter: MainRecyclerViewAdapter
 
     override fun onCreateView(
@@ -42,9 +41,6 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders
-            .of(this, viewModelFactory)
-            .get(MenuInboxViewModel::class.java)
 
         bindUI()
 
@@ -83,7 +79,8 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
         inboxProgressBarCaption.visibility = View.GONE
 
         params.topToTop = ConstraintLayout.LayoutParams.UNSET
-        params.bottomToBottom = R.id.inboxRecyclerView
+        params.bottomToBottom = R.id.inboxFragmentLayout
+        params.bottomMargin = 50
 
         viewAdapter = MainRecyclerViewAdapter(
             resources,
