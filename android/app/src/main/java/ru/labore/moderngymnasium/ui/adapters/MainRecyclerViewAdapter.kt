@@ -91,6 +91,20 @@ class MainRecyclerViewAdapter(
         notifyItemInserted(0)
     }
 
+    fun refreshAnnouncements(
+        newAnnouncements: Array<AnnouncementEntity>
+    ) {
+        val count = itemCount
+
+        announcements = mutableListOf()
+
+        notifyItemRangeRemoved(0, count)
+
+        announcements = newAnnouncements.asList() as MutableList<AnnouncementEntity>
+
+        notifyItemRangeInserted(0, announcements.size)
+    }
+
     fun pushAnnouncements(
         newAnnouncements: Array<AnnouncementEntity>
     ) {

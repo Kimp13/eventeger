@@ -52,6 +52,7 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
     private fun addNewAnnouncements() = launch {
         if (!loading) {
             loading = true
+            println("Setting to visible.")
             inboxProgressBar.visibility = View.VISIBLE
 
             val newAnnouncements = viewModel.getAnnouncements(currentCount)
@@ -61,8 +62,22 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
             viewAdapter.pushAnnouncements(newAnnouncements.data)
 
             loading = false
+            println("Setting to gone.")
             inboxProgressBar.visibility = View.GONE
         }
+    }
+
+    private fun refreshUI() = launch {
+        val announcements = viewModel
+            .appRepository
+            .getAnnouncements(0, 25, true)
+
+        currentCount = announcements.currentCount
+        overallCount = announcements.overallCount
+
+        viewAdapter.refreshAnnouncements(announcements.data)
+
+        inboxRefreshLayout.isRefreshing = false
     }
 
     private fun bindUI() = launch {
@@ -86,6 +101,10 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
             resources,
             announcements.data.toList() as MutableList<AnnouncementEntity>
         )
+
+        inboxRefreshLayout.setOnRefreshListener {
+            refreshUI()
+        }
 
         inboxRecyclerView.apply {
             setHasFixedSize(true)
