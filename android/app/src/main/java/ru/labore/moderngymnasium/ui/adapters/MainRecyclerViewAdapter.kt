@@ -70,7 +70,8 @@ class MainRecyclerViewAdapter(
             } else {
                 classView.text = String.format(
                     resources.getString(R.string.class_label),
-                    announcements[position].authorClass!!.name
+                    "${announcements[position].authorClass!!.grade} " +
+                            announcements[position].authorClass!!.letter
                 )
             }
 

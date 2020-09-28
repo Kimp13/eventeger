@@ -62,11 +62,13 @@ class LoginActivity : AppCompatActivity(), DIAware {
 
                         finish()
                     } catch (e: Exception) {
+                        println(e.message)
+
                         val toastString: String = when (e) {
                             is ConnectException -> getString(R.string.server_unavailable)
                             is ClientConnectionException -> getString(R.string.no_internet)
                             is ClientErrorException -> getString(R.string.invalid_credentials)
-                            else -> throw e
+                            else -> "Look into the console."
                         }
 
                         apiRequestButton.isEnabled = true

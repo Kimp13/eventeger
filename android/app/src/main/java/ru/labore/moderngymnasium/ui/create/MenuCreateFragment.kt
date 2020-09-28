@@ -9,12 +9,16 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.menu_create_fragment.*
 import kotlinx.coroutines.launch
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import ru.labore.moderngymnasium.R
+import ru.labore.moderngymnasium.data.network.ClientConnectionException
+import ru.labore.moderngymnasium.data.network.ClientErrorException
 import ru.labore.moderngymnasium.ui.base.ScopedFragment
+import java.net.ConnectException
 import java.util.*
 
 class MenuCreateFragment : ScopedFragment(), DIAware {
@@ -145,13 +149,30 @@ class MenuCreateFragment : ScopedFragment(), DIAware {
                     ).show()
                 } else {
                     launch {
-                        viewModel.createAnnouncement(text, checkedRoles!!.toTypedArray())
+                        try {
+                            viewModel.createAnnouncement(text, checkedRoles!!.toTypedArray())
 
-                        Toast.makeText(
-                            this@MenuCreateFragment.requireContext(),
-                            "Got it! Check your server response.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                            Toast.makeText(
+                                this@MenuCreateFragment.requireContext(),
+                                "Got it! Check your server response.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } catch(e: Exception) {
+                            println(e.message)
+
+                            val toastString: String = when (e) {
+                                is ConnectException -> getString(R.string.server_unavailable)
+                                is ClientConnectionException -> getString(R.string.no_internet)
+                                is ClientErrorException -> getString(R.string.invalid_credentials)
+                                else -> "Look into the console."
+                            }
+
+                            Toast.makeText(
+                                requireActivity(),
+                                toastString,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
             }

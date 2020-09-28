@@ -9,6 +9,7 @@ data class ClassEntity(
     @PrimaryKey(autoGenerate = false)
     val id: Int,
 
-    val name: String,
+    val grade: Int,
+    val letter: String,
     var updatedAt: ZonedDateTime? = null
 )

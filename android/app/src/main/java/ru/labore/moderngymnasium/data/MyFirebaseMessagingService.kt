@@ -16,7 +16,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService(), DIAware {
     private val gson = Gson()
 
     override fun onNewToken(token: String) {
-        repository.pushToken(token)
+        repository.saveToken(token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

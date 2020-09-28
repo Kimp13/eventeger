@@ -65,10 +65,10 @@ class AppRepository(
     private val classEntityDao: ClassEntityDao,
     private val appNetwork: AppNetwork
 ) {
-    private var token = ""
-
     val inboxAnnouncement: MutableLiveData<AnnouncementEntity> =
         MutableLiveData()
+
+    var user: User? = null
 
     private val gson = GsonBuilder()
         .registerTypeAdapter(ZonedDateTime::class.java, JsonSerializerImpl())
@@ -78,8 +78,6 @@ class AppRepository(
         context.getString(R.string.utility_shared_preference_file_key),
         Context.MODE_PRIVATE
     )
-
-    var user: User? = null
 
     init {
         val userString = sharedPreferences.getString("user", null)
@@ -105,15 +103,25 @@ class AppRepository(
         }
     }
 
-    fun pushToken(tkn: String) {
-        println("Got new token as $tkn")
+    fun saveToken(token: String) {
+        val editor = sharedPreferences.edit()
+
+        pushToken(token)
+        editor.putString("messaging_token", token)
+
+        editor.apply()
+    }
+
+    private fun pushToken(token: String? = null) {
         if (user?.jwt != null) {
-            println("Launching it!")
-            GlobalScope.launch {
-                appNetwork.pushToken(user!!.jwt, token)
+            val actualToken =
+                token ?: sharedPreferences.getString("messaging_token", null)
+
+            if (token?.isNotEmpty() == true) {
+                GlobalScope.launch {
+                    appNetwork.pushToken(user!!.jwt, actualToken!!)
+                }
             }
-        } else {
-            token = tkn
         }
     }
 
@@ -121,10 +129,7 @@ class AppRepository(
         user = SignIn(context, appNetwork, username, password)
         val editor = sharedPreferences.edit()
 
-        if (token.isNotEmpty()) {
-            pushToken(token)
-        }
-
+        pushToken()
         editor.putString("user", gson.toJson(user))
         editor.apply()
     }
@@ -156,7 +161,7 @@ class AppRepository(
         appNetwork.fetchClass(id)
     }
 
-    suspend fun populateAnnouncementEntity(
+    private suspend fun populateAnnouncementEntity(
         entity: AnnouncementEntity,
         updated: UpdatedAnnouncementInfo = UpdatedAnnouncementInfo(
             HashMap(),
@@ -287,16 +292,18 @@ class AppRepository(
             return AnnouncementsWithCount(0, 0, emptyArray())
         }
 
-        val announcement =
-            announcementEntityDao
-                .getAnnouncementAtOffset(offset)
-        val now = ZonedDateTime.now()
-        val tenMinutesBefore = now.minusMinutes(10)
+        val isNeededToUpdate: Boolean = if (forceFetch) {
+            true
+        } else {
+            val announcement: AnnouncementEntity? = announcementEntityDao.getAnnouncementAtOffset(offset)
+            val now: ZonedDateTime = ZonedDateTime.now()
+            val tenMinutesBefore = now.minusMinutes(10)
 
-        if (
             announcement?.updatedAt?.isAfter(now) != false ||
-            announcement.updatedAt!!.isBefore(tenMinutesBefore)
-        ) {
+                    announcement.updatedAt!!.isBefore(tenMinutesBefore)
+        }
+
+        if (isNeededToUpdate) {
             announcements = AnnouncementsWithCount(
                 appNetwork.countAnnouncements(user!!.jwt),
                 0,
