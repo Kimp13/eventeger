@@ -51,7 +51,6 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
     private fun addNewAnnouncements() = launch {
         if (!loading) {
             loading = true
-            println("Setting to visible.")
             inboxProgressBar.visibility = View.VISIBLE
 
             val newAnnouncements = viewModel.getAnnouncements(currentCount)
@@ -61,7 +60,6 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
             viewAdapter.pushAnnouncements(newAnnouncements.data)
 
             loading = false
-            println("Setting to gone.")
             inboxProgressBar.visibility = View.GONE
         }
     }

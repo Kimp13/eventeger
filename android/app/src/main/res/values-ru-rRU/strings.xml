@@ -41,4 +41,9 @@
     <string name="choose_recipient_role">Выберите хотя бы одного получателя</string>
     <string name="loading">Загрузка…</string>
     <string name="no_rights_to_announce">Нет необходимых прав для объявления</string>
+    <string name="notification_channel_name">&app_name;</string>
+    <string name="notification_channel_description">
+        Стандартный канал уведомлений приложения &app_name;.
+    </string>
+    <string name="no_author">Нет автора</string>
 </resources>

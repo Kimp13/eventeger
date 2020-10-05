@@ -1,18 +1,23 @@
 <!DOCTYPE resources [
     <!ENTITY app_name "Modern Gymnasium">
     <!ENTITY sign_in  "Sign In">
+    <!ENTITY app_id   "ru.labore.moderngymnasium">
 ]>
 
 <resources>
     <!-- Utility strings -->
     <string name="utility_shared_preference_file_key" translatable="false">
-        ru.labore.moderngymnasium.PREFERENCE_FILE_KEY
+        &app_id;.PREFERENCE_FILE_KEY
     </string>
     <string name="api_url" translatable="false">
         http://192.168.1.8:3000/api/
     </string>
-    <string name="default_notification_channel_id" translatable="false">
-        1056
+    <string name="default_notification_channel_id" translatable="false">&app_id;</string>
+    <string name="notification_channel_name">
+        &app_name;
+    </string>
+    <string name="notification_channel_description">
+        Default &app_name; notification channel.
     </string>
 
     <!-- User Interface strings -->
@@ -50,6 +55,7 @@
 
             <!-- Inbox fragment strings -->
                     <string name="author_no_name">Noname</string>
+                    <string name="no_author">No author</string>
                     <string name="author_label">Author: %1$s</string>
                     <string name="role_label">Role: %1$s</string>
                     <string name="class_label">Class: %1$s</string>

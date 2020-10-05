@@ -1,6 +1,8 @@
 package ru.labore.moderngymnasium.data.repository
 
 import android.content.Context
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.*
 import kotlinx.coroutines.*
@@ -15,18 +17,13 @@ import ru.labore.moderngymnasium.data.db.daos.UserEntityDao
 import ru.labore.moderngymnasium.data.db.entities.*
 import ru.labore.moderngymnasium.data.network.*
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
+import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 import java.lang.reflect.Type
 
 data class DeferredAnnouncementInfo(
     val users: HashMap<Int, Deferred<UserEntity?>>,
     val classes: HashMap<Int, Deferred<ClassEntity?>>,
     val roles: HashMap<Int, Deferred<RoleEntity?>>
-)
-
-data class FetchedAnnouncementInfo(
-    val users: HashMap<Int, UserEntity?>,
-    val classes: HashMap<Int, ClassEntity?>,
-    val roles: HashMap<Int, RoleEntity?>
 )
 
 data class AnnouncementsWithCount(
@@ -76,6 +73,7 @@ class AppRepository(
 
     var user: User? = null
 
+    private var notificationsCount: Int = 0
     private val gson = GsonBuilder()
         .registerTypeAdapter(ZonedDateTime::class.java, JsonSerializerImpl())
         .registerTypeAdapter(ZonedDateTime::class.java, JsonDeserializerImpl())
@@ -83,6 +81,10 @@ class AppRepository(
     private val sharedPreferences = context.getSharedPreferences(
         context.getString(R.string.utility_shared_preference_file_key),
         Context.MODE_PRIVATE
+    )
+    private val notificationBuilder = NotificationCompat.Builder(
+        context,
+        context.getString(R.string.default_notification_channel_id)
     )
 
     init {
@@ -265,7 +267,7 @@ class AppRepository(
         }
     }
 
-    fun pushNewAnnouncement(map: Map<String, String>) {
+    fun pushNewAnnouncement(map: Map<String, String>, notify: Boolean = true) {
         if (
             map["id"] != null &&
             map["text"] != null &&
@@ -283,6 +285,24 @@ class AppRepository(
                 populateAnnouncementEntity(entity)
 
                 inboxAnnouncement.postValue(entity)
+
+                if (notify) {
+                    notificationBuilder
+                        .setContentTitle(announcementEntityToCaption(
+                            entity,
+                            context.getString(R.string.author_no_name)
+                        ))
+                        .setContentText(entity.text)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true)
+
+                    println("Built, notified!")
+
+                    NotificationManagerCompat.from(context).notify(
+                        notificationsCount++,
+                        notificationBuilder.build()
+                    )
+                }
             }
         }
     }
