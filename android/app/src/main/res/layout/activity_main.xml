@@ -5,6 +5,7 @@
     android:id="@+id/rootMainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     android:orientation="vertical"
     tools:context=".ui.activities.MainActivity">
     
@@ -13,7 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimaryDark"
-        app:titleTextColor="@color/colorGray" />
+        android:elevation="16dp"
+        app:titleTextColor="@color/colorPrimary" />
     
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/navHostFragment"

@@ -57,8 +57,6 @@ class MainActivity : AppCompatActivity(), DIAware {
                 loadFragment(it)
             }
         }
-
-        rootMainLayout.setOnClickListener {hideKeyboard()}
     }
 
     private fun loadFragment(menuItem: MenuItem): Boolean {

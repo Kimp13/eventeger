@@ -3,19 +3,45 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="editTextStyle">@style/AppEditTextStyle</item>
+<!--        <item name="buttonStyle">@style/AppButtonStyle</item>-->
+    </style>
+
+    <style name="AppThemeWithoutActionBar" parent="AppTheme">
+        <item name="android:textViewStyle">@style/AppTextViewStyle</item>
         <!-- Removing Action Bar -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppThemeWithActionBar" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+    <style name="AppThemeWithActionBar" parent="AppTheme">
+        <item name="actionBarStyle">@style/AppActionBar</item>
+    </style>
+
+    <style name="AppActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
+        <item name="background">@color/colorPrimaryDark</item>
+        <item name="titleTextColor">@color/colorPrimary</item>
+    </style>
+
+    <style name="AppButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="background">@drawable/button_background</item>
+        <item name="android:padding">10dp</item>
+    </style>
+
+    <style name="AppEditTextStyle" parent="android:Widget.EditText">
+        <item name="android:textColor">@drawable/edit_text_text_color</item>
+        <item name="android:textColorHint">@drawable/edit_text_text_color</item>
+        <item name="android:background">@drawable/edit_text_background</item>
+        <item name="android:padding">20dp</item>
+    </style>
+
+    <style name="AppTextViewStyle" parent="android:Widget.TextView">
+        <item name="android:textColor">@color/colorPrimary</item>
     </style>
 
     <style name="AppBottomNavigationView">
         <item name="android:background">@color/colorPrimaryDark</item>
+        <item name="elevation">16dp</item>
         <item name="itemBackground">@drawable/bottom_navigation_ripple</item>
         <item name="itemIconTint">@drawable/bottom_navigation_view_color</item>
         <item name="itemTextColor">@drawable/bottom_navigation_view_color</item>

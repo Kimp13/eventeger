@@ -5,6 +5,7 @@
     android:id="@+id/rootLoginLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     android:padding="20dp"
     tools:context=".ui.activities.LoginActivity">
 
@@ -16,7 +17,6 @@
         android:gravity="center_horizontal|center_vertical"
         android:hint="@string/username_hint"
         android:inputType="textAutoComplete"
-        android:padding="20dp"
         android:typeface="normal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -33,7 +33,6 @@
         android:gravity="center_horizontal|center_vertical"
         android:hint="@string/password_hint"
         android:inputType="textPassword"
-        android:padding="20dp"
         android:typeface="normal"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintLeft_toRightOf="parent"
