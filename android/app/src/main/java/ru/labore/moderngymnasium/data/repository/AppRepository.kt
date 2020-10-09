@@ -279,9 +279,9 @@ class AppRepository(
             GlobalScope.launch {
                 val entity =  AnnouncementEntity(
                     (map["id"] ?: error("")).toInt(),
-                    ZonedDateTime.parse(map["created_at"]),
                     (map["author_id"] ?: error("")).toInt(),
-                    map["text"] ?: error("")
+                    map["text"] ?: error(""),
+                    ZonedDateTime.parse(map["created_at"])
                 )
 
                 populateAnnouncementEntity(entity)
@@ -309,6 +309,29 @@ class AppRepository(
                 }
             }
         }
+    }
+
+    suspend fun getAnnouncement(id: Int): AnnouncementEntity? {
+        if (user == null) {
+            return null
+        }
+
+        var announcement: AnnouncementEntity? = announcementEntityDao.getAnnouncement(id)
+        val now: ZonedDateTime = ZonedDateTime.now()
+        val tenMinutesBefore = now.minusMinutes(10)
+
+        if (
+            announcement?.updatedAt?.isAfter(now) != false ||
+            announcement.updatedAt!!.isBefore(tenMinutesBefore)
+                ) {
+            announcement = appNetwork.fetchAnnouncement(user!!.jwt, id, gson)
+        }
+
+        if (announcement != null) {
+            populateAnnouncementEntity(announcement)
+        }
+
+        return announcement
     }
 
     suspend fun getAnnouncements(

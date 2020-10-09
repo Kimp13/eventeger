@@ -1,5 +1,6 @@
 package ru.labore.moderngymnasium.ui.inbox
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,8 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
+import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
+import ru.labore.moderngymnasium.ui.activities.LoginActivity
 import ru.labore.moderngymnasium.ui.adapters.MainRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.ScopedFragment
 import kotlin.properties.Delegates
@@ -101,7 +104,13 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
         viewAdapter = MainRecyclerViewAdapter(
             resources,
             announcements.data.toList() as MutableList<AnnouncementEntity>
-        )
+        ) {
+            val intent = Intent(requireContext(), AnnouncementDetailedActivity::class.java)
+            val bundle = Bundle()
+            bundle.putParcelable("announcement", it)
+            intent.putExtras(bundle)
+            startActivity(intent)
+        }
 
         inboxRefreshLayout.setOnRefreshListener {
             refreshUI()

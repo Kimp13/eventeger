@@ -17,7 +17,8 @@ import java.lang.reflect.Constructor
 
 class MainRecyclerViewAdapter(
     private val resources: Resources,
-    private var announcements: MutableList<AnnouncementEntity>
+    private var announcements: MutableList<AnnouncementEntity>,
+    private val clickHandler: (AnnouncementEntity) -> Unit = {}
 ) : RecyclerView.Adapter<MainRecyclerViewAdapter.MainViewHolder>() {
     class MainViewHolder(val card: MaterialCardView) : RecyclerView.ViewHolder(card)
 
@@ -34,6 +35,10 @@ class MainRecyclerViewAdapter(
         val authorView = constraintLayout.getChildAt(1) as TextView
         val authorRankView = constraintLayout.getChildAt(2) as TextView
         val textView = linearLayout.getChildAt(1) as TextView
+
+        holder.card.setOnClickListener{
+            clickHandler(announcements[position])
+        }
 
         authorView.text = if (announcements[position].author == null) {
             authorRankView.visibility = View.GONE

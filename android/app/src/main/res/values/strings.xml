@@ -1,8 +1,4 @@
-<!DOCTYPE resources [
-    <!ENTITY app_name "Modern Gymnasium">
-    <!ENTITY sign_in  "Sign In">
-    <!ENTITY app_id   "ru.labore.moderngymnasium">
-]>
+<!DOCTYPE resources [<!ENTITY app_name "Modern Gymnasium"><!ENTITY sign_in  "Sign In"><!ENTITY app_id   "ru.labore.moderngymnasium">]>
 
 <resources>
     <!-- Utility strings -->
@@ -21,48 +17,48 @@
     </string>
 
     <!-- User Interface strings -->
-        <!-- Global strings -->
-            <string name="app_name">&app_name;</string>
+    <!-- Global strings -->
+    <string name="app_name">&app_name;</string>
 
-        <!-- Network-related strings -->
-            <string name="server_unavailable">
+    <!-- Network-related strings -->
+    <string name="server_unavailable">
                 Our server is unavailable. Please, retry after a few minutes
             </string>
-            <string name="no_internet">Your device has no internet connection</string>
-            <string name="loading">Loading…</string>
+    <string name="no_internet">Your device has no internet connection</string>
+    <string name="loading">Loading…</string>
 
-        <!-- Login Activity strings -->
-            <string name="login_activity_label">&sign_in;&#09;•&#09;&app_name;</string>
-            <string name="username_hint">Username</string>
-            <string name="password_hint">Password</string>
-            <string name="enter_username">Enter username</string>
-            <string name="username_incorrect">
+    <!-- Login Activity strings -->
+    <string name="login_activity_label">&sign_in;&#09;•&#09;&app_name;</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="enter_username">Enter username</string>
+    <string name="username_incorrect">
                 Username must only contain english letters, digits and signs #, $, *, _
             </string>
-            <string name="enter_password">Enter password</string>
-            <string name="password_too_short">Password must contain at least 8 characters</string>
-            <string name="invalid_credentials">Couldn\'t log in: wrong username or password</string>
-            <string name="sign_in">&sign_in;</string>
+    <string name="enter_password">Enter password</string>
+    <string name="password_too_short">Password must contain at least 8 characters</string>
+    <string name="invalid_credentials">Couldn\'t log in: wrong username or password</string>
+    <string name="sign_in">&sign_in;</string>
 
-        <!-- Main Activity strings -->
-            <!-- Fragment strings -->
-                <!-- Create fragment strings -->
-                    <string name="no_rights_to_announce">No required rights to announce.</string>
-                    <string name="hint_create_announcement">Enter text…</string>
-                    <string name="create_announcement_label">Announce</string>
-                    <string name="enter_announcement_text">Enter announcement text</string>
-                    <string name="choose_recipient_role">Choose at least one recipient</string>
+    <!-- Main Activity strings -->
+    <!-- Fragment strings -->
+    <!-- Create fragment strings -->
+    <string name="no_rights_to_announce">No required rights to announce.</string>
+    <string name="hint_create_announcement">Enter text…</string>
+    <string name="create_announcement_label">Announce</string>
+    <string name="enter_announcement_text">Enter announcement text</string>
+    <string name="choose_recipient_role">Choose at least one recipient</string>
 
-            <!-- Inbox fragment strings -->
-                    <string name="author_no_name">Noname</string>
-                    <string name="no_author">No author</string>
-                    <string name="author_label">Author: %1$s</string>
-                    <string name="role_label">Role: %1$s</string>
-                    <string name="class_label">Class: %1$s</string>
-                    <string name="text_label">Text: %1$s</string>
+    <!-- Inbox fragment strings -->
+    <string name="author_no_name">Noname</string>
+    <string name="no_author">No author</string>
+    <string name="author_label">Author: %1$s</string>
+    <string name="role_label">Role: %1$s</string>
+    <string name="class_label">Class: %1$s</string>
+    <string name="text_label">Text: %1$s</string>
 
-            <!-- Bottom Nav strings -->
-                <string name="menu_create">Announce</string>
-                <string name="menu_inbox">Announcements</string>
-                <string name="menu_profile">Profile</string>
-    </resources>
+    <!-- Bottom Nav strings -->
+    <string name="menu_create">Announce</string>
+    <string name="menu_inbox">Announcements</string>
+    <string name="menu_profile">Profile</string>
+</resources>

@@ -14,6 +14,11 @@ interface AnnouncementEntityDao {
     suspend fun countAnnouncements(): Int
 
     @Query("""
+        select * from announcement where id = :id
+    """)
+    suspend fun getAnnouncement(id: Int): AnnouncementEntity?
+
+    @Query("""
         select * from announcement
         order by createdAt desc
         limit 1 offset :offset

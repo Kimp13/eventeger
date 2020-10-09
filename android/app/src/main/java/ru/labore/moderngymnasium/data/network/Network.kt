@@ -33,6 +33,18 @@ class AppNetwork(context: Context) : Interceptor {
         token
     )
 
+    suspend fun fetchAnnouncement(
+        jwt: String,
+        id: Int,
+        gson: Gson
+    ) = FetchAnnouncement(
+        appContext,
+        this,
+        gson,
+        jwt,
+        id
+    )
+
     suspend fun fetchAnnouncements(
         jwt: String,
         offset: Int,

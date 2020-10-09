@@ -10,6 +10,7 @@ import org.kodein.di.android.x.androidXModule
 import ru.labore.moderngymnasium.data.db.AppDatabase
 import ru.labore.moderngymnasium.data.network.AppNetwork
 import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
 
 class MGApplication : Application(), DIAware {
     override val di = DI.lazy {

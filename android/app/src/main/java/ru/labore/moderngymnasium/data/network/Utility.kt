@@ -134,6 +134,45 @@ interface PushToken {
     }
 }
 
+interface FetchAnnouncement {
+    @GET("announcements/get")
+    suspend fun fetch(
+        @Header("Authentication") jwt: String,
+        @Query("id") id: Int
+    ): AnnouncementEntity?
+
+    companion object {
+        suspend operator fun invoke(
+            context: Context,
+            requestInterceptor: Interceptor,
+            gson: Gson,
+            jwt: String,
+            id: Int
+        ): AnnouncementEntity? {
+            val okHttpClient = OkHttpClient
+                .Builder()
+                .addInterceptor(requestInterceptor)
+                .build()
+
+            return Retrofit
+                .Builder()
+                .client(okHttpClient)
+                .baseUrl(
+                    context
+                        .resources
+                        .getString(R.string.api_url)
+                )
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+                .create(FetchAnnouncement::class.java)
+                .fetch(
+                    jwt,
+                    id
+                )
+        }
+    }
+}
+
 interface FetchAnnouncements {
     @GET("announcements/getMine")
     suspend fun fetch(
