@@ -16,14 +16,13 @@
         Default &app_name; notification channel.
     </string>
 
-    <!-- User Interface strings -->
     <!-- Global strings -->
     <string name="app_name">&app_name;</string>
 
     <!-- Network-related strings -->
     <string name="server_unavailable">
-                Our server is unavailable. Please, retry after a few minutes
-            </string>
+        Our server is unavailable. Please, retry after a few minutes
+    </string>
     <string name="no_internet">Your device has no internet connection</string>
     <string name="loading">Loading…</string>
 
@@ -40,8 +39,6 @@
     <string name="invalid_credentials">Couldn\'t log in: wrong username or password</string>
     <string name="sign_in">&sign_in;</string>
 
-    <!-- Main Activity strings -->
-    <!-- Fragment strings -->
     <!-- Create fragment strings -->
     <string name="no_rights_to_announce">No required rights to announce.</string>
     <string name="hint_create_announcement">Enter text…</string>
@@ -61,4 +58,8 @@
     <string name="menu_create">Announce</string>
     <string name="menu_inbox">Announcements</string>
     <string name="menu_profile">Profile</string>
+
+    <!-- Announcement Detailed Activity strings -->
+    <string name="announcement_detailed_activity_action_bar_title">Announcement</string>
+    <string name="expand_text">Expand text…</string>
 </resources>

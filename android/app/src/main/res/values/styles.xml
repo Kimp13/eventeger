@@ -38,6 +38,16 @@
         <item name="android:padding">10dp</item>
     </style>
 
+    <style name="AppTextViewButtonStyle" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:letterSpacing">.03</item>
+    </style>
+
     <style name="AppEditTextStyle" parent="android:Widget.EditText">
         <item name="android:textColor">@drawable/edit_text_text_color</item>
         <item name="android:textColorHint">@drawable/edit_text_text_color</item>
@@ -47,7 +57,7 @@
 
     <style name="AppBottomNavigationView">
         <item name="android:background">@color/colorPrimaryDark</item>
-        <item name="elevation">32dp</item>
+        <item name="elevation">16dp</item>
         <item name="itemBackground">@drawable/bottom_navigation_ripple</item>
         <item name="itemIconTint">@drawable/bottom_navigation_view_color</item>
         <item name="itemTextColor">@drawable/bottom_navigation_view_color</item>

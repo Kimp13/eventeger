@@ -5,19 +5,42 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import kotlinx.android.synthetic.main.activity_announcement_detailed.*
+import kotlinx.android.synthetic.main.inbox_recycler_view.*
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
-import java.lang.reflect.Constructor
+
+fun trimTextTo(text: String, amount: Int): String {
+    if (text.length <= amount) {
+        return text
+    }
+
+    var i = amount
+
+    while (text[--i].toInt() > 32) {
+        if (i == 0) {
+            return "${text.substring(0, amount)}…"
+        }
+    }
+
+    val indexAfterFirstLoop = i
+    while(text[--i].toInt() <= 32) {
+        if (i == 0) {
+            return "${text.substring(indexAfterFirstLoop + 1)}…"
+        }
+    }
+
+    return "${text.substring(0, i + 1)}…"
+}
 
 class MainRecyclerViewAdapter(
     private val resources: Resources,
-    private var announcements: MutableList<AnnouncementEntity>,
+    var announcements: MutableList<AnnouncementEntity>,
     private val clickHandler: (AnnouncementEntity) -> Unit = {}
 ) : RecyclerView.Adapter<MainRecyclerViewAdapter.MainViewHolder>() {
     class MainViewHolder(val card: MaterialCardView) : RecyclerView.ViewHolder(card)
@@ -35,6 +58,7 @@ class MainRecyclerViewAdapter(
         val authorView = constraintLayout.getChildAt(1) as TextView
         val authorRankView = constraintLayout.getChildAt(2) as TextView
         val textView = linearLayout.getChildAt(1) as TextView
+        val expandButton = linearLayout.getChildAt(2)
 
         holder.card.setOnClickListener{
             clickHandler(announcements[position])
@@ -59,7 +83,17 @@ class MainRecyclerViewAdapter(
             }
         }
 
-        textView.text = announcements[position].text
+        if (announcements[position].text.length <= 200) {
+            textView.text = announcements[position].text
+            expandButton.visibility = View.GONE
+        } else {
+            textView.text = trimTextTo(announcements[position].text, 200)
+            expandButton.visibility = View.VISIBLE
+            expandButton.setOnClickListener {
+                textView.text = announcements[position].text
+                it.visibility = View.GONE
+            }
+        }
     }
 
     override fun getItemCount() = announcements.size

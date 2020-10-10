@@ -4,14 +4,45 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activities.AnnouncementDetailedActivity"
-    android:background="@color/colorDarkVariant">
+    android:background="@color/colorDarkVariant"
+    android:padding="20dp"
+    tools:context=".ui.activities.AnnouncementDetailedActivity">
+
+    <ImageView
+        android:id="@+id/announcementDetailedImageView"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/ic_baseline_announcement"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/colorPrimary" />
 
     <TextView
-        android:id="@+id/detailedTextView"
+        android:id="@+id/announcementDetailedAuthorName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_marginStart="8dp"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        app:layout_constraintStart_toEndOf="@id/announcementDetailedImageView"
+        app:layout_constraintTop_toTopOf="@id/announcementDetailedImageView" />
+
+    <TextView
+        android:id="@+id/announcementDetailedAuthorRank"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="?android:attr/textColorSecondaryInverse"
+        app:layout_constraintBottom_toBottomOf="@id/announcementDetailedImageView"
+        app:layout_constraintStart_toStartOf="@id/announcementDetailedAuthorName" />
+
+    <TextView
+        android:id="@+id/announcementDetailedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="?android:attr/textColorSecondaryInverse"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/announcementDetailedImageView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

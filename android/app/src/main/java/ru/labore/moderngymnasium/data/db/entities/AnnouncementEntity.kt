@@ -62,9 +62,9 @@ class AnnouncementEntity(
         parcel.writeString(text)
         parcel.writeString(createdAt.toString())
         parcel.writeString(updatedAt.toString())
-        parcel.writeParcelable(author, 0)
-        parcel.writeParcelable(authorRole, 0)
-        parcel.writeParcelable(authorClass, 0)
+        parcel.writeParcelable(author, flags)
+        parcel.writeParcelable(authorRole, flags)
+        parcel.writeParcelable(authorClass, flags)
 
     }
 

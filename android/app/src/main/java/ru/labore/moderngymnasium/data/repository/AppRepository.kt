@@ -1,6 +1,8 @@
 package ru.labore.moderngymnasium.data.repository
 
 import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
@@ -26,11 +28,38 @@ data class DeferredAnnouncementInfo(
     val roles: HashMap<Int, Deferred<RoleEntity?>>
 )
 
-data class AnnouncementsWithCount(
+class AnnouncementsWithCount(
     val overallCount: Int,
     var currentCount: Int,
     val data: Array<AnnouncementEntity>
-)
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.createTypedArray(AnnouncementEntity.CREATOR) ?: emptyArray()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(overallCount)
+        parcel.writeInt(currentCount)
+        parcel.writeTypedArray(data, flags)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<AnnouncementsWithCount> {
+        override fun createFromParcel(parcel: Parcel): AnnouncementsWithCount {
+            return AnnouncementsWithCount(parcel)
+        }
+
+        override fun newArray(size: Int): Array<AnnouncementsWithCount?> {
+            return arrayOfNulls(size)
+        }
+    }
+
+}
 
 class JsonSerializerImpl : JsonSerializer<ZonedDateTime> {
     override fun serialize(

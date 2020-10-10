@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,8 +17,8 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
+import ru.labore.moderngymnasium.data.repository.AnnouncementsWithCount
 import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
-import ru.labore.moderngymnasium.ui.activities.LoginActivity
 import ru.labore.moderngymnasium.ui.adapters.MainRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.ScopedFragment
 import kotlin.properties.Delegates
@@ -45,7 +46,7 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        bindUI()
+        bindUI(savedInstanceState)
 
         viewModel.appRepository.inboxAnnouncement.observe(viewLifecycleOwner) {
             viewAdapter.prependAnnouncement(it)
@@ -81,15 +82,14 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
         inboxRefreshLayout.isRefreshing = false
     }
 
-    private fun bindUI() = launch {
-        val divider = DividerItemDecoration(requireContext(), viewManager.orientation)
-        val announcements = viewModel.announcements.await()
+    private fun bindUI(savedInstanceState: Bundle?) = launch {
+        val announcements = savedInstanceState?.getParcelable("announcements") ?:
+            viewModel.announcements.await()
+
         val params =
             inboxProgressBar.layoutParams as ConstraintLayout.LayoutParams
 
         loading = false
-
-        inboxRecyclerView.addItemDecoration(divider)
 
         overallCount = announcements.overallCount
         currentCount = announcements.currentCount
@@ -117,10 +117,22 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
         }
 
         inboxRecyclerView.apply {
+            val divider = DividerItemDecoration(requireContext(), viewManager.orientation)
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.inbox_recycler_view_divider,
+                null
+            )?.let {
+                divider.setDrawable(it)
+            }
+
+            addItemDecoration(divider)
             setHasFixedSize(true)
 
             layoutManager = viewManager
             adapter = viewAdapter
+
+            scrollBy(0, savedInstanceState?.getInt("scrollY") ?: 0)
 
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -135,5 +147,15 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
                 }
             })
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt("scrollY", inboxRecyclerView.computeVerticalScrollOffset())
+        outState.putParcelable("announcements", AnnouncementsWithCount(
+            overallCount,
+            currentCount,
+            viewAdapter.announcements.toTypedArray()
+        ))
+        super.onSaveInstanceState(outState)
     }
 }
