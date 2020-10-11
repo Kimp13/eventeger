@@ -97,6 +97,14 @@ class AppRepository(
     private val classEntityDao: ClassEntityDao,
     private val appNetwork: AppNetwork
 ) {
+    companion object {
+        val HTTP_RESPONSE_CODE_FORBIDDEN = 403
+        val HTTP_RESPONSE_CODE_UNAUTHORIZED = 401
+        val INTERNET_ERROR_SERVER_DOWN = 1
+        val INTERNET_ERROR_NO_CONNECTION = -1
+        val INTERNET_ERROR_NO_INTERNET = 0
+    }
+
     val inboxAnnouncement: MutableLiveData<AnnouncementEntity> =
         MutableLiveData()
 
@@ -207,93 +215,107 @@ class AppRepository(
             HashMap(),
             HashMap()
         ),
-        forceFetch: Boolean = false
+        forceFetch: Boolean? = false
     ) {
-        val oneDayBefore = ZonedDateTime.now().minusDays(1)
-        if (!forceFetch) {
-            entity.author = userEntityDao
-                .getUser(entity.authorId)
-        }
-
-        if (
-            forceFetch ||
-            entity.author
-                ?.updatedAt
-                ?.isBefore(oneDayBefore) != false
-        ) {
-            if (!updated.users.containsKey(entity.authorId)) {
-                updated.users[entity.authorId] = fetchDeferredUser(
-                    entity.authorId
-                )
+        if (forceFetch != null) {
+            val oneDayBefore = ZonedDateTime.now().minusDays(1)
+            if (forceFetch) {
+                entity.author = userEntityDao
+                    .getUser(entity.authorId)
             }
 
-            entity.author =
-                updated.users[entity.authorId]?.await()
-
-            persistFetchedUser(entity.author!!)
-        }
-
-        if (entity.author != null) {
-            val weekBefore = ZonedDateTime.now().minusWeeks(1)
-
-            if (entity.author!!.roleId != null) {
-                if (!forceFetch) {
-                    entity.authorRole = roleEntityDao.getRole(
-                        entity.author!!.roleId!!
+            if (
+                forceFetch ||
+                entity.author
+                    ?.updatedAt
+                    ?.isBefore(oneDayBefore) != false
+            ) {
+                if (!updated.users.containsKey(entity.authorId)) {
+                    updated.users[entity.authorId] = fetchDeferredUser(
+                        entity.authorId
                     )
                 }
 
-                if (
-                    forceFetch ||
-                    entity.authorRole
-                        ?.updatedAt
-                        ?.isBefore(weekBefore) != false
-                ) {
+                entity.author =
+                    updated.users[entity.authorId]?.await()
+
+                persistFetchedUser(entity.author!!)
+            }
+
+            if (entity.author != null) {
+                val weekBefore = ZonedDateTime.now().minusWeeks(1)
+
+                if (entity.author!!.roleId != null) {
+                    if (!forceFetch) {
+                        entity.authorRole = roleEntityDao.getRole(
+                            entity.author!!.roleId!!
+                        )
+                    }
+
                     if (
-                        !updated.roles.containsKey(entity.author!!.roleId)
+                        forceFetch ||
+                        entity.authorRole
+                            ?.updatedAt
+                            ?.isBefore(weekBefore) != false
                     ) {
-                        updated.roles[entity.author!!.roleId!!] =
-                            fetchDeferredRole(entity.author!!.roleId!!)
+                        if (
+                            !updated.roles.containsKey(entity.author!!.roleId)
+                        ) {
+                            updated.roles[entity.author!!.roleId!!] =
+                                fetchDeferredRole(entity.author!!.roleId!!)
+                        }
+
+                        entity.authorRole =
+                            updated.roles[entity.author!!.roleId!!]?.await()
+
+                        if (entity.authorRole != null) {
+                            persistFetchedRole(
+                                entity.authorRole!!
+                            )
+                        }
+                    }
+                }
+
+                if (entity.author!!.classId != null) {
+                    if (!forceFetch) {
+                        entity.authorClass = classEntityDao.getClass(
+                            entity.author!!.classId!!
+                        )
                     }
 
-                    entity.authorRole =
-                        updated.roles[entity.author!!.roleId!!]?.await()
+                    if (
+                        forceFetch ||
+                        entity.authorClass
+                            ?.updatedAt
+                            ?.isBefore(weekBefore) != false
+                    ) {
+                        if (!updated.classes.containsKey(entity.author!!.classId)) {
+                            updated.classes[entity.author!!.classId!!] =
+                                fetchDeferredClass(entity.author!!.classId!!)
+                        }
 
-                    if (entity.authorRole != null) {
-                        persistFetchedRole(
-                            entity.authorRole!!
-                        )
+                        entity.authorClass =
+                            updated.classes[entity.author!!.classId!!]?.await()
+
+                        if (entity.authorClass != null) {
+                            persistFetchedClass(
+                                entity.authorClass!!
+                            )
+                        }
                     }
                 }
             }
-
-            if (entity.author!!.classId != null) {
-                if (!forceFetch) {
-                    entity.authorClass = classEntityDao.getClass(
-                        entity.author!!.classId!!
-                    )
-                }
-
-                if (
-                    forceFetch ||
-                    entity.authorClass
-                        ?.updatedAt
-                        ?.isBefore(weekBefore) != false
-                ) {
-                    if (!updated.classes.containsKey(entity.author!!.classId)) {
-                        updated.classes[entity.author!!.classId!!] =
-                            fetchDeferredClass(entity.author!!.classId!!)
-                    }
-
-                    entity.authorClass =
-                        updated.classes[entity.author!!.classId!!]?.await()
-
-                    if (entity.authorClass != null) {
-                        persistFetchedClass(
-                            entity.authorClass!!
-                        )
-                    }
-                }
+        } else {
+            entity.author = userEntityDao.getUser(entity.authorId)
+            entity.authorRole = if (entity.author?.roleId != null) {
+                roleEntityDao.getRole(entity.author!!.roleId!!)
+            } else {
+                null
+            }
+            entity.authorClass = if (entity.author?.classId != null) {
+                classEntityDao.getClass(entity.author!!.classId!!)
+            } else {
+                null
             }
         }
     }
@@ -352,7 +374,7 @@ class AppRepository(
         if (
             announcement?.updatedAt?.isAfter(now) != false ||
             announcement.updatedAt!!.isBefore(tenMinutesBefore)
-                ) {
+        ) {
             announcement = appNetwork.fetchAnnouncement(user!!.jwt, id, gson)
         }
 
@@ -366,7 +388,7 @@ class AppRepository(
     suspend fun getAnnouncements(
         offset: Int = 0,
         limit: Int = 25,
-        forceFetch: Boolean = false
+        forceFetch: Boolean? = false
     ): AnnouncementsWithCount {
         val announcements: AnnouncementsWithCount
 
@@ -374,15 +396,17 @@ class AppRepository(
             return AnnouncementsWithCount(0, 0, emptyArray())
         }
 
-        val isNeededToUpdate: Boolean = if (forceFetch) {
-            true
-        } else {
-            val announcement: AnnouncementEntity? = announcementEntityDao.getAnnouncementAtOffset(offset)
-            val now: ZonedDateTime = ZonedDateTime.now()
-            val tenMinutesBefore = now.minusMinutes(10)
+        val isNeededToUpdate: Boolean = when (forceFetch) {
+            true -> true
+            false -> {
+                val announcement: AnnouncementEntity? = announcementEntityDao.getAnnouncementAtOffset(offset)
+                val now: ZonedDateTime = ZonedDateTime.now()
+                val tenMinutesBefore = now.minusMinutes(10)
 
-            announcement?.updatedAt?.isAfter(now) != false ||
-                    announcement.updatedAt!!.isBefore(tenMinutesBefore)
+                announcement?.updatedAt?.isAfter(now) != false ||
+                        announcement.updatedAt!!.isBefore(tenMinutesBefore)
+            }
+            else -> false
         }
 
         if (isNeededToUpdate) {

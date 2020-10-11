@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
@@ -17,10 +18,15 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
+import ru.labore.moderngymnasium.data.network.ClientConnectionException
+import ru.labore.moderngymnasium.data.network.ClientErrorException
 import ru.labore.moderngymnasium.data.repository.AnnouncementsWithCount
+import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
+import ru.labore.moderngymnasium.ui.activities.LoginActivity
 import ru.labore.moderngymnasium.ui.adapters.MainRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.ScopedFragment
+import java.net.ConnectException
 import kotlin.properties.Delegates
 
 class MenuInboxFragment : ScopedFragment(), DIAware {
@@ -33,7 +39,7 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
 
     private var loading = true
     private var overallCount by Delegates.notNull<Int>()
-    private var currentCount by Delegates.notNull<Int>()
+    private var currentCount = 0
     private lateinit var viewAdapter: MainRecyclerViewAdapter
 
     override fun onCreateView(
@@ -53,12 +59,43 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
         }
     }
 
+    private suspend fun getAnnouncements(
+        offset: Int = currentCount,
+        forceFetch: Boolean = false
+    ): AnnouncementsWithCount =
+        try {
+            viewModel.getAnnouncements(offset, forceFetch)
+        } catch(e: Exception) {
+            val activity = requireActivity()
+
+            Toast.makeText(
+                activity,
+                when (e) {
+                    is ConnectException -> getString(R.string.server_unavailable)
+                    is ClientConnectionException -> getString(R.string.no_internet)
+                    is ClientErrorException -> {
+                        if (e.errorCode == AppRepository.HTTP_RESPONSE_CODE_UNAUTHORIZED) {
+                            viewModel.cleanseUser()
+                            startActivity(Intent(activity, LoginActivity::class.java))
+                            activity.finish()
+                        }
+
+                        getString(R.string.invalid_credentials)
+                    }
+                    else -> "An unknown error occurred."
+                },
+                Toast.LENGTH_SHORT
+            ).show()
+
+            viewModel.getAnnouncements(offset, null)
+        }
+
     private fun addNewAnnouncements() = launch {
         if (!loading) {
             loading = true
             inboxProgressBar.visibility = View.VISIBLE
 
-            val newAnnouncements = viewModel.getAnnouncements(currentCount)
+            val newAnnouncements = getAnnouncements()
 
             currentCount += newAnnouncements.currentCount
 
@@ -70,9 +107,7 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
     }
 
     private fun refreshUI() = launch {
-        val announcements = viewModel
-            .appRepository
-            .getAnnouncements(0, 25, true)
+        val announcements = getAnnouncements(0, true)
 
         currentCount = announcements.currentCount
         overallCount = announcements.overallCount
@@ -84,7 +119,7 @@ class MenuInboxFragment : ScopedFragment(), DIAware {
 
     private fun bindUI(savedInstanceState: Bundle?) = launch {
         val announcements = savedInstanceState?.getParcelable("announcements") ?:
-            viewModel.announcements.await()
+            getAnnouncements()
 
         val params =
             inboxProgressBar.layoutParams as ConstraintLayout.LayoutParams

@@ -14,9 +14,10 @@ class MenuInboxViewModel(
     override val di: DI by lazy { (application as DIAware).di }
     val appRepository: AppRepository by instance()
 
-    val announcements by lazyDeferred {
-        appRepository.getAnnouncements()
+    fun cleanseUser() {
+        appRepository.user = null
     }
 
-    suspend fun getAnnouncements(offset: Int) = appRepository.getAnnouncements(offset)
+    suspend fun getAnnouncements(offset: Int, forceFetch: Boolean? = false) =
+        appRepository.getAnnouncements(offset, 25, forceFetch)
 }

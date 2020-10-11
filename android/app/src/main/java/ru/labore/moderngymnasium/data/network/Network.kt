@@ -15,6 +15,8 @@ import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.db.entities.ClassEntity
 import ru.labore.moderngymnasium.data.db.entities.RoleEntity
 import ru.labore.moderngymnasium.data.db.entities.UserEntity
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 
 class AppNetwork(context: Context) : Interceptor {
     private val appContext = context.applicationContext
@@ -93,13 +95,19 @@ class AppNetwork(context: Context) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         if (isOnline()) {
-            val response = chain.proceed(chain.request())
+            try {
+                val response = chain.proceed(chain.request())
 
-            if (response.code() in 400..499) {
-                throw ClientErrorException(response.code())
+                if (response.code() in 400..499) {
+                    throw ClientErrorException(response.code())
+                } else if (response.code() in 500..599) {
+                    throw ConnectException()
+                }
+
+                return response
+            } catch(e: SocketTimeoutException) {
+                throw ConnectException()
             }
-
-            return response
         } else {
             throw ClientConnectionException()
         }

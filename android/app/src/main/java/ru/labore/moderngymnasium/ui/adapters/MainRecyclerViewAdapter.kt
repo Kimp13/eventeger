@@ -15,6 +15,14 @@ import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 
+fun isWordCharacter(character: Char): Boolean = when(character.toInt()) {
+    in 0..47 -> false
+    in 58..64 -> false
+    in 91..96 -> false
+    in 123..126 -> false
+    else -> true
+}
+
 fun trimTextTo(text: String, amount: Int): String {
     if (text.length <= amount) {
         return text
@@ -22,14 +30,14 @@ fun trimTextTo(text: String, amount: Int): String {
 
     var i = amount
 
-    while (text[--i].toInt() > 32) {
+    while (isWordCharacter(text[--i])) {
         if (i == 0) {
             return "${text.substring(0, amount)}…"
         }
     }
 
     val indexAfterFirstLoop = i
-    while(text[--i].toInt() <= 32) {
+    while(isWordCharacter(text[--i])) {
         if (i == 0) {
             return "${text.substring(indexAfterFirstLoop + 1)}…"
         }
