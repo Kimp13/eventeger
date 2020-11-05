@@ -19,7 +19,10 @@ module.exports = permissionsArray => {
           ], [permission.role_id]);
         }
       } else {
-        set(permissionObject, permission.type, permission.operation);
+        set(permissionObject, [
+          permission.type,
+          permission.operation
+        ], true);
       }
     } else {
       set(permissionObject, permission.type, true);

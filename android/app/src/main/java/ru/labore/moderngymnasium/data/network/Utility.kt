@@ -14,361 +14,264 @@ import ru.labore.moderngymnasium.data.db.entities.RoleEntity
 import ru.labore.moderngymnasium.data.db.entities.UserEntity
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 
-data class UserCredentials(val username: String, val password: String)
-
-data class AnnouncementTextAndRecipients(
-    val text: String,
-    val recipients: HashMap<Int, MutableList<Int>>
-)
-
-data class TokenPayload(val token: String)
-
-data class CountResponse(val count: Int)
-
-interface SignIn {
-    @POST("users/signin")
-    suspend fun signIn(@Body body: UserCredentials): User?
-
+class Utility(
+    private val context: Context,
+    requestInterceptor: Interceptor,
+    private val gson: Gson
+) {
     companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            username: String,
-            password: String
-        ): User? {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
+        data class UserCredentials(val username: String, val password: String)
 
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(SignIn::class.java)
-                .signIn(UserCredentials(username, password))
+        data class AnnouncementTextAndRecipients(
+            val text: String,
+            val recipients: HashMap<Int, MutableList<Int>>
+        )
+
+        data class TokenPayload(val token: String)
+
+        data class CountResponse(val count: Int)
+
+        private interface SignIn {
+            @POST("users/signin")
+            suspend fun signIn(@Body body: UserCredentials): User?
+        }
+
+        private interface CreateAnnouncement {
+            @POST("announcements/create")
+            suspend fun createAnnouncement(
+                @Header("Authentication") jwt: String,
+                @Body body: AnnouncementTextAndRecipients
+            )
+        }
+
+        private interface PushToken {
+            @POST("tokens/add")
+            suspend fun pushToken(
+                @Header("Authentication") jwt: String,
+                @Body body: TokenPayload
+            )
+        }
+
+        private interface FetchAnnouncement {
+            @GET("announcements/get")
+            suspend fun fetch(
+                @Header("Authentication") jwt: String,
+                @Query("id") id: Int
+            ): AnnouncementEntity?
+        }
+
+        private interface FetchAnnouncements {
+            @GET("announcements/getMine")
+            suspend fun fetch(
+                @Header("Authentication") jwt: String,
+                @Query("offset") offset: Int,
+                @Query("limit") limit: Int
+            ): Array<AnnouncementEntity>
+        }
+
+        private interface CountAnnouncements {
+            @GET("announcements/countMine")
+            suspend fun count(
+                @Header("Authentication") jwt: String
+            ): CountResponse
+        }
+
+        private interface FetchUser {
+            @GET("users")
+            suspend fun fetch(@Query("id") id: Int): UserEntity?
+        }
+
+        private interface FetchRole {
+            @GET("roles")
+            suspend fun fetch(@Query("id") id: Int): RoleEntity?
+        }
+
+        private interface FetchAllRoles {
+            @GET("roles/all")
+            suspend fun fetch(
+                @Header("Authentication") jwt: String
+            ): Array<RoleEntity?>
+        }
+
+        private interface FetchClass {
+            @GET("class")
+            suspend fun fetch(@Query("id") id: Int): ClassEntity?
         }
     }
-}
 
-interface CreateAnnouncement {
-    @POST("announcements/create")
+    private val okHttpClient = OkHttpClient
+        .Builder()
+        .addInterceptor(requestInterceptor)
+        .build()
+
+    suspend fun signIn(
+        username: String,
+        password: String
+    ): User? = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(SignIn::class.java)
+        .signIn(UserCredentials(username, password))
+
     suspend fun createAnnouncement(
-        @Header("Authentication") jwt: String,
-        @Body body: AnnouncementTextAndRecipients
-    )
+        jwt: String,
+        text: String,
+        recipients: HashMap<Int, MutableList<Int>>
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(CreateAnnouncement::class.java)
+        .createAnnouncement(
+            jwt,
+            AnnouncementTextAndRecipients(text, recipients)
+        )
 
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            jwt: String,
-            text: String,
-            recipients: HashMap<Int, MutableList<Int>>
-        ) {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(CreateAnnouncement::class.java)
-                .createAnnouncement(
-                    jwt,
-                    AnnouncementTextAndRecipients(text, recipients)
-                )
-        }
-    }
-}
-
-interface PushToken {
-    @POST("tokens/add")
     suspend fun pushToken(
-        @Header("Authentication") jwt: String,
-        @Body body: TokenPayload
-    )
+        jwt: String,
+        token: String
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(PushToken::class.java)
+        .pushToken(
+            jwt,
+            TokenPayload(token)
+        )
 
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            jwt: String,
-            token: String
-        ) {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
+    suspend fun fetchAnnouncement(
+        jwt: String,
+        id: Int
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(FetchAnnouncement::class.java)
+        .fetch(
+            jwt,
+            id
+        )
 
-            Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(PushToken::class.java)
-                .pushToken(
-                    jwt,
-                    TokenPayload(token)
-                )
-        }
-    }
+    suspend fun fetchAnnouncements(
+        jwt: String,
+        offset: Int,
+        limit: Int
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(FetchAnnouncements::class.java)
+        .fetch(
+            jwt,
+            offset,
+            limit
+        )
+
+    suspend fun countAnnouncements(
+        jwt: String
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(CountAnnouncements::class.java)
+        .count(
+            jwt
+        ).count
+
+    suspend fun fetchUser(
+        id: Int
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(FetchUser::class.java)
+        .fetch(id)
+
+    suspend fun fetchRole(
+        id: Int
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(FetchRole::class.java)
+        .fetch(id)
+
+    suspend fun fetchAllRoles(jwt: String) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+        .create(FetchAllRoles::class.java)
+        .fetch(jwt)
+
+    suspend fun fetchClass(
+        id: Int
+    ) = Retrofit
+        .Builder()
+        .client(okHttpClient)
+        .baseUrl(
+            context
+                .resources
+                .getString(R.string.api_url)
+        )
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(FetchClass::class.java)
+        .fetch(id)
 }
 
-interface FetchAnnouncement {
-    @GET("announcements/get")
-    suspend fun fetch(
-        @Header("Authentication") jwt: String,
-        @Query("id") id: Int
-    ): AnnouncementEntity?
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            gson: Gson,
-            jwt: String,
-            id: Int
-        ): AnnouncementEntity? {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build()
-                .create(FetchAnnouncement::class.java)
-                .fetch(
-                    jwt,
-                    id
-                )
-        }
-    }
-}
-
-interface FetchAnnouncements {
-    @GET("announcements/getMine")
-    suspend fun fetch(
-        @Header("Authentication") jwt: String,
-        @Query("offset") offset: Int,
-        @Query("limit") limit: Int
-    ): Array<AnnouncementEntity>
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            gson: Gson,
-            jwt: String,
-            offset: Int,
-            limit: Int
-        ): Array<AnnouncementEntity> {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build()
-                .create(FetchAnnouncements::class.java)
-                .fetch(
-                    jwt,
-                    offset,
-                    limit
-                )
-        }
-    }
-}
-
-interface CountAnnouncements {
-    @GET("announcements/countMine")
-    suspend fun count(
-        @Header("Authentication") jwt: String
-    ): CountResponse
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            jwt: String
-        ): Int {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(CountAnnouncements::class.java)
-                .count(
-                    jwt
-                ).count
-        }
-    }
-}
-
-interface FetchUser {
-    @GET("users")
-    suspend fun fetch(@Query("id") id: Int): UserEntity?
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            id: Int
-        ): UserEntity? {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(FetchUser::class.java)
-                .fetch(id)
-        }
-    }
-}
-
-interface FetchRole {
-    @GET("roles")
-    suspend fun fetch(@Query("id") id: Int): RoleEntity?
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            id: Int
-        ): RoleEntity? {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(FetchRole::class.java)
-                .fetch(id)
-        }
-    }
-}
-
-interface FetchAllRoles {
-    @GET("roles/all")
-    suspend fun fetch(): Array<RoleEntity?>
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor
-        ): Array<RoleEntity?> {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(FetchAllRoles::class.java)
-                .fetch()
-        }
-    }
-}
-
-interface FetchClass {
-    @GET("class")
-    suspend fun fetch(@Query("id") id: Int): ClassEntity?
-
-    companion object {
-        suspend operator fun invoke(
-            context: Context,
-            requestInterceptor: Interceptor,
-            id: Int
-        ): ClassEntity? {
-            val okHttpClient = OkHttpClient
-                .Builder()
-                .addInterceptor(requestInterceptor)
-                .build()
-
-            return Retrofit
-                .Builder()
-                .client(okHttpClient)
-                .baseUrl(
-                    context
-                        .resources
-                        .getString(R.string.api_url)
-                )
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(FetchClass::class.java)
-                .fetch(id)
-        }
-    }
-}

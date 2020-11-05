@@ -3,6 +3,7 @@ package ru.labore.moderngymnasium.ui.activities
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.viewpager2.widget.ViewPager2
@@ -17,7 +18,7 @@ import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.adapters.MainFragmentPagerAdapter
 import ru.labore.moderngymnasium.ui.create.CreateFragment
 
-class MainActivity : FragmentActivity(), DIAware {
+class MainActivity : AppCompatActivity(), DIAware {
     override val di: DI by lazy { (applicationContext as DIAware).di }
 
     private lateinit var viewPagerAdapter: MainFragmentPagerAdapter
@@ -32,8 +33,6 @@ class MainActivity : FragmentActivity(), DIAware {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
-            setActionBar(toolbar)
-
             viewPagerAdapter = MainFragmentPagerAdapter(supportFragmentManager, lifecycle)
             navHostFragment.adapter = viewPagerAdapter
             navHostFragment.registerOnPageChangeCallback(object :

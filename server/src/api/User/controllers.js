@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const pick = require('lodash/pick');
 const jsonify = require("../../../utils/searchToJson");
 const parsePermissions = require('../../../utils/permissionArrayToObject');
+const getPermission = require('../../../utils/getPermission');
 
 module.exports = {
   find: async (req, res) => {

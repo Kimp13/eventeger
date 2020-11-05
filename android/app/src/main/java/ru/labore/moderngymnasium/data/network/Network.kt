@@ -4,13 +4,8 @@ import android.content.Context
 import android.net.ConnectivityManager
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
-import kotlinx.coroutines.*
 import okhttp3.Interceptor
 import okhttp3.Response
-import org.threeten.bp.ZonedDateTime
-import ru.labore.moderngymnasium.data.db.daos.ClassEntityDao
-import ru.labore.moderngymnasium.data.db.daos.RoleEntityDao
-import ru.labore.moderngymnasium.data.db.daos.UserEntityDao
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.db.entities.ClassEntity
 import ru.labore.moderngymnasium.data.db.entities.RoleEntity
@@ -18,8 +13,9 @@ import ru.labore.moderngymnasium.data.db.entities.UserEntity
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 
-class AppNetwork(context: Context) : Interceptor {
+class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
     private val appContext = context.applicationContext
+    private val utility = Utility(appContext, this, gson)
     val fetchedAnnouncementEntities = MutableLiveData<Array<AnnouncementEntity>>()
     val fetchedUserEntity = MutableLiveData<UserEntity>()
     val fetchedRoleEntity = MutableLiveData<RoleEntity>()
@@ -28,72 +24,47 @@ class AppNetwork(context: Context) : Interceptor {
     suspend fun pushToken(
         jwt: String,
         token: String
-    ) = PushToken(
-        appContext,
-        this,
-        jwt,
-        token
-    )
+    ) = utility.pushToken(jwt, token)
 
     suspend fun fetchAnnouncement(
         jwt: String,
-        id: Int,
-        gson: Gson
-    ) = FetchAnnouncement(
-        appContext,
-        this,
-        gson,
-        jwt,
-        id
-    )
+        id: Int
+    ) = utility.fetchAnnouncement(jwt, id)
 
     suspend fun fetchAnnouncements(
         jwt: String,
         offset: Int,
-        limit: Int,
-        gson: Gson
-    ) = FetchAnnouncements(
-        appContext,
-        this,
-        gson,
-        jwt,
-        offset,
-        limit
-    )
+        limit: Int
+    ) = utility.fetchAnnouncements(jwt, offset, limit)
 
     suspend fun countAnnouncements(
         jwt: String
-    ) = CountAnnouncements(
-        appContext,
-        this,
-        jwt
-    )
+    ) = utility.countAnnouncements(jwt)
+
+    suspend fun createAnnouncement(
+        jwt: String,
+        text: String,
+        recipients: HashMap<Int, MutableList<Int>>
+    ) = utility.createAnnouncement(jwt, text, recipients)
+
+    suspend fun signIn(
+        username: String,
+        password: String
+    ) = utility.signIn(username, password)
 
     suspend fun fetchUser(
         id: Int
-    ) = FetchUser(
-        appContext,
-        this,
-        id
-    )
+    ) = utility.fetchUser(id)
 
     suspend fun fetchRole(
         id: Int
-    ) = FetchRole(
-        appContext,
-        this,
-        id
-    )
+    ) = utility.fetchRole(id)
 
-    suspend fun fetchAllRoles() = FetchAllRoles(appContext, this)
+    suspend fun fetchAllRoles(jwt: String) = utility.fetchAllRoles(jwt)
 
     suspend fun fetchClass(
         id: Int
-    ) = FetchClass(
-        appContext,
-        this,
-        id
-    )
+    ) = utility.fetchClass(id)
 
     override fun intercept(chain: Interceptor.Chain): Response {
         if (isOnline()) {

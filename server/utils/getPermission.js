@@ -1,5 +1,5 @@
 module.exports = (permissions, required) => {
-  if (permissions.hasOwnProperty('*')) return true;
+  if (permissions['*']) return true;
 
   let i = 0;
   let current = permissions[required[i++]];

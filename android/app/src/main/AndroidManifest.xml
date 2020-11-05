@@ -49,9 +49,6 @@
 
         <activity android:name=".ui.activities.AnnouncementDetailedActivity"
             android:theme="@style/AppThemeWithActionBar" />
-
-        <activity android:name=".ui.create.AnnouncementCreateActivity"
-            android:theme="@style/AppThemeWithoutActionBar" />
     </application>
 
 </manifest>

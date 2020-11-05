@@ -8,16 +8,29 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.gson.GsonBuilder
 import com.jakewharton.threetenabp.AndroidThreeTen
 import org.kodein.di.*
 import org.kodein.di.android.x.androidXModule
+import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.data.db.AppDatabase
 import ru.labore.moderngymnasium.data.network.AppNetwork
 import ru.labore.moderngymnasium.data.repository.AppRepository
-import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
+import ru.labore.moderngymnasium.data.sharedpreferences.entities.AllPermissions
+import ru.labore.moderngymnasium.utils.JsonDateDeserializerImpl
+import ru.labore.moderngymnasium.utils.JsonDateSerializerImpl
+import ru.labore.moderngymnasium.utils.JsonPermissionsDeserializerImpl
+import ru.labore.moderngymnasium.utils.JsonPermissionsSerializerImpl
 
 class MGApplication : Application(), DIAware, LifecycleObserver {
     override val di = DI.lazy {
+        val gson = GsonBuilder()
+            .registerTypeAdapter(ZonedDateTime::class.java, JsonDateSerializerImpl())
+            .registerTypeAdapter(ZonedDateTime::class.java, JsonDateDeserializerImpl())
+            .registerTypeAdapter(AllPermissions::class.java, JsonPermissionsSerializerImpl())
+            .registerTypeAdapter(AllPermissions::class.java, JsonPermissionsDeserializerImpl())
+            .create()
+
         import(androidXModule(this@MGApplication))
 
         bind() from singleton { AppDatabase(instance()) }
@@ -25,14 +38,15 @@ class MGApplication : Application(), DIAware, LifecycleObserver {
         bind() from singleton { instance<AppDatabase>().userEntityDao() }
         bind() from singleton { instance<AppDatabase>().roleEntityDao() }
         bind() from singleton { instance<AppDatabase>().classEntityDao() }
-        bind() from singleton { AppNetwork(instance()) }
+        bind() from singleton { AppNetwork(instance(), gson) }
         bind() from singleton { AppRepository(
             instance(),
             instance(),
             instance(),
             instance(),
             instance(),
-            instance()
+            instance(),
+            gson
         ) }
     }
     private val repository: AppRepository by instance()

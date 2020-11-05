@@ -8,15 +8,15 @@
         <item name="buttonStyle">@style/AppButtonStyle</item>
         <item name="materialButtonStyle">@style/AppButtonStyle</item>
         <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="colorControlNormal">@color/colorPrimary</item>
+        <item name="colorControlActivated">@color/colorAccent</item>
+        <item name="cardViewStyle">@style/AppMaterialCardViewStyle</item>
+        <item name="materialCardViewStyle">@style/AppMaterialCardViewStyle</item>
     </style>
 
     <style name="AppThemeWithoutActionBar" parent="AppTheme">s
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="colorControlNormal">@color/colorPrimary</item>
-        <item name="colorControlActivated">@color/colorAccent</item>
-        <item name="cardViewStyle">@style/AppMaterialCardViewStyle</item>
-        <item name="materialCardViewStyle">@style/AppMaterialCardViewStyle</item>
     </style>
 
     <style name="AppThemeWithActionBar" parent="AppTheme">
@@ -24,6 +24,11 @@
     </style>
 
     <style name="AppActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
+        <item name="background">@color/colorPrimaryDark</item>
+        <item name="titleTextColor">@color/colorPrimary</item>
+    </style>
+
+    <style name="AppToolbar" parent="Widget.MaterialComponents.Toolbar">
         <item name="background">@color/colorPrimaryDark</item>
         <item name="titleTextColor">@color/colorPrimary</item>
     </style>

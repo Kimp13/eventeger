@@ -111,7 +111,7 @@ class CreateFragment : ScopedFragment(), DIAware {
         if (announcementText != null) {
             createAnnouncementEditText.setText(announcementText)
         }
-        println("Hello, World!")
+
         roles.forEach { role ->
             val checkboxLayout: View
 

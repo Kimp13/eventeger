@@ -1,4 +1,5 @@
 const jsonify = require("../../../utils/searchToJson");
+const getUser = require('../../../utils/getUser');
 const getPermission = require("../../../utils/getPermission");
 
 module.exports = {
@@ -22,10 +23,13 @@ module.exports = {
   },
 
   findAll: async (req, res) => {
-    const user = getUser(req.headers.authentication);
+    const user = await getUser(req.headers.authentication);
 
     if (user) {
-      const permission = getPermission(user.permissions, ['*']);
+      const permission = getPermission(user.permissions, [
+        'announcement',
+        'create'
+      ]);
 
       if (permission === true) {
         res.statusCode = 200;

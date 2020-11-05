@@ -18,6 +18,7 @@ import ru.labore.moderngymnasium.data.db.daos.RoleEntityDao
 import ru.labore.moderngymnasium.data.db.daos.UserEntityDao
 import ru.labore.moderngymnasium.data.db.entities.*
 import ru.labore.moderngymnasium.data.network.*
+import ru.labore.moderngymnasium.data.sharedpreferences.entities.ActionPermissions
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 import java.lang.reflect.Type
@@ -61,41 +62,14 @@ class AnnouncementsWithCount(
 
 }
 
-class JsonSerializerImpl : JsonSerializer<ZonedDateTime> {
-    override fun serialize(
-        src: ZonedDateTime?,
-        typeOfSrc: Type?,
-        context: JsonSerializationContext?
-    ): JsonElement {
-        return if (src == null) {
-            JsonPrimitive("")
-        } else {
-            JsonPrimitive(src.toString())
-        }
-    }
-}
-
-class JsonDeserializerImpl : JsonDeserializer<ZonedDateTime> {
-    override fun deserialize(
-        json: JsonElement?,
-        typeOfT: Type?,
-        context: JsonDeserializationContext?
-    ): ZonedDateTime {
-        return if (json == null) {
-            ZonedDateTime.ofInstant(Instant.ofEpochSecond(0), ZoneOffset.UTC)
-        } else {
-            ZonedDateTime.parse(json.asString)
-        }
-    }
-}
-
 class AppRepository(
     private val context: Context,
     private val announcementEntityDao: AnnouncementEntityDao,
     private val userEntityDao: UserEntityDao,
     private val roleEntityDao: RoleEntityDao,
     private val classEntityDao: ClassEntityDao,
-    private val appNetwork: AppNetwork
+    private val appNetwork: AppNetwork,
+    private val gson: Gson
 ) {
     companion object {
         const val HTTP_RESPONSE_CODE_UNAUTHORIZED = 401
@@ -109,10 +83,6 @@ class AppRepository(
     var unreadAnnouncements: MutableList<AnnouncementEntity> = mutableListOf()
     var unreadAnnouncementsPushListener: ((AnnouncementEntity) -> Unit)? = null
 
-    private val gson = GsonBuilder()
-        .registerTypeAdapter(ZonedDateTime::class.java, JsonSerializerImpl())
-        .registerTypeAdapter(ZonedDateTime::class.java, JsonDeserializerImpl())
-        .create()
     private val sharedPreferences = context.getSharedPreferences(
         context.getString(R.string.utility_shared_preference_file_key),
         Context.MODE_PRIVATE
@@ -171,7 +141,7 @@ class AppRepository(
     }
 
     suspend fun signIn(username: String, password: String) {
-        user = SignIn(context, appNetwork, username, password)
+        user = appNetwork.signIn(username, password)
         val editor = sharedPreferences.edit()
 
         pushToken()
@@ -184,9 +154,7 @@ class AppRepository(
         recipients: HashMap<Int, MutableList<Int>>
     ) {
         if (user?.jwt != null) {
-            CreateAnnouncement(
-                context,
-                appNetwork,
+            appNetwork.createAnnouncement(
                 user!!.jwt,
                 text,
                 recipients
@@ -376,7 +344,7 @@ class AppRepository(
             announcement?.updatedAt?.isAfter(now) != false ||
             announcement.updatedAt!!.isBefore(tenMinutesBefore)
         ) {
-            announcement = appNetwork.fetchAnnouncement(user!!.jwt, id, gson)
+            announcement = appNetwork.fetchAnnouncement(user!!.jwt, id)
         }
 
         if (announcement != null) {
@@ -417,8 +385,7 @@ class AppRepository(
                 appNetwork.fetchAnnouncements(
                     user!!.jwt,
                     offset,
-                    limit,
-                    gson
+                    limit
                 )
             )
 
@@ -451,9 +418,14 @@ class AppRepository(
     }
 
     suspend fun getUserRoles(): Array<RoleEntity?> = if (
+        user?.data?.permissions?.all == true ||
+        user?.data?.permissions?.announcement?.create?.all == true
+    ) {
+        appNetwork.fetchAllRoles(user!!.jwt)
+    }  else if (
         user?.data?.permissions?.announcement?.create != null
     ) {
-        getRoles(user!!.data.permissions!!.announcement!!.create!!)
+        getRoles(user!!.data.permissions!!.announcement!!.create!!.contents)
     } else {
         emptyArray()
     }
@@ -501,29 +473,25 @@ class AppRepository(
     }
 
     private suspend fun getRoles(rolesIds: Array<Int>): Array<RoleEntity?> {
-        return if (rolesIds[0] == -1) {
-            appNetwork.fetchAllRoles()
-        } else {
-            val result: Array<RoleEntity?> = arrayOfNulls(rolesIds.size)
+        val result: Array<RoleEntity?> = arrayOfNulls(rolesIds.size)
 
-            List(rolesIds.size) {
-                GlobalScope.launch {
-                    var role = roleEntityDao.getRole(rolesIds[it])
+        List(rolesIds.size) {
+            GlobalScope.launch {
+                var role = roleEntityDao.getRole(rolesIds[it])
 
-                    if (role == null) {
-                        role = appNetwork.fetchRole(rolesIds[it])
+                if (role == null) {
+                    role = appNetwork.fetchRole(rolesIds[it])
 
-                        if (role != null) {
-                            persistFetchedRole(role)
-                        }
+                    if (role != null) {
+                        persistFetchedRole(role)
                     }
-
-                    result[it] = role
                 }
-            }.joinAll()
 
-            result
-        }
+                result[it] = role
+            }
+        }.joinAll()
+
+        return result
     }
 
     private suspend fun persistFetchedAnnouncement(
