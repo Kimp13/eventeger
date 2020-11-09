@@ -70,7 +70,7 @@ const main = () => {
       };
 
       mg.paths = {};
-      mg.models = {};
+      mg.models = [];
       mg.services = {};
       mg.cache = {
         usersTokens: {},
@@ -94,7 +94,8 @@ const main = () => {
                   return;
                 }
 
-                mg.models[file] = require(modelPath);
+                const model = require(modelPath);
+                mg.models.push(model);
 
                 if (file.toLowerCase() === 'user') {
                   mg
@@ -159,10 +160,10 @@ const main = () => {
                 resolve();
               });
             })
-          ]).then(resolve);
+          ]).then(resolve, e => console.log(e));
         }))
       )
-        .then(addModels(knex, mg.models))
+        .then(() => addModels(knex, mg.models))
         .then(() => Promise.all([
           new Promise((resolve, reject) => {
             knex
@@ -300,9 +301,8 @@ const main = () => {
           app.listen(PORT, err => {
             if (err) console.log('error', err);
           });
-        }, e => {
-          console.log(e);
-        });
+        })
+        .catch(e => console.log(e));
     });
   });
 };

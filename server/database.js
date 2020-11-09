@@ -3,7 +3,178 @@
 import set from 'lodash/set';
 import get from 'lodash/get';
 
+const UTILITY_DATABASE_NAME = 'tables';
 const _models = {};
+let hasInitialized = false;
+
+const checkTable = (trx, model) => trx.schema
+  .hasTable(model.tableName)
+  .then(exists => {
+    if (exists) {
+      return trx.raw(`describe ${model.tableName}`)
+        .then(description => {
+          description = description[0];
+
+          return trx.schema.alterTable(model.tableName, table => {
+            const hasRaw = {};
+            const primaryKeys = [];
+            const uniques = [];
+
+            for (const rawColumn of description) {
+              if (rawColumn.Field !== 'id') {
+                const initColumn = () => {
+                  if (dbColumn === undefined) {
+                    dbColumn =
+                      initializeColumn(
+                        table,
+                        rawColumn.Field,
+                        column
+                      );
+                  }
+                };
+
+                const column = model.columns[rawColumn.Field];
+                let dbColumn;
+                let type;
+
+                if (column) {
+                  hasRaw[rawColumn.Field] = true;
+
+                  if (
+                    rawColumn.Type.substring(0, 7) === 'varchar'
+                  ) {
+                    type = 'string';
+                  } else if (
+                    rawColumn.Type.substring(0, 6) === 'binary'
+                  ) {
+                    type = 'binary';
+                  } else {
+                    type = rawColumn.Type;
+                  }
+
+                  initColumn();
+
+                  if (column.notNull) {
+                    dbColumn = dbColumn.notNullable();
+                  } else {
+                    dbColumn = dbColumn.nullable();
+                  }
+
+                  if (rawColumn.Key === 'PRI') {
+                    if (!(column.primary || column.increments)) {
+                      table.dropPrimary();
+                    }
+                  } else if (rawColumn.Key === 'UNI') {
+                    if (!column.unique) {
+                      table.dropUnique(rawColumn.Field);
+                    }
+                  } else if (rawColumn.Key === 'MUL') {
+                    if (!model.hasOwnProperty('relations')) {
+                      table.dropForeign(rawColumn.Field);
+                    }
+                  } else if (column.primary) {
+                    primarykeys.push(rawColumn.Field);
+                  } else if (column.increments) {
+                    dbColumn = dbColumn.increments();
+                  } else if (column.unique) {
+                    uniques.push(rawColumn.Field);
+                  }
+
+                  if (column.default) {
+                    dbColumn = dbColumn.defaultTo(column.default);
+                  }
+
+                  dbColumn.alter();
+                }
+              }
+            }
+
+            for (const key of Object.keys(model.columns)) {
+              if (!hasRaw.hasOwnProperty(key)) {
+                const dbColumn = heavyInit(
+                  table,
+                  key,
+                  model.columns[key],
+                  uniques
+                );
+
+                if (model.columns[key].increments) {
+                  dbColumn.increments();
+                } else if (model.columns[key].primary) {
+                  primaryKeys.push(key);
+                }
+              }
+            }
+
+            if (primaryKeys.length > 0) {
+              table.primary(primaryKeys);
+            }
+
+            if (uniques.length > 0) {
+              table.unique(uniques);
+            }
+          });
+        });
+    } else {
+      return trx.schema.createTable(model.tableName, table => {
+        const uniques = [];
+        const primaryKeys = [];
+        const columnsKeys = Object.keys(model.columns);
+        let hasInlinePrimary = false;
+
+        if (model.hasOwnProperty('table')) {
+          if (model.table.timestamps) {
+            table.timestamps();
+          }
+
+          if (model.table.comment) {
+            table.comment(model.table.comment);
+          }
+
+          if (model.table.engine) {
+            table.engine(model.table.engine);
+          }
+
+          if (model.table.charset) {
+            table.charset(model.table.charset);
+          }
+
+          if (model.table.collate) {
+            table.collate(model.table.collate);
+          }
+        }
+
+        for (const key of columnsKeys) {
+          const column = model.columns[key];
+          let dbColumn = heavyInit(
+            table,
+            key,
+            column,
+            uniques
+          );
+
+          if (column.increments) {
+            dbColumn = dbColumn.increments();
+            hasInlinePrimary = true;
+          } else if (column.primary) {
+            primaryKeys.push(key);
+          }
+        }
+
+        if (uniques.length > 0) {
+          table.unique(uniques);
+        }
+
+        if (!hasInlinePrimary) {
+          if (primaryKeys.length > 0) {
+            table.primary(primaryKeys);
+          } else {
+            table.increments('id');
+          }
+        }
+      });
+    }
+  });
 
 export const query = (name, origin = 'unspecified') => {
   return get(_models, [origin, name], null);
@@ -82,7 +253,7 @@ export const parseArgs = (query, args = {}, property = 'where') => {
           column
         );
       } else {
-        result = result[method](column, '=', args[key]);
+        result = result[method](key, '=', args[key]);
       }
     }
   }
@@ -231,7 +402,7 @@ export class KnexManageModel {
   }
 
   find(args = {}, related = []) {
-    return this._findBase(args, related);
+    return this._findBase(args, related).then(result => result);
   }
 
   findOne(args = {}, related = []) {
@@ -242,18 +413,17 @@ export class KnexManageModel {
 
   delete(args = {}) {
     return parseArgs(this.knex(this.specs.tableName), args)
-      .del();
+      .del().then(result => result);
   }
 
   update(where = {}, set = {}) {
     return parseArgs(this.knex(this.specs.tableName), where)
-      .update(set);
+      .update(set).then(result => result);
   }
 
   create(value = {}) {
-    return this.knex
-      .insert(value)
-      .into(this.specs.tableName);
+    return this.knex(this.specs.tableName)
+      .insert(value).then(result => result);
   }
 };
 
@@ -349,16 +519,28 @@ export const relationColumn = async (trx, relation) => {
   }
 };
 
-
-
 export const addModel = (key, model) => _models[key] = model;
 
-export default function (knex, models) {
+function __default(knex, models) {
   const relations = [];
 
-  return knex.transaction(trx => {
-    Promise.all(
-      Object.keys(models).map(key => new Promise((resolve, reject) => {
+  if (!hasInitialized) {
+    hasInitialized = true;
+
+    return __default(knex, [{
+      tableName: UTILITY_DATABASE_NAME,
+      origin: 'utility',
+      columns: {
+        table_name: {
+          type: 'string'
+        }
+      }
+    }]).then(() => __default(knex, models));
+  }
+
+  return knex
+    .transaction(trx => Promise.all(
+      models.map(model => new Promise((resolve, reject) => {
         const res = () => {
           set(
             _models,
@@ -368,8 +550,6 @@ export default function (knex, models) {
 
           resolve();
         };
-
-        const model = models[key];
 
         if (!model.hasOwnProperty('origin')) {
           model.origin = 'unspecified';
@@ -395,173 +575,23 @@ export default function (knex, models) {
           model.tableName = `${model.origin}_${model.tableName}`;
         }
 
-        trx.schema.hasTable(model.tableName).then(exists => {
-          if (exists) {
-            trx.raw(`describe ${model.tableName}`)
-              .then(description => {
-                description = description[0];
+        const util = query(UTILITY_DATABASE_NAME, 'utility');
 
-                trx.schema.alterTable(model.tableName, table => {
-
-                  const hasRaw = {};
-                  const primaryKeys = [];
-                  const uniques = [];
-
-                  for (const rawColumn of description) {
-                    if (rawColumn.Field !== 'id') {
-                      const initColumn = () => {
-                        if (dbColumn === undefined) {
-                          dbColumn =
-                            initializeColumn(
-                              table,
-                              rawColumn.Field,
-                              column
-                            );
-                        }
-                      };
-
-                      const column = model.columns[rawColumn.Field];
-                      let dbColumn;
-                      let type;
-
-                      if (column) {
-                        hasRaw[rawColumn.Field] = true;
-
-                        if (
-                          rawColumn.Type.substring(0, 7) === 'varchar'
-                        ) {
-                          type = 'string';
-                        } else if (
-                          rawColumn.Type.substring(0, 6) === 'binary'
-                        ) {
-                          type = 'binary';
-                        } else {
-                          type = rawColumn.Type;
-                        }
-
-                        initColumn();
-
-                        if (column.notNull) {
-                          dbColumn = dbColumn.notNullable();
-                        } else {
-                          dbColumn = dbColumn.nullable();
-                        }
-
-                        if (rawColumn.Key === 'PRI') {
-                          if (!(column.primary || column.increments)) {
-                            table.dropPrimary();
-                          }
-                        } else if (rawColumn.Key === 'UNI') {
-                          if (!column.unique) {
-                            table.dropUnique(rawColumn.Field);
-                          }
-                        } else if (rawColumn.Key === 'MUL') {
-                          if (!model.hasOwnProperty('relations')) {
-                            table.dropForeign(rawColumn.Field);
-                          }
-                        } else if (column.primary) {
-                          primarykeys.push(rawColumn.Field);
-                        } else if (column.increments) {
-                          dbColumn = dbColumn.increments();
-                        } else if (column.unique) {
-                          uniques.push(rawColumn.Field);
-                        }
-
-                        if (column.default) {
-                          dbColumn = dbColumn.defaultTo(column.default);
-                        }
-
-                        dbColumn.alter();
-                      }
-                    }
-                  }
-
-                  for (const key of Object.keys(model.columns)) {
-                    if (!hasRaw.hasOwnProperty(key)) {
-                      const dbColumn = heavyInit(
-                        table,
-                        key,
-                        model.columns[key],
-                        uniques
-                      );
-
-                      if (model.columns[key].increments) {
-                        dbColumn.increments();
-                      } else if (model.columns[key].primary) {
-                        primaryKeys.push(key);
-                      }
-                    }
-                  }
-
-                  if (primaryKeys.length > 0) {
-                    table.primary(primaryKeys);
-                  }
-
-                  if (uniques.length > 0) {
-                    table.unique(uniques);
-                  }
-                }).then(res);
+        if (util) {
+          util.findOne({
+            table_name: model.tableName
+          }).then(result => {
+            if (!result) {
+              util.create({
+                table_name: model.tableName
               });
-          } else {
-            trx.schema.createTable(model.tableName, table => {
-              const uniques = [];
-              const primaryKeys = [];
-              const columnsKeys = Object.keys(model.columns);
-              let hasInlinePrimary = false;
+            }
 
-              if (model.hasOwnProperty('table')) {
-                if (model.table.timestamps) {
-                  table.timestamps();
-                }
-
-                if (model.table.comment) {
-                  table.comment(model.table.comment);
-                }
-
-                if (model.table.engine) {
-                  table.engine(model.table.engine);
-                }
-
-                if (model.table.charset) {
-                  table.charset(model.table.charset);
-                }
-
-                if (model.table.collate) {
-                  table.collate(model.table.collate);
-                }
-              }
-
-              for (const key of columnsKeys) {
-                const column = model.columns[key];
-                let dbColumn = heavyInit(
-                  table,
-                  key,
-                  column,
-                  uniques
-                );
-
-                if (column.increments) {
-                  dbColumn = dbColumn.increments();
-                  hasInlinePrimary = true;
-                } else if (column.primary) {
-                  primaryKeys.push(key);
-                }
-              }
-
-              if (uniques.length > 0) {
-                table.unique(uniques);
-              }
-
-              if (!hasInlinePrimary) {
-                if (primaryKeys.length > 0) {
-                  table.primary(primaryKeys);
-                } else {
-                  table.increments('id');
-                }
-              }
-            }).then(res);
-          }
-        })
+            checkTable(trx, model).then(res);
+          });
+        } else {
+          checkTable(trx, model).then(res);
+        }
       }))
     )
       .then(() => Promise.all(
@@ -658,6 +688,9 @@ export default function (knex, models) {
       .catch(e => {
         console.log(e);
         trx.rollback();
-      });
-  }).then(() => console.log('Database loaded!'));
+      })
+    )
+    .then(() => console.log('Database loaded!'));
 };
+
+export default __default;
