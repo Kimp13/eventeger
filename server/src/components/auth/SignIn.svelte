@@ -75,6 +75,8 @@
   $: disabled = passwordError || usernameError || wrongPassword;
 
   const signin = (e) => {
+    e.preventDefault();
+
     if (passwordEntered && usernameEntered) {
       if (!disabled) {
         promise = postApi($session.apiUrl + "/users/signin", {
@@ -84,7 +86,6 @@
 
         promise.then(
           (json) => {
-            console.log(json);
             dispatch("signed", json);
           },
           (e) => {
@@ -107,7 +108,6 @@
 
   .signin {
     padding: 3rem 1rem;
-    text-align: right;
 
     .await {
       font-weight: 700;
@@ -115,26 +115,17 @@
     }
 
     .error {
-      font-size: .75rem;
+      font-size: 0.75rem;
       text-align: center;
       color: $color-error;
     }
   }
 </style>
 
-<form bind:this={element} class="signin">
+<form bind:this={element} on:submit|preventDefault={signin} class="signin">
   <div class="fields">
-    <Textfield
-      counter={32}
-      bind:value={username}
-      error={usernameError}
-      label="Логин" />
-    <Textfield
-      counter={128}
-      type="password"
-      bind:value={password}
-      error={passwordError}
-      label="Пароль" />
+    <Textfield bind:value={username} placeholder="Логин" />
+    <Textfield type="password" bind:value={password} placeholder="Пароль" />
   </div>
   {#if promise}
     {#await promise}
@@ -147,10 +138,11 @@
         через пару минут или обратитесь к администратору.
       </p>
     {/await}
-  {:else if wrongPassword}
-    <p class="error" transition:slide>Неправильный логин или пароль.</p>
-    <SubmitButton on:click={signin} disabled label="Войти" />
   {:else}
-    <SubmitButton on:click={signin} {disabled} label="Войти" />
+    {#if wrongPassword}
+      <p class="error" transition:slide>Неправильный логин или пароль.</p>
+    {/if}
+
+    <SubmitButton title="Войти" />
   {/if}
 </form>

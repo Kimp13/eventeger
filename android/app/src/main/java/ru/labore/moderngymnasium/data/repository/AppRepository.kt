@@ -368,7 +368,8 @@ class AppRepository(
         val isNeededToUpdate: Boolean = when (forceFetch) {
             true -> true
             false -> {
-                val announcement: AnnouncementEntity? = announcementEntityDao.getAnnouncementAtOffset(offset)
+                val announcement: AnnouncementEntity? =
+                    announcementEntityDao.getAnnouncementAtOffset(offset)
                 val now: ZonedDateTime = ZonedDateTime.now()
                 val tenMinutesBefore = now.minusMinutes(10)
 
@@ -388,6 +389,10 @@ class AppRepository(
                     limit
                 )
             )
+
+            announcements.data.forEach {
+                println(it.text)
+            }
 
             announcements.currentCount = announcements.data.size
 

@@ -17,11 +17,10 @@
 </script>
 
 <script>
-  import { ListItem } from "svelte-materialify/src";
   import TextField from "Textfield.svelte";
   import Title from "Title.svelte";
   import Button from "Button.svelte";
-  import {postApi} from "requests";
+  import { postApi } from "requests";
 
   export let columns;
   export let tableName;
@@ -54,16 +53,6 @@
   .insert-header {
     text-align: center;
   }
-
-  :global {
-    .s-list-item__title {
-      padding: 1rem 0.5rem 0;
-    }
-
-    .insert-submit {
-      margin: 0.25rem 0 0 1.5rem;
-    }
-  }
 </style>
 
 <Title caption={tableName} />
@@ -71,14 +60,7 @@
 <h2 class="insert-header">{tableName}</h2>
 
 {#each Object.keys(columns) as key}
-  <ListItem class="insert-list-item">
-    {#if columns[key].type === 'string'}
-      <TextField
-        bind:value={columnValues[key]}
-        counter={columns[key].length}
-        label={key} />
-    {/if}
-  </ListItem>
+  hello i am column
 {/each}
 
-<Button on:click={submit} class="insert-submit" text label="Создать" />
+<Button on:click={submit} class="insert-submit" placeholder="Создать" />

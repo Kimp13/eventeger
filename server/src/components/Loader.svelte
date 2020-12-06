@@ -14,7 +14,7 @@
       height: 1rem
       margin: 0 .25rem
       border-radius: 50%
-      background: $mdc-theme-primary
+      background: $color-blue
       animation-duration: 2s
       animation-iteration-count: infinite
       animation-name: animate

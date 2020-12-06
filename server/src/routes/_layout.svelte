@@ -1,7 +1,4 @@
 <script>
-  import { MaterialApp } from 'svelte-materialify/src';
-
-  export let segment;
 </script>
 
 <style global lang="sass">
@@ -52,6 +49,4 @@
       font-size: calc(1vw + 1vh)
 </style>
 
-<MaterialApp>
-  <slot />
-</MaterialApp>
+<slot />

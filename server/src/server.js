@@ -50,7 +50,7 @@ if (!API_URL) {
  * Global variable containing server cache, plugins, models, functions
  * @returns JS object
  */
-global.mg = new Object();
+global.mg = {};
 mg.knex = knex;
 
 // Firebase

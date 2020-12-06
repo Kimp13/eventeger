@@ -21,8 +21,7 @@ module.exports = {
     },
 
     password: {
-      type: 'binary',
-      length: 60,
+      type: 'password',
       notNull: true
     }
   },
@@ -36,6 +35,11 @@ module.exports = {
     {
       type: 'many:one',
       with: 'class'
+    },
+
+    {
+      type: 'one:many',
+      with: 'announcement'
     }
   ]
 };

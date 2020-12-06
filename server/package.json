@@ -1,7 +1,11 @@
 {
-  "name": "moderngymnasium_admin_panel",
-  "description": "Admin panel for \"moderngymnasium\" modernization project.",
+  "name": "moderngymnasium_web",
+  "description": "Web version of \"moderngymnasium\" modernization project.",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kimp13/moderngymnasium.git"
+  },
   "scripts": {
     "dev": "sapper dev",
     "build": "sapper build --legacy",
@@ -12,7 +16,6 @@
     "test": "run-p --race dev cy:run"
   },
   "dependencies": {
-    "@mdi/js": "^5.8.55",
     "bcrypt": "^5.0.0",
     "binary-search": "^1.3.6",
     "body-parser": "^1.19.0",
@@ -49,7 +52,7 @@
     "sapper": "^0.28.0",
     "sass": "^1.26.10",
     "svelte": "^3.17.3",
-    "svelte-materialify": "^0.2.6",
     "svelte-preprocess": "^4.2.1"
-  }
+  },
+  "license": "UNLICENSED"
 }
