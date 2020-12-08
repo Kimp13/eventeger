@@ -27,70 +27,92 @@ class KnexManageModel {
         related.substring(dotIndex + 1)
     );
 
-    if (model.specs.relations) {
-      for (const relation of model.specs.relations) {
-        if (
-          relation.with[0] === relatedModelName &&
-          relation.with[1] === model.specs.origin
-        ) {
-          const type = relation.type.split(':');
-          const relatedModel = query(...relation.with);
+    if (model.specs.hasOwnProperty('relations')) {
+      const relation = model.specs.relations[
+        relatedModelName + ',' + model.specs.origin
+      ];
 
-          if (type[1] === 'many') {
-            let relatedEntities;
-
-            if (type[0] === 'many') {
-              relatedEntities = await this.knex
-                .select(`${relatedModel.specs.tableName}.*`)
-                .from(relatedModel.specs.tableName)
-                .innerJoin(
-                  relation.junctionTableName,
-                  relation.junctionTableName + '.' +
-                  relation.junctionToColumn,
-                  relatedModel.specs.tableName + '.id'
-                )
-                .where(
-                  relation.junctionTableName + '.' +
-                  relation.junctionFromColumn,
-                  entity.id
-                );
-            } else {
-              relatedEntities = await relatedModel.find({
-                id: entity[`${relatedModel.specs.tableName}_id`]
-              });
+      if (relation) {
+        const type = relation.type.split(':');
+        const relatedModel = query(...relation.with);
+        const relatedModelRelation = (
+          relatedModel.specs.hasOwnProperty('relations') ?
+            relatedModel.specs.relations[
+            model.specs.tableName + ',' + model.specs.origin
+            ] :
+            {
+              column: 'id'
             }
+        ) || {
+          column: 'id'
+        };
 
-            set(
-              entity,
-              ['_relations', relatedModelName],
-              relatedEntities
-            );
+        if (type[1] === 'many') {
+          let relatedEntities;
 
-            if (next) {
-              await Promise.all(
-                relatedEntities.map(relatedEntity => this._findRelated(
-                  relatedEntity,
-                  next,
-                  relatedModel
-                ))
-              );
-            }
-          } else {
-            const relatedEntity = await relatedModel.findOne({
-              id: entity[`${relatedModel.specs.tableName}_id`]
-            });
-
-            set(
-              entity,
-              ['_relations', relatedModelName],
-              relatedEntity
-            );
-            if (next) {
-              await this._findRelated(relatedEntity, next, relatedModel);
-            }
+          if (!relatedModelRelation.hasOwnProperty('junctionColumn')) {
+            relatedModelRelation.junctionColumn =
+              relatedModelName + '_id';
           }
 
-          break;
+          if (type[0] === 'many') {
+            relatedEntities = await this.knex
+              .select(`${relatedModelName}.*`)
+              .from(relatedModelName)
+              .innerJoin(
+                relation.junctionTableName,
+                relation.junctionTableName + '.' +
+                relatedModelRelation.junctionColumn,
+                relatedModelName + '.' + relatedModelRelation.column
+              )
+              .where(
+                relation.junctionTableName + '.' +
+                relation.junctionColumn,
+                entity[relation.column]
+              );
+          } else {
+            const searchObject = {};
+
+            searchObject[relatedModelRelation.column] =
+              entity[relation.column];
+
+            relatedEntities = await relatedModel
+              .find(searchObject);
+          }
+
+          set(
+            entity,
+            ['_relations', relatedModelName],
+            relatedEntities
+          );
+
+          if (next) {
+            await Promise.all(
+              relatedEntities.map(relatedEntity => this._findRelated(
+                relatedEntity,
+                next,
+                relatedModel
+              ))
+            );
+          }
+        } else {
+          const searchObject = {};
+
+          searchObject[relatedModelRelation.column] =
+            entity[relation.column];
+
+          const relatedEntity = await relatedModel
+            .findOne(searchObject);
+
+          set(
+            entity,
+            ['_relations', relatedModelName],
+            relatedEntity
+          );
+
+          if (next) {
+            await this._findRelated(relatedEntity, next, relatedModel);
+          }
         }
       }
     }
@@ -598,11 +620,18 @@ function __default(knex, models, printReady = true) {
       return Promise.all(
         models.map(model => new Promise((resolve, reject) => {
           const res = () => {
-            set(
-              _models,
-              [model.origin, model.suffixTableName],
-              new KnexManageModel(knex, model)
-            );
+            if (!_models.hasOwnProperty(model.origin)) {
+              _models[model.origin] = {};
+            }
+
+            if (!_models[model.origin].hasOwnProperty(
+              model.suffixTableName
+            )) {
+              _models[model.origin][model.suffixTableName] = {};
+            }
+
+            _models[model.origin][model.suffixTableName] = 
+              new KnexManageModel(knex, model);
 
             resolve();
           };
@@ -613,6 +642,7 @@ function __default(knex, models, printReady = true) {
 
           if (model.hasOwnProperty('relations')) {
             const access = model.tableName + ',' + model.origin;
+            const resultObject = {};
 
             if (!relations.hasOwnProperty(access)) {
               relations[access] = {};
@@ -624,6 +654,7 @@ function __default(knex, models, printReady = true) {
               }
 
               const withString = relation.with[0] + ',' + relation.with[1];
+              resultObject[withString] = relation;
 
               if (relation.type === 'one:one') {
                 if (relation.from) {
@@ -634,19 +665,21 @@ function __default(knex, models, printReady = true) {
                   relations[access][withString].from = relation;
                 } else {
                   if (!relations.hasOwnProperty(withString)) {
-                    relations[relation.with] = {};
-                    relations[relation.with][access] = {};
+                    relations[withString] = {};
+                    relations[withString][access] = {};
                   } else if (
-                    !relations[relation.with].hasOwnProperty(access)
+                    !relations[withString].hasOwnProperty(access)
                   ) {
-                    relations[relation.with][access] = {};
+                    relations[withString][access] = {};
                   }
 
                   relations[withString][access].to = relation;
                 }
               } else {
                 if (relations.hasOwnProperty(withString)) {
-                  relations[withString][access].to = relation;
+                  relations[withString][access] = {
+                    to: relation
+                  };
                 } else {
                   relations[access][withString] = {
                     from: relation
@@ -654,6 +687,8 @@ function __default(knex, models, printReady = true) {
                 }
               }
             }
+
+            model.relations = resultObject;
           }
 
           model.suffixTableName = model.tableName;
@@ -688,19 +723,23 @@ function __default(knex, models, printReady = true) {
           const resultArray = [];
 
           for (const from in relations) {
-            const tableFrom = query(...from.split(',')).specs;
+            const fromModelName = from.split(',');
+            const tableFrom = query(...fromModelName).specs;
 
             resultArray.push(Promise.all((() => {
               const resultArray = [];
 
               for (const to in relations[from]) {
-                const tableTo = query(...to.split(',')).specs;
+                const toModelName = to.split(',');
+                const tableTo = query(...toModelName).specs;
 
                 resultArray.push(new Promise((resolve, reject) => {
                   const relation = relations[from][to];
                   const [typeFrom, typeTo] = (
-                    relation.from || relation.to
-                  ).type.split(':');
+                    relation.from ?
+                      relation.from.type.split(':') :
+                      relation.to.type.split(':').reverse()
+                  );
 
                   if (!relation.hasOwnProperty('from')) {
                     relation.from = {};
@@ -708,6 +747,22 @@ function __default(knex, models, printReady = true) {
 
                   if (!relation.hasOwnProperty('to')) {
                     relation.to = {};
+                  }
+
+                  if (!relation.from.hasOwnProperty('type')) {
+                    relation.from.type = `${typeFrom}:${typeTo}`;
+                  }
+
+                  if (!relation.to.hasOwnProperty('type')) {
+                    relation.to.type = `${typeTo}:${typeFrom}`;
+                  }
+
+                  if (!relation.from.hasOwnProperty('with')) {
+                    relation.from.with = toModelName;
+                  }
+
+                  if (!relation.to.hasOwnProperty('with')) {
+                    relation.to.with = fromModelName;
                   }
 
                   if (typeFrom === typeTo) {
@@ -851,7 +906,7 @@ function __default(knex, models, printReady = true) {
                     }
 
                     if (!relation.from.hasOwnProperty('column')) {
-                      relation.from.column = tableTo.tableName + '_id';
+                      relation.from.column = tableToName + '_id';
                     }
 
                     if (!relation.to.hasOwnProperty('column')) {
@@ -866,6 +921,9 @@ function __default(knex, models, printReady = true) {
                       resolve();
                     });
                   }
+
+                  tableTo.relations[from] = relation.from;
+                  tableFrom.relations[to] = relation.to;
                 }));
               }
 

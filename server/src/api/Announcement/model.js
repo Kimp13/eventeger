@@ -14,11 +14,5 @@ module.exports = {
       type: 'many:one',
       column: 'author_id'
     },
-
-    {
-      with: 'class',
-      type: 'many:one',
-      column: 'watafuk_fuk_me'
-    }
   ]
 }
