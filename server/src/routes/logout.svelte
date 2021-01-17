@@ -8,7 +8,7 @@
 </div>
 
 <script>
-  import { deleteCookie } from "../../utils/cookies";
+  import { deleteCookie } from "cookies";
   import { onMount } from "svelte";
 
   onMount(() => {

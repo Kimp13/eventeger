@@ -3,18 +3,17 @@ module.exports = {
   columns: {
     type: {
       type: 'string',
-      length: 48,
+      length: 64,
       notNull: true
     },
 
     operation: {
       type: 'string',
-      length: 48
+      length: 64
     },
 
     target: {
-      type: 'string',
-      length: 128
+      type: 'string'
     }
   },
 

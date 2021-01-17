@@ -2,11 +2,16 @@
   {
     "method": "GET",
     "path": "/",
-    "handler": "find"
+    "handler": "findOne"
   },
   {
     "method": "GET",
-    "path": "/all",
-    "handler": "findAll"
+    "path": "/mine",
+    "handler": "find",
+    "config": {
+      "policies": [
+        "userStrict"
+      ]
+    }
   }
 ]

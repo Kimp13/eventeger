@@ -1,4 +1,4 @@
-module.exports = function(name) {
+export default function(name) {
   name = name.replace(/\s+/g, '').toLowerCase();
 
   if (name.charAt(name.length - 1) !== 's') {

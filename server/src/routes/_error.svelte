@@ -25,10 +25,10 @@
   p {
     margin: 1em auto;
   }
-  
+
   audio {
     display: block;
-    margin: .25rem auto;
+    margin: 0.25rem auto;
   }
 
   @media (min-width: 480px) {
@@ -48,9 +48,4 @@
   <pre>{error.stack}</pre>
 {/if}
 
-{#if status === 404}
-  <audio
-    src="/audio/404.mp3"
-    controls
-    loop />
-{/if}
+{#if status === 404}Well, it's not found. Goodbye.{/if}

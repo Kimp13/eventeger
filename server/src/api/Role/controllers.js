@@ -1,44 +1,33 @@
-const jsonify = require("../../../utils/searchToJson");
-const getUser = require('../../../utils/getUser');
-const getPermission = require("../../../utils/getPermission");
+import getPermission from "getPermission";
 
-module.exports = {
-  find: async (req, res) => {
-    const id = Number(jsonify(req.search).id);
+export default {
+  findOne: async (req, res) => {
+    if (Array.isArray(req.query.id)) {
+      for (let i = 0; i < req.query.id.length; i += 1) {
+        req.query.id[i] = parseInt(req.query.id[i], 10);
 
-    if (!isNaN(id)) {
-      const role = await mg.knex
-        .select('*')
-        .from('role')
-        .where('id', id);
+        if (isNaN(req.query.id[i])) {
+          res.throw(400);
+          return;
+        }
+      }
 
-      res.statusCode = 200;
-      res.end(JSON.stringify(role[0]));
-      return;
+      res.send(await mg.query('role').find({ id_in: req.query.id }));
+    } else {
+      const id = parseInt(req.query.id, 10);
+
+      if (!isNaN(id)) {
+        const role = await mg.query('role').findOne({ id });
+
+        res.send(role);
+        return;
+      }
+
+      req.throw(400);
     }
-
-    req.statusCode = 400;
-    res.end('{}');
-    return;
   },
 
-  findAll: async (req, res) => {
-    const user = await getUser(req.headers.authentication);
-
-    if (user) {
-      const permission = getPermission(user.permissions, [
-        'announcement',
-        'create'
-      ]);
-
-      if (permission === true) {
-        res.statusCode = 200;
-        res.end(JSON.stringify(await mg.query('role').find()));
-        return
-      }
-    }
-
-    res.statusCode = 401;
-    res.end('{}');
+  find: async (req, res) => {
+    res.send(await mg.services.role.getUsersCreateMap(req.user));
   }
 }

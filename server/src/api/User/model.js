@@ -3,12 +3,12 @@ module.exports = {
   hasTimestamps: true,
 
   columns: {
-    first_name: {
+    firstName: {
       type: 'string',
       length: 128
     },
 
-    last_name: {
+    lastName: {
       type: 'string',
       length: 128
     },

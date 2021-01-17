@@ -1,0 +1,12 @@
+[
+    {
+        "method": "POST",
+        "path": "/registerEndpoint",
+        "handler": "default",
+        "config": {
+            "policies": [
+                "jwtPayloadStrict"
+            ]
+        }
+    }
+]

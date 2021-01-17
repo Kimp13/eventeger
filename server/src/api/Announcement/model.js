@@ -12,7 +12,7 @@ module.exports = {
     {
       with: 'user',
       type: 'many:one',
-      column: 'author_id'
+      column: 'authorId'
     },
   ]
 }

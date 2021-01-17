@@ -11,12 +11,6 @@ module.exports = {
       type: 'string',
       length: 128,
       notNull: true
-    },
-
-    name_ru: {
-      type: 'string',
-      length: 128,
-      notNull: true
     }
   },
 

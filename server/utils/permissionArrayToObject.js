@@ -1,22 +1,22 @@
 const has = require('lodash/has');
 const set = require('lodash/set');
 
-module.exports = permissionsArray => {
+module.exports = (permissionsArray = []) => {
   let permissionObject = new Object();
 
-  for (let permission of permissionsArray) {
+  for (const permission of permissionsArray) {
     if (permission.operation) {
-      if (permission.role_id) {
+      if (permission.target) {
         if (has(
           permissionObject,
           [permission.type, permission.operation]
         )) {
-          permissionObject[type][operation].push(permission.role_id);
+          permissionObject[type][operation].push(permission.target);
         } else {
           set(permissionObject, [
             permission.type,
             permission.operation
-          ], [permission.role_id]);
+          ], [permission.target]);
         }
       } else {
         set(permissionObject, [
@@ -28,6 +28,6 @@ module.exports = permissionsArray => {
       set(permissionObject, permission.type, true);
     }
   }
-
+  
   return permissionObject;
 };

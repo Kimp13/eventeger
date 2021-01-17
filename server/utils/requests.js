@@ -1,6 +1,6 @@
 import { getCookie } from "./cookies";
 
-const createUrl = (path, query, auth) => {
+const createUrl = (path, query) => {
   let keys,
     queryString = '';
 
@@ -8,14 +8,28 @@ const createUrl = (path, query, auth) => {
     keys = Object.keys(query);
 
     if (keys.length > 0) {
-      queryString = `?${keys[0]}=${query[keys[0]]}`;
+      if (Array.isArray(query[keys[0]])) {
+        queryString = `?${keys[0]}[]=${query[keys[0]][0]}`;
+
+        for (let i = 1; i < query[keys[0]].length; i += 1) {
+          queryString += `&${keys[0]}[]=${query[keys[0]][i]}`;
+        }
+      } else {
+        queryString = `?${keys[0]}=${query[keys[0]]}`;
+      }
     }
   } else {
     keys = new Array();
   }
 
   for (let i = 1; i < keys.length; i += 1) {
-    queryString += `&${keys[i]}=${query[keys[i]]}`;
+    if (Array.isArray(query[keys[i]])) {
+      for (const value of query[keys[i]]) {
+        queryString += `&${keys[i]}[]=${value}`;
+      }
+    } else {
+      queryString += `&${keys[i]}=${query[keys[i]]}`;
+    }
   }
 
   return encodeURI(path + queryString);
@@ -30,9 +44,9 @@ export const getApiResponse = async (path, query, auth) => {
   const response = await fetch(url, {
     method: 'GET',
     headers: {
-      'Custom-Authorization': auth || ''
+      'Authentication': auth || ''
     }
-  }); 
+  });
 
   if (response.ok) {
     return await response.json();
@@ -54,23 +68,25 @@ export const getPreloadApiResponse = async (path, query, sapperInstance) => {
     response;
 };
 
-export const postApi = async (path, query, auth) => {
+export const postApi = (path, query, auth) => {
   if (auth === true) {
     auth = getCookie('jwt');
   }
 
-  const response = await fetch(path, {
+  return fetch(path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authentication': auth || ''
     },
     body: JSON.stringify(query)
-  });
-
-  if (response.ok) {
-    return await response.json();
-  } else {
-    throw response;
-  }
+  }).then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw response;
+    }
+  }).then(jsoned => (
+    jsoned.hasOwnProperty('response') ? jsoned.response : jsoned
+  ));
 };

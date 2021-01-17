@@ -1,42 +1,35 @@
-const bcrypt = require('bcrypt');
-const pick = require('lodash/pick');
-const jsonify = require("../../../utils/searchToJson");
-const parsePermissions = require('../../../utils/permissionArrayToObject');
-const getPermission = require('../../../utils/getPermission');
+import bcrypt from 'bcrypt';
+import pick from 'lodash/pick';
+import get from 'lodash/get';
+import parsePermissions from 'permissionArrayToObject';
 
 module.exports = {
   find: async (req, res) => {
-    const id = Number(jsonify(req.search).id);
+    const id = parseInt(req.query.id, 10);
 
     if (!isNaN(id)) {
-      const user = await mg.knex
-        .select(
+      const user = await mg.query('user').findOne({
+        id
+      }, [], [
           'id',
-          'first_name',
-          'last_name',
-          'role_id',
-          'class_id'
-        )
-        .from('user')
-        .where('id', id);
+          'firstName',
+          'lastName',
+          'roleId',
+          'classId' 
+      ]);
 
-      res.statusCode = 200;
-      res.end(JSON.stringify(user[0]));
+      res.send(user);
       return;
     }
 
-    res.statusCode = 400;
-    res.end('{}');
+    res.throw(400);
     return;
   },
 
-  count: async (req, res) => {
-    res.statusCode = 200;
-    res.end(JSON.stringify({
+  count: async (_, res) => {
+    res.send({
       count: mg.cache.usersCount
-    }));
-
-    return;
+    });
   },
 
   signUp: async (req, res) => {
@@ -131,20 +124,26 @@ module.exports = {
           id: user.id
         });
 
-        user.permissions = parsePermissions(
-          user._relations.role._relations.permission
-        );
+        user.permissions = parsePermissions(get(
+          user,
+          [
+            '_relations',
+            'role',
+            '_relations',
+            'permission'
+          ]
+        ));
 
         res.statusCode = 200;
         res.end(JSON.stringify({
           jwt,
           data: pick(user, [
-            'first_name',
-            'last_name',
+            'firstName',
+            'lastName',
             'username',
             'permissions',
-            'role_id',
-            'class_id'
+            'roleId',
+            'classId'
           ])
         }));
 

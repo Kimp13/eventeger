@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   getUsersTokens: async announcementId => {
     announcementId = Number(announcementId);
 
@@ -57,5 +57,9 @@ module.exports = {
     }
 
     return null;
+  },
+
+  notify: async announcement => {
+    
   }
 }

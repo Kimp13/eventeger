@@ -1,5 +1,5 @@
-import * as sapper from '@sapper/app';
+import { start } from '@sapper/app';
 
-sapper.start({
-	target: document.querySelector('body')
+start({
+	target: document.body
 });

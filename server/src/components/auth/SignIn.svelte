@@ -8,8 +8,6 @@
 
   import { postApi } from "requests";
 
-  export let element;
-
   const dispatch = createEventDispatcher();
   const { session } = stores();
 
@@ -75,8 +73,6 @@
   $: disabled = passwordError || usernameError || wrongPassword;
 
   const signin = (e) => {
-    e.preventDefault();
-
     if (passwordEntered && usernameEntered) {
       if (!disabled) {
         promise = postApi($session.apiUrl + "/users/signin", {
@@ -122,7 +118,7 @@
   }
 </style>
 
-<form bind:this={element} on:submit|preventDefault={signin} class="signin">
+<form on:submit|preventDefault={signin} class="signin">
   <div class="fields">
     <Textfield bind:value={username} placeholder="Логин" />
     <Textfield type="password" bind:value={password} placeholder="Пароль" />
@@ -130,9 +126,9 @@
   {#if promise}
     {#await promise}
       <p class="await">Ждём ответа...</p>
-    {:then resolved}
+    {:then}
       <p class="await">Перенаправляем...</p>
-    {:catch e}
+    {:catch}
       <p class="error">
         К сожалению, произошла какая-то ошибка. Пожалуйста, попробуйте снова
         через пару минут или обратитесь к администратору.

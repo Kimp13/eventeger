@@ -1,10 +1,17 @@
+const e = require("express");
+
 module.exports = url => {
   if (typeof url === 'string') {
-    let result = new Object();
+    const questionMarkIndex = url.indexOf('?');
+    const result = {};
 
-    url = decodeURI(url);
+    if (questionMarkIndex === -1) {
+      url = decodeURI(url);
+    } else {
+      url = decodeURI(url.substring(questionMarkIndex + 1));
+    }
 
-    for (let argument of url.split('&')) {
+    for (const argument of url.split('&')) {
       const parts = argument.split('=');
 
       result[parts[0]] = parts[1];
@@ -13,5 +20,5 @@ module.exports = url => {
     return result;
   }
   
-  return new Object();
+  return {};
 }

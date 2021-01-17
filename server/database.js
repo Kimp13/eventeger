@@ -6,7 +6,22 @@ import bcrypt from 'bcrypt';
 
 const UTILITY_DATABASE_NAME = 'tables';
 const _models = {};
+let relationPostfix;
+let createdString;
+let updatedString;
 let hasInitialized = false;
+
+const itIsAnInitFunctionBuddy = () => {
+  if (process.env.IGNORE_SQL_NAMING_CONVENTION === 'true') {
+    relationPostfix = 'Id';
+    createdString = 'createdAt';
+    updatedString = 'updatedAt';
+  } else {
+    relationPostfix = '_id';
+    createdString = 'created_at';
+    updatedString = 'updated_at';
+  }
+};
 
 class KnexManageModel {
   constructor(knex, model) {
@@ -29,7 +44,7 @@ class KnexManageModel {
 
     if (model.specs.hasOwnProperty('relations')) {
       const relation = model.specs.relations[
-        relatedModelName + ',' + model.specs.origin
+        `${relatedModelName},${model.specs.origin}`
       ];
 
       if (relation) {
@@ -52,7 +67,7 @@ class KnexManageModel {
 
           if (!relatedModelRelation.hasOwnProperty('junctionColumn')) {
             relatedModelRelation.junctionColumn =
-              relatedModelName + '_id';
+              relatedModelName + relationPostfix;
           }
 
           if (type[0] === 'many') {
@@ -104,14 +119,16 @@ class KnexManageModel {
           const relatedEntity = await relatedModel
             .findOne(searchObject);
 
-          set(
-            entity,
-            ['_relations', relatedModelName],
-            relatedEntity
-          );
+          if (relatedEntity) {
+            set(
+              entity,
+              ['_relations', relatedModelName],
+              relatedEntity
+            );
 
-          if (next) {
-            await this._findRelated(relatedEntity, next, relatedModel);
+            if (next) {
+              await this._findRelated(relatedEntity, next, relatedModel);
+            }
           }
         }
       }
@@ -134,6 +151,28 @@ class KnexManageModel {
   }
 
   parseArgs(query, args = {}, property = 'where') {
+    const [orderColumn, orderType] = (
+      args.hasOwnProperty('_sort') ?
+        args._sort.split(':') :
+        [false]
+    );
+
+    const limit = (
+      args.hasOwnProperty('_limit') ?
+        args._limit :
+        100
+    );
+
+    const offset = (
+      args.hasOwnProperty('_skip') ?
+        args._skip :
+        0
+    );
+
+    delete args._sort;
+    delete args._limit;
+    delete args._skip;
+
     let result = query;
     const keys = Object.keys(args);
 
@@ -203,45 +242,28 @@ class KnexManageModel {
       }
     }
 
+    if (orderColumn !== false) {
+      result = result.orderBy(orderColumn, orderType);
+    }
+
+    result = result.limit(limit);
+    result = result.offset(offset);
+
     return result;
   };
 
-  _findBase(args = {}, related = []) {
-    const [orderColumn, orderType] = (
-      args.hasOwnProperty('_sort') ?
-        args._sort.split(':') :
-        [false]
-    );
-
-    const limit = (
-      args.hasOwnProperty('_limit') ?
-        args._limit :
-        100
-    );
-
-    const offset = (
-      args.hasOwnProperty('_skip') ?
-        args._skip :
-        0
-    );
-
-    delete args._sort;
-    delete args._limit;
-    delete args._skip;
-
+  _findBase(
+    args = {},
+    related = [],
+    columns = '*'
+  ) {
     let query = this.parseArgs(
       this.knex
-        .select('*')
+        .column(columns)
+        .select()
         .from(this.specs.tableName),
       args
     );
-
-    if (orderColumn !== false) {
-      query = query.orderBy(orderColumn, orderType);
-    }
-
-    query = query.limit(limit);
-    query = query.offset(offset);
 
     if (related.length > 0) {
       query = query.then(result => new Promise((resolve, reject) => {
@@ -258,20 +280,20 @@ class KnexManageModel {
     return query;
   }
 
-  find(args = {}, related = []) {
+  find(args, related, columns) {
     return (
       this.prepareArgs(args)
-        .then(args => this._findBase(args, related))
+        .then(args => this._findBase(args, related, columns))
         .then(result => result)
     );
   }
 
-  findOne(args = {}, related = []) {
+  findOne(args, related, columns) {
     args._limit = 1;
 
     return (
       this.prepareArgs(args)
-        .then(args => this._findBase(args, related))
+        .then(args => this._findBase(args, related, columns))
         .then(result => result[0])
     );
   }
@@ -291,13 +313,15 @@ class KnexManageModel {
 
       // date.setTime(date.getTime() + date.getTimezoneOffset() * 60000);
 
-      set.updated_at = date;
+      set[updatedString] = date;
     }
 
     return (
-      this.prepareArgs(args)
-        .then(args => this.parseArgs(this.knex(this.specs.tableName), where))
-        .update(set)
+      this.prepareArgs(where)
+        .then(args => this.parseArgs(
+          this.knex(this.specs.tableName).update(set),
+          args
+        ))
         .then(result => result)
     );
   }
@@ -308,13 +332,35 @@ class KnexManageModel {
 
       // date.setTime(date.getTime() + date.getTimezoneOffset() * 60000);
 
-      set.created_at = date;
-      set.updated_at = date;
+      set[createdString] = date;
+      set[updatedString] = date;
     }
 
     return (
       this.prepareArgs(value)
         .then(args => this.knex(this.specs.tableName).insert(value))
+    );
+  }
+
+  count(args = {}, column = '*') {
+    return (
+      this.prepareArgs(args)
+        .then(args => this.parseArgs(
+          this.knex.count(column).from(this.specs.tableName),
+          args
+        ))
+        .then(a => a[0][`count(${column})`])
+    );
+  }
+
+  sum(column, args = {}) {
+    return (
+      this.prepareArgs(args)
+        .then(args => this.parseArgs(
+          this.knex.sum(column).from(this.specs.tableName),
+          args
+        ))
+        .then(a => a[0][`sum(\`${column}\`)`] || 0)
     );
   }
 };
@@ -327,11 +373,15 @@ const initializeColumn = (table, name, column) => {
     case 'password':
       return table.binary(name, 60);
 
-    case 'string':
     case 'binary':
-      return table[column.type](name, column.length);
+      return table.binary(name, column.length);
+
+    case 'string':
+    case 'varchar':
+      return table.string(name, column.length);
 
     case 'int':
+    case 'integer':
       return table.integer(name);
 
     case 'float':
@@ -345,6 +395,7 @@ const initializeColumn = (table, name, column) => {
     case 'time':
       return table.time(name, column.precision);
 
+    case 'enumerable':
     case 'enum':
     case 'enu':
       return table.enu(name, column.values, column.options);
@@ -386,13 +437,15 @@ export const queryAll = origin => {
   return _models;
 }
 
-function __default(knex, models, printReady = true) {
+function itIsADefaultFunctionBuddy(knex, models, printReady = true) {
   const relations = {};
 
   if (!hasInitialized) {
     hasInitialized = true;
 
-    return __default(knex, [{
+    itIsAnInitFunctionBuddy();
+
+    return itIsADefaultFunctionBuddy(knex, [{
       tableName: UTILITY_DATABASE_NAME,
       origin: 'utility',
       columns: {
@@ -400,7 +453,7 @@ function __default(knex, models, printReady = true) {
           type: 'string'
         }
       }
-    }], false).then(() => __default(knex, models));
+    }], false).then(() => itIsADefaultFunctionBuddy(knex, models));
   }
 
   return knex
@@ -630,7 +683,7 @@ function __default(knex, models, printReady = true) {
               _models[model.origin][model.suffixTableName] = {};
             }
 
-            _models[model.origin][model.suffixTableName] = 
+            _models[model.origin][model.suffixTableName] =
               new KnexManageModel(knex, model);
 
             resolve();
@@ -782,7 +835,7 @@ function __default(knex, models, printReady = true) {
 
                       if (!relation.from.hasOwnProperty('junctionColumn')) {
                         relation.from.junctionColumn =
-                          `${tableFrom.tableName}_id`;
+                          `${tableFrom.tableName}${relationPostfix}`;
                       }
 
                       if (!relation.to.hasOwnProperty('column')) {
@@ -791,7 +844,7 @@ function __default(knex, models, printReady = true) {
 
                       if (!relation.to.hasOwnProperty('junctionColumn')) {
                         relation.to.junctionColumn =
-                          `${tableTo.tableName}_id`;
+                          `${tableTo.tableName}${relationPostfix}`;
                       }
 
                       trx.schema.hasTable(relation.to.junctionTableName)
@@ -869,7 +922,7 @@ function __default(knex, models, printReady = true) {
                         });
                     } else {
                       if (!relation.from.hasOwnProperty('column')) {
-                        relation.from.column = tableTo.tableName + '_id';
+                        relation.from.column = tableTo.tableName + relationPostfix;
                       }
 
                       if (!relation.to.hasOwnProperty('column')) {
@@ -906,7 +959,7 @@ function __default(knex, models, printReady = true) {
                     }
 
                     if (!relation.from.hasOwnProperty('column')) {
-                      relation.from.column = tableToName + '_id';
+                      relation.from.column = tableToName + relationPostfix;
                     }
 
                     if (!relation.to.hasOwnProperty('column')) {
@@ -947,4 +1000,4 @@ function __default(knex, models, printReady = true) {
     .catch(e => console.log(e));
 };
 
-export default __default;
+export default itIsADefaultFunctionBuddy;

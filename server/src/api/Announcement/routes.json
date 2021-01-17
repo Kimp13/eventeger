@@ -2,16 +2,25 @@
   {
     "method": "GET",
     "path": "/getMine",
-    "handler": "find"
+    "handler": "find",
+    "config": {
+      "policies": ["userStrict"]
+    }
   },
   {
     "method": "GET",
     "path": "/countMine",
-    "handler": "count"
+    "handler": "count",
+    "config": {
+      "policies": ["userStrict"]
+    }
   },
   {
     "method": "POST",
     "path": "/create",
-    "handler": "create"
+    "handler": "create",
+    "config": {
+      "policies": ["userStrict"]
+    }
   }
 ]

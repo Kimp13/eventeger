@@ -1,4 +1,4 @@
-const parsePermissions = require("./permissionArrayToObject");
+const bs = require('binary-search');
 
 module.exports = async jwt => {
   if (jwt) {
@@ -7,15 +7,17 @@ module.exports = async jwt => {
     if (payload) {
       const user = await mg.query('user').findOne({
         id: payload.id
-      }, ['role.permission']);
+      });
 
-      if (user) {
-        user.permissions = parsePermissions(
-          user._relations.role._relations.permission
-        );
-  
-        return user;
-      }
+      user.permissions = mg.cache.roles[bs(
+        mg.cache.roles,
+        user.roleId,
+        function comparator(element, needle) {
+          return element.id - needle;
+        }
+      )].permissions;
+
+      return user;
     }
   }
 
