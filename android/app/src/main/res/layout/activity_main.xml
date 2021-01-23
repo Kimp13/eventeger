@@ -32,15 +32,4 @@
         app:layout_constraintWidth_percent=".85"
         app:menu="@menu/bottom_nav" />
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/createFragment"
-        android:name="ru.labore.moderngymnasium.ui.create.CreateFragment"
-        android:tag="create_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:elevation="20dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

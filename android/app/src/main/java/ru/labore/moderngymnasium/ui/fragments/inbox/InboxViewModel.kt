@@ -17,12 +17,11 @@ import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
 import ru.labore.moderngymnasium.ui.activities.MainActivity
 import ru.labore.moderngymnasium.ui.adapters.InboxRecyclerViewAdapter
+import ru.labore.moderngymnasium.ui.base.BaseViewModel
 
 class InboxViewModel(
     application: Application
-) : AndroidViewModel(application), DIAware {
-    override val di: DI by lazy { (application as DIAware).di }
-    val appRepository: AppRepository by instance()
+) : BaseViewModel(application) {
     val viewAdapter = InboxRecyclerViewAdapter(
         application.resources,
         mutableListOf()
@@ -47,10 +46,6 @@ class InboxViewModel(
         appRepository.unreadAnnouncementsPushListener = {
             viewAdapter.prependAnnouncement(it)
         }
-    }
-
-    fun cleanseUser() {
-        appRepository.user = null
     }
 
     fun bindAdapter(): InboxRecyclerViewAdapter {

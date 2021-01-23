@@ -1,7 +1,9 @@
 package ru.labore.moderngymnasium.ui.fragments.news
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import ru.labore.moderngymnasium.ui.base.BaseViewModel
 
-class NewsViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
+class NewsViewModel(
+    application: Application
+) : BaseViewModel(application) {
 }

@@ -3,22 +3,17 @@ package ru.labore.moderngymnasium.ui.activities
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_announcement_detailed.*
-import kotlinx.android.synthetic.main.inbox_recycler_view.*
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.repository.AppRepository
-import ru.labore.moderngymnasium.ui.base.ScopedActivity
+import ru.labore.moderngymnasium.ui.base.BaseActivity
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 
-class AnnouncementDetailedActivity : ScopedActivity(), DIAware {
-    override val di: DI by lazy { (applicationContext as DIAware).di }
-    val repository: AppRepository by instance()
-
+class AnnouncementDetailedActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_announcement_detailed)

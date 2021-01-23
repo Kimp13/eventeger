@@ -28,7 +28,11 @@ export default {
   },
 
   getMap: async (req, res) => {
-    res.send(await mg.services.role.getUsersCreateMap(req.user));
+    const val = await mg.services.role.getUsersCreateMap(req.user);
+
+    console.log(val);
+
+    res.send(val);
   },
 
   all: async (req, res) => {

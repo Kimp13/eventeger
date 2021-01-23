@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
 
@@ -13,7 +14,7 @@ class ProfileFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElemen
     push,
     finish
 ) {
-    private lateinit var viewModel: ProfileViewModel
+    override val viewModel: ProfileViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,8 +25,6 @@ class ProfileFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElemen
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(ProfileViewModel::class.java)
-        // TODO: Use the ViewModel
     }
 
 }

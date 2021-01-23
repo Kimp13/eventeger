@@ -1,10 +1,8 @@
 package ru.labore.moderngymnasium.data.repository
 
 import android.content.Context
-import android.content.Intent
 import android.os.Parcel
 import android.os.Parcelable
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
@@ -21,13 +19,9 @@ import ru.labore.moderngymnasium.data.db.entities.ClassEntity
 import ru.labore.moderngymnasium.data.db.entities.RoleEntity
 import ru.labore.moderngymnasium.data.db.entities.UserEntity
 import ru.labore.moderngymnasium.data.network.AppNetwork
-import ru.labore.moderngymnasium.data.network.ClientConnectionException
-import ru.labore.moderngymnasium.data.network.ClientErrorException
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
-import ru.labore.moderngymnasium.ui.activities.LoginActivity
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
-import java.net.ConnectException
 
 class AppRepository(
     private val context: Context,
@@ -107,55 +101,6 @@ class AppRepository(
 
         if (userString != null) {
             user = gson.fromJson(userString, User::class.java)
-
-            if (user != null) {
-                val mapString = sharedPreferences.getString("announce_map", null)
-                announceMap = gson.fromJson(mapString, AnnounceMap::class.java)
-
-                GlobalScope.launch {
-                    try {
-                        val new = appNetwork.fetchMe(user!!.jwt)
-                        val newMap = appNetwork.fetchAnnounceMap(user!!.jwt)
-                        val editor = sharedPreferences.edit()
-                        
-                        editor.putString("announce_map", gson.toJson(newMap))
-
-                        if (new != null && user != null) {
-                            user = User(user!!.jwt, new.data)
-
-                            editor.putString("user", gson.toJson(user))
-                        }
-
-                        editor.apply()
-                    } catch (e: Exception) {
-                        Toast.makeText(
-                            context,
-                            when (e) {
-                                is ConnectException -> context.getString(R.string.server_unavailable)
-                                is ClientConnectionException -> context.getString(R.string.no_internet)
-                                is ClientErrorException -> {
-                                    if (e.errorCode == AppRepository.HTTP_RESPONSE_CODE_UNAUTHORIZED) {
-                                        user = null
-                                        val intent = Intent(context, LoginActivity::class.java)
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                        context.startActivity(intent)
-
-                                        context.getString(R.string.session_timed_out)
-                                    } else {
-                                        println(e.toString())
-                                        "An unknown error has occurred."
-                                    }
-                                }
-                                else -> {
-                                    println(e.toString())
-                                    "An unknown error has occurred."
-                                }
-                            },
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
         }
 
         notificationBuilder.setSmallIcon(R.drawable.ic_baseline_announcement)
@@ -174,6 +119,32 @@ class AppRepository(
 
         appNetwork.fetchedClassEntity.observeForever {
             persistFetchedClass(it)
+        }
+    }
+
+    suspend fun onMainActivityCreated() {
+        if (user != null) {
+            val mapString = sharedPreferences.getString("announce_map", null)
+
+            announceMap = if (mapString == null) {
+                AnnounceMap()
+            } else {
+                gson.fromJson(mapString, AnnounceMap::class.java)
+            }
+
+            val new = appNetwork.fetchMe(user!!.jwt)
+            val newMap = appNetwork.fetchAnnounceMap(user!!.jwt)
+            val editor = sharedPreferences.edit()
+
+            editor.putString("announce_map", gson.toJson(newMap))
+
+            if (new != null && user != null) {
+                user = User(user!!.jwt, new.data)
+
+                editor.putString("user", gson.toJson(user))
+            }
+
+            editor.apply()
         }
     }
 

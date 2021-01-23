@@ -3,25 +3,18 @@ package ru.labore.moderngymnasium.ui.activities
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.kodein.di.DI
-import org.kodein.di.DIAware
-import org.kodein.di.instance
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.network.ClientConnectionException
 import ru.labore.moderngymnasium.data.network.ClientErrorException
-import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.ui.base.BaseActivity
 import ru.labore.moderngymnasium.utils.hideKeyboard
 import java.net.ConnectException
 
-class LoginActivity : AppCompatActivity(), DIAware {
-    override val di: DI by lazy { (applicationContext as DIAware).di }
-
-    private val repository: AppRepository by instance()
+class LoginActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

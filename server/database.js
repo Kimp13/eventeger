@@ -332,8 +332,8 @@ class KnexManageModel {
 
       // date.setTime(date.getTime() + date.getTimezoneOffset() * 60000);
 
-      set[createdString] = date;
-      set[updatedString] = date;
+      value[createdString] = date;
+      value[updatedString] = date;
     }
 
     return (
@@ -692,6 +692,18 @@ function itIsADefaultFunctionBuddy(knex, models, printReady = true) {
           if (!('origin' in model)) {
             model.origin = 'unspecified';
           }
+
+          if (model.hasTimestamps) {
+            if (!(createdString in model.columns))
+              model.columns[createdString] = {
+                type: 'datetime'
+              };
+
+            if (!(updatedString in model.columns))
+              model.columns[updatedString] = {
+                type: 'datetime'
+              };
+          };
 
           if ('relations' in model) {
             const access = model.tableName + ',' + model.origin;
