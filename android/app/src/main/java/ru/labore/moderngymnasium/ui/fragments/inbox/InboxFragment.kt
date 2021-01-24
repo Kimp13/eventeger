@@ -36,7 +36,7 @@ class InboxFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElementF
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        bindUI(savedInstanceState)
+        bindUI()
 
         inboxRecyclerView.apply {
             val viewManager = LinearLayoutManager(requireActivity())
@@ -98,25 +98,28 @@ class InboxFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElementF
         )
     })
 
-    private fun addNewAnnouncements() = launch {
-        if (!loading) {
-            loading = true
-            inboxProgressBar.visibility = View.VISIBLE
-
-            updateAnnouncements()
-
-            loading = false
-            inboxProgressBar.visibility = View.GONE
-        }
-    }
+//    private fun addNewAnnouncements() = launch {
+//        if (!loading) {
+//            loading = true
+//            inboxProgressBar.visibility = View.VISIBLE
+//
+//            updateAnnouncements()
+//
+//            loading = false
+//            inboxProgressBar.visibility = View.GONE
+//        }
+//    }
 
     private fun refreshUI() = launch {
-        updateAnnouncements(AppRepository.Companion.UpdateParameters.UPDATE, true)
+        updateAnnouncements(
+            AppRepository.Companion.UpdateParameters.UPDATE,
+            true
+        )
 
         inboxRefreshLayout.isRefreshing = false
     }
 
-    private fun bindUI(savedInstanceState: Bundle?) = launch {
+    private fun bindUI() = launch {
         val params =
             inboxProgressBar.layoutParams as ConstraintLayout.LayoutParams
 
@@ -136,7 +139,7 @@ class InboxFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElementF
         }
 
         if (viewModel.itemCount == 0) {
-            val textView = LayoutInflater
+            LayoutInflater
                 .from(context)
                 .inflate(
                     R.layout.inbox_no_announcements_textview,

@@ -4,23 +4,24 @@ import com.google.gson.*
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneOffset
 import org.threeten.bp.ZonedDateTime
-import ru.labore.moderngymnasium.data.sharedpreferences.entities.AllPermissions
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
+import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 import java.lang.reflect.Type
 
-class JsonPermissionsDeserializerImpl : JsonDeserializer<AllPermissions> {
+class JsonPermissionsDeserializerImpl :
+    JsonDeserializer<User.Companion.AllPermissions> {
     override fun deserialize(
         json: JsonElement?,
         typeOfT: Type?,
         context: JsonDeserializationContext?
-    ): AllPermissions? {
+    ): User.Companion.AllPermissions? {
         return if (json != null) {
             println(json.toString())
 
             if (json.isJsonObject) {
-                AllPermissions(json.asJsonObject)
+                User.Companion.AllPermissions(json.asJsonObject)
             } else {
-                AllPermissions(json.asBoolean)
+                User.Companion.AllPermissions(json.asBoolean)
             }
         } else {
             null
@@ -28,9 +29,9 @@ class JsonPermissionsDeserializerImpl : JsonDeserializer<AllPermissions> {
     }
 }
 
-class JsonPermissionsSerializerImpl : JsonSerializer<AllPermissions> {
+class JsonPermissionsSerializerImpl : JsonSerializer<User.Companion.AllPermissions> {
     override fun serialize(
-        src: AllPermissions?,
+        src: User.Companion.AllPermissions?,
         typeOfSrc: Type?,
         context: JsonSerializationContext?
     ): JsonElement = when {

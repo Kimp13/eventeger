@@ -51,7 +51,7 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
     suspend fun createAnnouncement(
         jwt: String,
         text: String,
-        recipients: HashMap<Int, MutableList<Int>>
+        recipients: HashMap<Int, HashSet<Int>>
     ) = utility.createAnnouncement(jwt, text, recipients)
 
     suspend fun signIn(
@@ -67,11 +67,19 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
         id: Int
     ) = utility.fetchRole(id)
 
+    suspend fun fetchRoles(
+        ids: Array<Int>
+    ) = utility.fetchRoles(ids)
+
     suspend fun fetchAllRoles(jwt: String) = utility.fetchAllRoles(jwt)
 
     suspend fun fetchClass(
         id: Int
     ) = utility.fetchClass(id)
+
+    suspend fun fetchClasses(
+        ids: Array<Int>
+    ) = utility.fetchClasses(ids)
 
     override fun intercept(chain: Interceptor.Chain): Response {
         if (isOnline()) {

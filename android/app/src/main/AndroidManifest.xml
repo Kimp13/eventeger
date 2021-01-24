@@ -37,6 +37,11 @@
             android:windowSoftInputMode="stateVisible|adjustResize" />
 
         <activity
+            android:name=".ui.activities.CreateActivity"
+            android:theme="@style/AppThemeWithoutActionBar"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".ui.activities.MainActivity"
             android:theme="@style/AppThemeWithoutActionBar"
             android:windowSoftInputMode="adjustResize">

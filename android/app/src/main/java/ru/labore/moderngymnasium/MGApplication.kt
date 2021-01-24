@@ -16,19 +16,37 @@ import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.data.db.AppDatabase
 import ru.labore.moderngymnasium.data.network.AppNetwork
 import ru.labore.moderngymnasium.data.repository.AppRepository
-import ru.labore.moderngymnasium.data.sharedpreferences.entities.AllPermissions
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
+import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 import ru.labore.moderngymnasium.utils.*
 
 class MGApplication : Application(), DIAware, LifecycleObserver {
     override val di = DI.lazy {
         val gson = GsonBuilder()
-            .registerTypeAdapter(ZonedDateTime::class.java, JsonDateSerializerImpl())
-            .registerTypeAdapter(ZonedDateTime::class.java, JsonDateDeserializerImpl())
-            .registerTypeAdapter(AllPermissions::class.java, JsonPermissionsSerializerImpl())
-            .registerTypeAdapter(AllPermissions::class.java, JsonPermissionsDeserializerImpl())
-            .registerTypeAdapter(AnnounceMap::class.java, JsonAnnounceMapSerializerImpl())
-            .registerTypeAdapter(AnnounceMap::class.java, JsonAnnounceMapDeserializerImpl())
+            .registerTypeAdapter(
+                ZonedDateTime::class.java,
+                JsonDateSerializerImpl()
+            )
+            .registerTypeAdapter(
+                ZonedDateTime::class.java,
+                JsonDateDeserializerImpl()
+            )
+            .registerTypeAdapter(
+                User.Companion.AllPermissions::class.java,
+                JsonPermissionsSerializerImpl()
+            )
+            .registerTypeAdapter(
+                User.Companion.AllPermissions::class.java,
+                JsonPermissionsDeserializerImpl()
+            )
+            .registerTypeAdapter(
+                AnnounceMap::class.java,
+                JsonAnnounceMapSerializerImpl()
+            )
+            .registerTypeAdapter(
+                AnnounceMap::class.java,
+                JsonAnnounceMapDeserializerImpl()
+            )
             .create()
 
         import(androidXModule(this@MGApplication))

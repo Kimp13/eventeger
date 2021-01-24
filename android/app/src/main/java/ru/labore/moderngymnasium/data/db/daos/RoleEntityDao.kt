@@ -11,6 +11,9 @@ interface RoleEntityDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(role: RoleEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertArray(roles: Array<RoleEntity>)
+
     @Query("""
         select * from role where id = :roleId
     """)

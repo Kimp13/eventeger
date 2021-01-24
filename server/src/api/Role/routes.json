@@ -2,7 +2,7 @@
   {
     "method": "GET",
     "path": "/",
-    "handler": "findOne"
+    "handler": "find"
   },
   {
     "method": "GET",

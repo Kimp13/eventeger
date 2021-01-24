@@ -3,44 +3,43 @@ package ru.labore.moderngymnasium.ui.fragments.inbox
 import android.app.Application
 import android.content.Intent
 import android.os.Bundle
-import androidx.lifecycle.AndroidViewModel
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import org.kodein.di.DI
-import org.kodein.di.DIAware
-import org.kodein.di.instance
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
-import ru.labore.moderngymnasium.ui.activities.MainActivity
+import ru.labore.moderngymnasium.ui.activities.CreateActivity
 import ru.labore.moderngymnasium.ui.adapters.InboxRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseViewModel
 
 class InboxViewModel(
     application: Application
 ) : BaseViewModel(application) {
-    val viewAdapter = InboxRecyclerViewAdapter(
+    private val viewAdapter = InboxRecyclerViewAdapter(
         application.resources,
-        mutableListOf()
-    ) {
-        val intent = Intent(
-            application.applicationContext,
-            AnnouncementDetailedActivity::class.java
-        )
-        val bundle = Bundle()
-        bundle.putParcelable("announcement", it)
-        intent.putExtras(bundle)
-        application.startActivity(intent)
-    }
+        {
+            val intent = Intent(
+                application.applicationContext,
+                CreateActivity::class.java
+            )
+
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
+            application.startActivity(intent)
+        },
+        {
+            val intent = Intent(
+                application.applicationContext,
+                AnnouncementDetailedActivity::class.java
+            )
+            val bundle = Bundle()
+            bundle.putParcelable("announcement", it)
+            intent.putExtras(bundle)
+            application.startActivity(intent)
+        }
+    )
     val itemCount
         get() = viewAdapter.announcements.size
 
 
     private var reachedEnd = false
-    var adapterBinded = false
 
     init {
         appRepository.unreadAnnouncementsPushListener = {
@@ -48,13 +47,7 @@ class InboxViewModel(
         }
     }
 
-    fun bindAdapter(): InboxRecyclerViewAdapter {
-        if (!adapterBinded) {
-            adapterBinded = true
-        }
-
-        return viewAdapter
-    }
+    fun bindAdapter(): InboxRecyclerViewAdapter = viewAdapter
 
     suspend fun updateAnnouncements(
         forceFetch: AppRepository.Companion.UpdateParameters =
@@ -83,7 +76,7 @@ class InboxViewModel(
         }
     }
 
-    suspend fun getAnnouncements(
+    private suspend fun getAnnouncements(
         offset: Int,
         forceFetch: AppRepository.Companion.UpdateParameters
     ) =

@@ -1,7 +1,7 @@
 import getPermission from "getPermission";
 
 export default {
-  findOne: async (req, res) => {
+  find: async (req, res) => {
     if (Array.isArray(req.query.id)) {
       for (let i = 0; i < req.query.id.length; i += 1) {
         req.query.id[i] = parseInt(req.query.id[i], 10);
@@ -28,11 +28,7 @@ export default {
   },
 
   getMap: async (req, res) => {
-    const val = await mg.services.role.getUsersCreateMap(req.user);
-
-    console.log(val);
-
-    res.send(val);
+    res.send(await mg.services.role.getUsersCreateMap(req.user));
   },
 
   all: async (req, res) => {

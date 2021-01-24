@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.children
 
 class LabelledCheckbox(
     context: Context,
@@ -15,11 +14,13 @@ class LabelledCheckbox(
 ) : LinearLayout(context) {
     private val checkbox: CheckBox
     private val label: TextView
-    var checkedChangeHandler: ((Boolean) -> Unit)? = null
+    var innerCheckedChangeHandler: ((Boolean) -> Unit) = {}
+    var outerCheckedChangeHandler: ((Boolean) -> Unit) = {}
     var isChecked: Boolean = true
         set(value) {
             field = value
             checkbox.isChecked = value
+            outerCheckedChangeHandler(value)
         }
 
     init {
@@ -49,8 +50,9 @@ class LabelledCheckbox(
         addView(label)
         addView(checkbox)
 
-        checkbox.setOnClickListener { checkbox ->
-            checkedChangeHandler?.invoke((checkbox as CheckBox).isChecked)
+        checkbox.setOnClickListener { view ->
+            innerCheckedChangeHandler((view as CheckBox).isChecked)
+            outerCheckedChangeHandler(view.isChecked)
         }
     }
 }
@@ -80,7 +82,7 @@ class ParentCheckbox(
     specialLayoutParams: ViewGroup.LayoutParams? = null
 ) : LinearLayout(context) {
     companion object {
-        const val UNKNOWN = -1
+        const val INDETERMINATE = -1
         const val UNCHECKED = 0
         const val CHECKED = 1
     }
@@ -89,12 +91,12 @@ class ParentCheckbox(
     val checkboxLayout: CheckboxLinearLayout
 
     var checkedChangeHandler: ((Int) -> Unit)? = null
-    private lateinit var checkedChildren: MutableList<View>
+    private val childrenStates = ArrayList<Int>()
     private var state = UNCHECKED
         set(value) {
             if (field != value) {
                 field = value
-                updateCheckbox(false, notify = false)
+                updateCheckbox(false, false)
             }
         }
 
@@ -113,54 +115,59 @@ class ParentCheckbox(
         addView(checkbox)
         addView(checkboxLayout)
 
-        checkbox.checkedChangeHandler = {
+        checkbox.innerCheckedChangeHandler = {
             state = if (it) CHECKED else UNCHECKED
             updateCheckbox(false)
         }
-
-        updateCheckbox()
     }
 
     fun onViewToLayoutAdded(child: View?) {
+        val index = childrenStates.size
+        childrenStates.add(UNCHECKED)
+
         if (child is ParentCheckbox) {
             child.checkedChangeHandler = { childState ->
-                if (childState == CHECKED) {
-                    if (checkedChildren.indexOf(child) == -1) {
-                        checkedChildren.add(child)
-                    }
-                } else {
-                    checkedChildren.remove(child)
-                }
+                childrenStates[index] = childState
 
                 updateStateByChildren()
             }
         } else if (child is LabelledCheckbox) {
-            child.isChecked = true
-
-            child.checkedChangeHandler = { isChecked ->
-                if (isChecked) {
-                    if (checkedChildren.indexOf(child) == -1) {
-                        checkedChildren.add(child)
-                    }
-                } else {
-                    checkedChildren.remove(child)
-                }
+            child.innerCheckedChangeHandler = { childState ->
+                childrenStates[index] =
+                    if (childState)
+                        CHECKED
+                    else
+                        UNCHECKED
 
                 updateStateByChildren()
             }
         }
 
-        updateButton()
+        updateChildren()
     }
 
     private fun updateStateByChildren() {
-        state = when(checkedChildren.size) {
-            0 -> UNCHECKED
-            checkboxLayout.childCount -> CHECKED
-            else -> UNKNOWN
+        var checkedCount = 0
+        var indeterminateCount = 0
+
+        for (i in 0 until childrenStates.size) {
+            if (childrenStates[i] == CHECKED) {
+                checkedCount += 1
+            } else if (childrenStates[i] == INDETERMINATE) {
+                indeterminateCount += 1
+            }
         }
 
-        updateCheckbox(false)
+        val newState = when {
+            checkedCount == childrenStates.size -> CHECKED
+            checkedCount > 0 || indeterminateCount > 0 -> INDETERMINATE
+            else -> UNCHECKED
+        }
+
+        if (newState != state) {
+            state = newState
+            checkedChangeHandler?.invoke(state)
+        }
     }
 
     private fun updateCheckbox(updateState: Boolean = true, notify: Boolean = true) {
@@ -174,30 +181,34 @@ class ParentCheckbox(
             checkedChangeHandler?.invoke(state)
         }
 
-        updateButton()
+        updateChildren()
     }
 
-    private fun updateButton() {
+    private fun updateChildren() {
         if (state == CHECKED) {
-            checkedChildren = mutableListOf()
+            for (i in 0 until checkboxLayout.childCount) {
+                childrenStates[i] = CHECKED
 
-            checkboxLayout.children.forEach {
-                if (it is LabelledCheckbox) {
-                    checkedChildren.add(it)
-                    it.isChecked = true
-                } else if (it is ParentCheckbox) {
-                    checkedChildren.add(it)
-                    it.state = CHECKED
+                val child = checkboxLayout.getChildAt(i)
+
+                if (child is LabelledCheckbox) {
+                    child.isChecked = true
+                } else if (child is ParentCheckbox) {
+                    child.state = CHECKED
+                    child.updateChildren()
                 }
             }
         } else if (state == UNCHECKED) {
-            checkedChildren = mutableListOf()
+            for (i in 0 until checkboxLayout.childCount) {
+                childrenStates[i] = UNCHECKED
 
-            checkboxLayout.children.forEach {
-                if (it is LabelledCheckbox) {
-                    it.isChecked = false
-                } else if (it is ParentCheckbox) {
-                    it.state = UNCHECKED
+                val child = checkboxLayout.getChildAt(i)
+
+                if (child is LabelledCheckbox) {
+                    child.isChecked = false
+                } else if (child is ParentCheckbox) {
+                    child.state = UNCHECKED
+                    child.updateChildren()
                 }
             }
         }

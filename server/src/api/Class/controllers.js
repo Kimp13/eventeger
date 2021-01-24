@@ -1,5 +1,5 @@
 export default {
-  findOne: async (req, res) => {
+  find: async (req, res) => {
     if (Array.isArray(req.query.id)) {
       for (let i = 0; i < req.query.id.length; i += 1) {
         req.query.id[i] = parseInt(req.query.id[i], 10);

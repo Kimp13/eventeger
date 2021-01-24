@@ -1,14 +1,13 @@
 package ru.labore.moderngymnasium.ui.activities
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_create.*
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
+import ru.labore.moderngymnasium.data.db.entities.ClassEntity
+import ru.labore.moderngymnasium.data.db.entities.RoleEntity
 import ru.labore.moderngymnasium.ui.base.BaseActivity
 import ru.labore.moderngymnasium.ui.views.LabelledCheckbox
 import ru.labore.moderngymnasium.ui.views.ParentCheckbox
@@ -16,8 +15,7 @@ import ru.labore.moderngymnasium.utils.hideKeyboard
 import java.util.*
 
 class CreateActivity: BaseActivity() {
-    private val checkedRoles: HashMap<Int, MutableList<Int>> = hashMapOf()
-    private var announcementText: String? = null
+    private val checkedRoles: HashMap<Int, HashSet<Int>> = hashMapOf()
     private var uiLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +28,8 @@ class CreateActivity: BaseActivity() {
         createAnnouncementBackButton.setOnClickListener {
             finish()
         }
+
+        loadUI()
     }
 
     private fun createAnnouncement() {
@@ -69,135 +69,128 @@ class CreateActivity: BaseActivity() {
     }
 
     private fun childCheckedChangeHandler(isChecked: Boolean, roleId: Int, classId: Int) {
-        if (checkedRoles.containsKey(roleId)) {
-            if (isChecked) {
-                if (
-                    checkedRoles[roleId]
-                        ?.contains(classId) == false
-                ) {
-                    checkedRoles[roleId]?.add(classId)
-                }
-            } else {
-                checkedRoles[roleId]?.remove(classId)
-                if (checkedRoles[roleId]?.isEmpty() == true) {
-                    checkedRoles.remove(roleId)
-                }
-            }
-        } else {
-            checkedRoles[roleId] = mutableListOf()
+        if (!checkedRoles.containsKey(roleId))
+            checkedRoles[roleId] = hashSetOf()
 
-            if (isChecked) {
-                checkedRoles[roleId]!!.add(classId)
-            } else {
-                checkedRoles[roleId]!!.remove(classId)
-            }
-        }
+        if (isChecked)
+            checkedRoles[roleId]!!.add(classId)
+        else
+            checkedRoles[roleId]!!.remove(classId)
+
+        println(checkedRoles.toString())
     }
 
     private fun loadUI() = launch {
-        val roles = repository.getUserRoles().filterNotNull()
-        val classes = repository.getUserClasses()
+        var roles = HashMap<Int, RoleEntity>()
+        var classes = HashMap<Int, ClassEntity>()
 
-        if (announcementText != null) {
-            createAnnouncementEditText.setText(announcementText)
-        }
+        makeRequest({
+            roles = repository.getKeyedRoles(
+                repository.announceMap.rolesIds
+            )
 
-        roles.forEach { role ->
+            classes = repository.getKeyedClasses(
+                repository.announceMap.classesIds
+            )
+        }).join()
+
+        repository.announceMap.entries.forEach { roleMap ->
+            val role = roles[roleMap.key]
             val checkboxLayout: View
 
-            if (classes.size == 1) {
-                val firstGrade = classes.keys.elementAt(0)
+            if (role != null) {
+                if (roleMap.value.size == 1) {
+                    val onlyClass = classes[roleMap.value[0]]!!
 
-                if (
-                    classes[firstGrade]?.size != null &&
-                    classes[firstGrade]?.size!! > 0
-                ) {
-                    if (classes[firstGrade]?.size == 1) {
-                        checkboxLayout = LabelledCheckbox(
-                            this@CreateActivity,
-                            "${role.name}, ${
-                                classes[firstGrade]!![0].grade}${classes[firstGrade]!![0].letter
-                            }"
+                    checkboxLayout = LabelledCheckbox(
+                        this@CreateActivity,
+                        "${role.name}, ${
+                            onlyClass.grade
+                        }${
+                            onlyClass.letter
+                        } класс"
+                    )
+
+                    checkboxLayout.outerCheckedChangeHandler = { checked ->
+                        childCheckedChangeHandler(
+                            checked,
+                            role.id,
+                            roleMap.value[0]
                         )
+                    }
+                } else {
+                    val gradedClasses = HashMap<Int, ArrayList<Int>>()
 
-                        checkboxLayout.checkedChangeHandler = { checked ->
-                            childCheckedChangeHandler(
-                                checked,
-                                role.id,
-                                classes[firstGrade]!![0].id
-                            )
-                        }
+                    roleMap.value.contents.forEach { classId ->
+                        val classEntity = classes[classId]
 
-                        createAnnouncementRoleChoose.addView(checkboxLayout)
-                    } else {
-                        checkboxLayout = ParentCheckbox(
-                            this@CreateActivity,
-                            "${role.name}, ${classes[firstGrade]!![0].grade}"
-                        )
-
-                        classes[firstGrade]!!.forEach { classEntity ->
-                            val nestedCheckbox = LabelledCheckbox(
-                                this@CreateActivity,
-                                classEntity.letter
-                            )
-
-                            nestedCheckbox.checkedChangeHandler = { checked ->
-                                childCheckedChangeHandler(checked, role.id, classEntity.id)
+                        if (classEntity != null) {
+                            if (gradedClasses.containsKey(classEntity.grade)) {
+                                gradedClasses[classEntity.grade]!!.add(classId)
+                            } else {
+                                gradedClasses[classEntity.grade] = arrayListOf(classId)
                             }
-
-                            checkboxLayout.addView(nestedCheckbox)
                         }
                     }
-                }
-            } else if (classes.size > 1) {
-                checkboxLayout = ParentCheckbox(
-                    this@CreateActivity,
-                    role.name
-                )
 
-                classes.keys.forEach {
-                    if (
-                        classes[it]?.size != null &&
-                        classes[it]!!.size > 0
-                    ) {
+                    checkboxLayout = ParentCheckbox(
+                        this@CreateActivity,
+                        "Роль: ${role.name}"
+                    )
+
+                    gradedClasses.entries.forEach {
                         val childCheckbox: View
 
-                        if (classes[it]!!.size == 1) {
+                        if (it.value.size == 1) {
+                            val onlyClass = classes[it.value[0]]!!
+
                             childCheckbox = LabelledCheckbox(
                                 this@CreateActivity,
-                                "${classes[it]!![0].grade}${classes[it]!![0].letter}"
+                                "${
+                                    onlyClass.grade
+                                }${
+                                    onlyClass.letter
+                                } класс"
                             )
+
+                            childCheckbox.outerCheckedChangeHandler = { checked ->
+                                childCheckedChangeHandler(
+                                    checked,
+                                    roleMap.key,
+                                    onlyClass.id
+                                )
+                            }
                         } else {
                             childCheckbox = ParentCheckbox(
                                 this@CreateActivity,
-                                "${classes[it]!![0].grade}"
+                                "${it.key}-я параллель"
                             )
 
-                            classes[it]!!.forEach { classEntity ->
-                                val nestedCheckbox = LabelledCheckbox(
+                            it.value.forEach { classId ->
+                                val leafCheckbox = LabelledCheckbox(
                                     this@CreateActivity,
-                                    classEntity.letter
+                                    "${classes[classId]!!.letter} класс"
                                 )
 
-                                nestedCheckbox.checkedChangeHandler = { checked ->
-                                    childCheckedChangeHandler(checked, role.id, classEntity.id)
+                                leafCheckbox.outerCheckedChangeHandler = { checked ->
+                                    childCheckedChangeHandler(
+                                        checked,
+                                        roleMap.key,
+                                        classId
+                                    )
                                 }
 
-                                childCheckbox.addView(nestedCheckbox)
+                                childCheckbox.checkboxLayout.addView(leafCheckbox)
                             }
                         }
 
-                        checkboxLayout.addView(childCheckbox)
-                        createAnnouncementRoleChoose.addView(checkboxLayout)
+                        checkboxLayout.checkboxLayout.addView(childCheckbox)
                     }
                 }
-            } else {
-                val textView = TextView(this@CreateActivity)
-                textView.text = getString(R.string.no_rights_to_announce)
-                textView.gravity = Gravity.CENTER_HORIZONTAL
 
-                createAnnouncementRoleChoose.addView(textView)
+                createAnnouncementRoleChoose.addView(checkboxLayout)
             }
         }
+
     }
 }

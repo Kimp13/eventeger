@@ -25,7 +25,7 @@ class Utility(
 
         data class AnnouncementTextAndRecipients(
             val text: String,
-            val recipients: HashMap<Int, MutableList<Int>>
+            val recipients: HashMap<Int, HashSet<Int>>
         )
 
         data class TokenPayload(val token: String)
@@ -40,7 +40,7 @@ class Utility(
         }
 
         private interface FetchMap {
-            @GET("roles/getMine")
+            @GET("roles/mine")
             suspend fun fetchMap(
                 @Header("Authentication") jwt: String
             ): AnnounceMap
@@ -102,6 +102,11 @@ class Utility(
             suspend fun fetch(@Query("id") id: Int): RoleEntity?
         }
 
+        private interface FetchRoles {
+            @GET("roles")
+            suspend fun fetch(@Query("id[]") ids: Array<Int>): Array<RoleEntity>
+        }
+
         private interface FetchAllRoles {
             @GET("roles/all")
             suspend fun fetch(
@@ -112,6 +117,12 @@ class Utility(
         private interface FetchClass {
             @GET("class")
             suspend fun fetch(@Query("id") id: Int): ClassEntity?
+        }
+
+        private interface FetchClasses {
+            @GET("class")
+            suspend fun fetch(@Query("id[]") ids: Array<Int>):
+                    Array<ClassEntity>
         }
     }
 
@@ -153,7 +164,7 @@ class Utility(
     suspend fun createAnnouncement(
         jwt: String,
         text: String,
-        recipients: HashMap<Int, MutableList<Int>>
+        recipients: HashMap<Int, HashSet<Int>>
     ) = builder
         .create(CreateAnnouncement::class.java)
         .createAnnouncement(
@@ -211,6 +222,12 @@ class Utility(
         .create(FetchRole::class.java)
         .fetch(id)
 
+    suspend fun fetchRoles(
+        ids: Array<Int>
+    ) = builder
+        .create(FetchRoles::class.java)
+        .fetch(ids)
+
     suspend fun fetchAllRoles(
         jwt: String
     ) = builder
@@ -222,5 +239,11 @@ class Utility(
     ) = builder
         .create(FetchClass::class.java)
         .fetch(id)
+
+    suspend fun fetchClasses(
+        ids: Array<Int>
+    ) = builder
+        .create(FetchClasses::class.java)
+        .fetch(ids)
 }
 

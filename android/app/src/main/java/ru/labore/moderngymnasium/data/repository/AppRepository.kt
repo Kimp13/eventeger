@@ -1,8 +1,6 @@
 package ru.labore.moderngymnasium.data.repository
 
 import android.content.Context
-import android.os.Parcel
-import android.os.Parcelable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
@@ -46,36 +44,6 @@ class AppRepository(
             val classes: HashMap<Int, Deferred<ClassEntity?>>,
             val roles: HashMap<Int, Deferred<RoleEntity?>>
         )
-
-        class AnnouncementsWithCount(
-            private val overallCount: Int,
-            val data: Array<AnnouncementEntity>
-        ) : Parcelable {
-            constructor(parcel: Parcel) : this(
-                parcel.readInt(),
-                parcel.createTypedArray(AnnouncementEntity.CREATOR) ?: emptyArray()
-            )
-
-            override fun writeToParcel(parcel: Parcel, flags: Int) {
-                parcel.writeInt(overallCount)
-                parcel.writeTypedArray(data, flags)
-            }
-
-            override fun describeContents(): Int {
-                return 0
-            }
-
-            companion object CREATOR : Parcelable.Creator<AnnouncementsWithCount> {
-                override fun createFromParcel(parcel: Parcel): AnnouncementsWithCount {
-                    return AnnouncementsWithCount(parcel)
-                }
-
-                override fun newArray(size: Int): Array<AnnouncementsWithCount?> {
-                    return arrayOfNulls(size)
-                }
-            }
-
-        }
     }
 
     val inboxAnnouncement: MutableLiveData<AnnouncementEntity> =
@@ -181,7 +149,7 @@ class AppRepository(
 
     suspend fun createAnnouncement(
         text: String,
-        recipients: HashMap<Int, MutableList<Int>>
+        recipients: HashMap<Int, HashSet<Int>>
     ) {
         if (user?.jwt != null) {
             appNetwork.createAnnouncement(
@@ -414,10 +382,6 @@ class AppRepository(
                 offset
             )
 
-            announcements.forEach {
-                println(it.text)
-            }
-
             persistFetchedAnnouncements(announcements)
         } else {
             announcements = announcementEntityDao.getAnnouncements(offset, DEFAULT_LIMIT)
@@ -438,29 +402,36 @@ class AppRepository(
         return announcements
     }
 
-    suspend fun getUserRoles(): Array<RoleEntity?> = if (
-        user?.data?.permissions?.get("announcement")?.get("create")?.all == true
-    ) {
-        appNetwork.fetchAllRoles(user!!.jwt)
-    } else {
-        getRoles(user!!.data.permissions["announcement"]["create"].contents)
-    }
+    private suspend fun getRoles(rolesIds: Array<Int>): Array<RoleEntity?> {
+        val result: Array<RoleEntity?> = arrayOfNulls(rolesIds.size)
+        val now = ZonedDateTime.now()
+        val roleIdsToFetch = arrayListOf<Pair<Int, Int>>()
 
-    suspend fun getUserClasses(): HashMap<Int, ArrayList<ClassEntity>> {
-        val result: HashMap<Int, ArrayList<ClassEntity>> = HashMap()
+        List(rolesIds.size) {
+            GlobalScope.launch {
+                val role: RoleEntity? = null// roleEntityDao.getRole(rolesIds[it])
 
-        if (user?.data?.classId != null) {
-            val rawClasses = getClasses(arrayOf(user!!.data.classId!!))
-
-            rawClasses.forEach {
-                if (it != null) {
-                    if (result.containsKey(it.grade)) {
-                        result[it.grade]!!.add(it)
-                    } else {
-                        result[it.grade] = arrayListOf(it)
-                    }
+                if (
+                    role?.updatedAt == null ||
+                    now <= role.updatedAt!!.plusWeeks(1)
+                ) {
+                    roleIdsToFetch.add(Pair(rolesIds[it], it))
                 }
+
+                result[it] = role
             }
+        }.joinAll()
+
+        val fetchedRoles = appNetwork.fetchRoles(Array(
+            roleIdsToFetch.size
+        ) {
+            roleIdsToFetch[it].first
+        })
+
+//        persistFetchedRoles(fetchedRoles)
+
+        for (i in 0 until roleIdsToFetch.size) {
+            result[roleIdsToFetch[i].second] = fetchedRoles[i]
         }
 
         return result
@@ -468,46 +439,63 @@ class AppRepository(
 
     private suspend fun getClasses(classesIds: Array<Int>): Array<ClassEntity?> {
         val result: Array<ClassEntity?> = arrayOfNulls(classesIds.size)
+        val now = ZonedDateTime.now()
+        val classIdsToFetch = arrayListOf<Pair<Int, Int>>()
 
         List(classesIds.size) {
             GlobalScope.launch {
-                var classEntity = classEntityDao.getClass(classesIds[it])
+                val classEntity: ClassEntity? = null// classEntityDao.getClass(classesIds[it])
 
-                if (classEntity == null) {
-                    classEntity = appNetwork.fetchClass(classesIds[it])
-
-                    if (classEntity != null) {
-                        persistFetchedClass(classEntity)
-                    }
+                if (
+                    classEntity?.updatedAt == null ||
+                    now <= classEntity.updatedAt!!.plusWeeks(1)
+                ) {
+                    classIdsToFetch.add(Pair(classesIds[it], it))
                 }
 
                 result[it] = classEntity
             }
         }.joinAll()
 
+        val fetchedClasses = appNetwork.fetchClasses(Array(
+            classIdsToFetch.size
+        ) {
+            classIdsToFetch[it].first
+        })
+
+//        persistFetchedClasses(fetchedClasses)
+
+        for (i in 0 until classIdsToFetch.size) {
+            result[classIdsToFetch[i].second] = fetchedClasses[i]
+        }
+
         return result
     }
 
-    private suspend fun getRoles(rolesIds: Array<Int>): Array<RoleEntity?> {
-        val result: Array<RoleEntity?> = arrayOfNulls(rolesIds.size)
+    suspend fun getKeyedRoles(rolesIds: Array<Int>): HashMap<Int, RoleEntity> {
+        val keyed = HashMap<Int, RoleEntity>()
+        val roles = getRoles(rolesIds)
 
-        List(rolesIds.size) {
-            GlobalScope.launch {
-                var role = roleEntityDao.getRole(rolesIds[it])
-
-                if (role == null) {
-                    role = appNetwork.fetchRole(rolesIds[it])
-
-                    if (role != null) {
-                        persistFetchedRole(role)
-                    }
-                }
-
-                result[it] = role
+        roles.forEach {
+            if (it != null) {
+                keyed[it.id] = it
             }
-        }.joinAll()
+        }
 
-        return result
+        return keyed
+    }
+
+    suspend fun getKeyedClasses(classesIds: Array<Int>): HashMap<Int, ClassEntity> {
+        val keyed = HashMap<Int, ClassEntity>()
+        val classes = getClasses(classesIds)
+
+        classes.forEach {
+            if (it != null) {
+                keyed[it.id] = it
+            }
+        }
+
+        return keyed
     }
 
     private suspend fun persistFetchedAnnouncement(
@@ -548,11 +536,35 @@ class AppRepository(
         }
     }
 
+    private fun persistFetchedRoles(fetchedRoles: Array<RoleEntity>) {
+        val now = ZonedDateTime.now()
+
+        fetchedRoles.forEach {
+            it.updatedAt = now
+        }
+
+        GlobalScope.launch(Dispatchers.IO) {
+            roleEntityDao.upsertArray(fetchedRoles)
+        }
+    }
+
     private fun persistFetchedClass(fetchedClass: ClassEntity) {
         fetchedClass.updatedAt = ZonedDateTime.now()
 
         GlobalScope.launch(Dispatchers.IO) {
             classEntityDao.upsert(fetchedClass)
+        }
+    }
+
+    private fun persistFetchedClasses(fetchedClasses: Array<ClassEntity>) {
+        val now = ZonedDateTime.now()
+
+        fetchedClasses.forEach {
+            it.updatedAt = now
+        }
+
+        GlobalScope.launch(Dispatchers.IO) {
+            classEntityDao.upsertArray(fetchedClasses)
         }
     }
 }
