@@ -13,18 +13,14 @@ class RoleEntity(
     @PrimaryKey(autoGenerate = false)
     val id: Int,
 
-    @SerializedName("name_ru")
-    val nameRu: String,
-
     val type: String,
     val name: String,
     var updatedAt: ZonedDateTime? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
-        parcel.readString() ?: "Безымянная роль",
         parcel.readString() ?: "No type",
-        parcel.readString() ?: "Noname role",
+        parcel.readString() ?: "Безымянная роль",
         ZonedDateTime.parse(parcel.readString())
     )
 
@@ -34,7 +30,6 @@ class RoleEntity(
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(id)
-        parcel.writeString(nameRu)
         parcel.writeString(type)
         parcel.writeString(name)
         parcel.writeString(updatedAt.toString())

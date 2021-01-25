@@ -5,21 +5,43 @@ import parsePermissions from 'permissionArrayToObject';
 
 module.exports = {
   find: async (req, res) => {
-    const id = parseInt(req.query.id, 10);
+    if (Array.isArray(req.query.id)) {
+      for (let i = 0; i < req.query.id.length; i += 1) {
+        req.query.id[i] = parseInt(req.query.id[i], 10);
 
-    if (!isNaN(id)) {
-      const user = await mg.query('user').findOne({
-        id
-      }, [], [
-        'id',
-        'firstName',
-        'lastName',
-        'roleId',
-        'classId'
-      ]);
+        if (isNaN(req.query.id[i])) {
+          res.throw(400, []);
+          return;
+        }
+      }
 
-      res.send(user);
+      res.send(await mg.query('user').find(
+        { id_in: req.query.id },
+        [],
+        [
+          'id',
+          'firstName',
+          'lastName',
+          'roleId',
+          'classId'
+        ]
+      ));
       return;
+    } else {
+      const id = parseInt(req.query.id, 10);
+
+      if (!isNaN(id)) {
+        res.send(await mg.query('user').findOne({
+          id
+        }, [], [
+          'id',
+          'firstName',
+          'lastName',
+          'roleId',
+          'classId'
+        ]));
+        return;
+      }
     }
 
     res.throw(400);

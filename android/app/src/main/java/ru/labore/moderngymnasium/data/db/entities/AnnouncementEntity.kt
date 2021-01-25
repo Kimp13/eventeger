@@ -13,12 +13,8 @@ class AnnouncementEntity(
     @PrimaryKey(autoGenerate = false)
     val id: Int,
 
-    @SerializedName("author_id")
     val authorId: Int,
-
     val text: String,
-
-    @SerializedName("created_at")
     var createdAt: ZonedDateTime? = null,
 
     var updatedAt: ZonedDateTime? = null

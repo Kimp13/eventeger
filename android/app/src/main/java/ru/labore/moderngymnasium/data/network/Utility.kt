@@ -97,6 +97,11 @@ class Utility(
             suspend fun fetch(@Query("id") id: Int): UserEntity?
         }
 
+        private interface FetchUsers {
+            @GET("users")
+            suspend fun fetch(@Query("id[]") id: Array<Int>): Array<UserEntity>
+        }
+
         private interface FetchRole {
             @GET("roles")
             suspend fun fetch(@Query("id") id: Int): RoleEntity?
@@ -215,6 +220,13 @@ class Utility(
     ) = builder
         .create(FetchUser::class.java)
         .fetch(id)
+
+    suspend fun fetchUsers(
+        ids: Array<Int>
+    ) = builder
+        .create(FetchUsers::class.java)
+        .fetch(ids)
+
 
     suspend fun fetchRole(
         id: Int

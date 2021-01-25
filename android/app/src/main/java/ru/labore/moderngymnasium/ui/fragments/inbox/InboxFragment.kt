@@ -23,7 +23,7 @@ class InboxFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElementF
     finish
 ) {
     override val viewModel: InboxViewModel by viewModels()
-
+    private var noAnnouncementsTextView: View? = null
     private var loading = true
 
     override fun onCreateView(
@@ -96,7 +96,7 @@ class InboxFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElementF
             AppRepository.Companion.UpdateParameters.DONT_UPDATE,
             refresh
         )
-    })
+    }).join()
 
 //    private fun addNewAnnouncements() = launch {
 //        if (!loading) {
@@ -136,10 +136,29 @@ class InboxFragment(push: (Fragment) -> Unit, finish: () -> Unit) : ListElementF
 
         inboxRefreshLayout.setOnRefreshListener {
             refreshUI()
+
+            if (viewModel.itemCount == 0) {
+                if (noAnnouncementsTextView == null) {
+                    LayoutInflater
+                        .from(context)
+                        .inflate(
+                            R.layout.inbox_no_announcements_textview,
+                            inboxFragmentLayout
+                        )
+                }
+            } else if (noAnnouncementsTextView != null) {
+                for (i in 0 until inboxFragmentLayout.childCount)
+                    if (
+                        inboxFragmentLayout.getChildAt(i) == noAnnouncementsTextView
+                    )
+                        inboxFragmentLayout.removeViewAt(i)
+
+                noAnnouncementsTextView = null
+            }
         }
 
         if (viewModel.itemCount == 0) {
-            LayoutInflater
+            noAnnouncementsTextView = LayoutInflater
                 .from(context)
                 .inflate(
                     R.layout.inbox_no_announcements_textview,

@@ -13,6 +13,7 @@ export default {
       }
 
       res.send(await mg.query('role').find({ id_in: req.query.id }));
+      return;
     } else {
       const id = parseInt(req.query.id, 10);
 
@@ -23,7 +24,7 @@ export default {
         return;
       }
 
-      req.throw(400);
+      res.throw(400);
     }
   },
 

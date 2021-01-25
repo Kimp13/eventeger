@@ -3,6 +3,7 @@ package ru.labore.moderngymnasium.ui.fragments.inbox
 import android.app.Application
 import android.content.Intent
 import android.os.Bundle
+import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.activities.AnnouncementDetailedActivity
 import ru.labore.moderngymnasium.ui.activities.CreateActivity
@@ -30,8 +31,11 @@ class InboxViewModel(
                 AnnouncementDetailedActivity::class.java
             )
             val bundle = Bundle()
+
             bundle.putParcelable("announcement", it)
             intent.putExtras(bundle)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
             application.startActivity(intent)
         }
     )

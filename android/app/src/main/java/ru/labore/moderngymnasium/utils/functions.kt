@@ -18,10 +18,7 @@ fun announcementEntityToCaption(entity: AnnouncementEntity, noName: String): Str
     }
 
     if (entity.authorRole != null) {
-        result += ", ${when(Locale.getDefault().language) {
-            "ru" -> entity.authorRole!!.nameRu
-            else -> entity.authorRole!!.name
-        }}"
+        result += ", ${entity.authorRole!!.name}"
     }
 
     if (entity.authorClass != null) {

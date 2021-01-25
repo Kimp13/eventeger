@@ -5,7 +5,9 @@
     android:id="@+id/inboxFragmentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.fragments.inbox.InboxFragment">
+    tools:context=".ui.fragments.inbox.InboxFragment"
+    android:background="@drawable/inbox_fragment_background"
+    android:padding="5dp">
 
     <ProgressBar
         android:id="@+id/inboxProgressBar"

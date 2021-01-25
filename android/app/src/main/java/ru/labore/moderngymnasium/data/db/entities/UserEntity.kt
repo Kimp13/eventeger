@@ -12,16 +12,9 @@ class UserEntity(
     @PrimaryKey(autoGenerate = false)
     val id: Int,
 
-    @SerializedName("first_name")
     val firstName: String?,
-
-    @SerializedName("last_name")
     val lastName: String?,
-
-    @SerializedName("role_id")
     var roleId: Int?,
-
-    @SerializedName("class_id")
     var classId: Int?,
 
     var updatedAt: ZonedDateTime? = null

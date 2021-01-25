@@ -63,6 +63,10 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
         id: Int
     ) = utility.fetchUser(id)
 
+    suspend fun fetchUsers(
+        ids: Array<Int>
+    ) = utility.fetchUsers(ids)
+
     suspend fun fetchRole(
         id: Int
     ) = utility.fetchRole(id)

@@ -36,7 +36,9 @@ module.exports = {
         ['announcement', 'read']
       );
 
-      let announcements = mg.knex('announcement')
+      let announcements = mg.knex
+        .select('announcement.*')
+        .from('announcement')
         .innerJoin(
           'announcementClassRole',
           'announcementClassRole.announcementId',
@@ -59,8 +61,8 @@ module.exports = {
 
       announcements = await announcements
         .orderBy('announcement.id', 'desc')
-        .offset(skip || 0)
-        .limit(limit || 10);
+        .offset(skip)
+        .limit(limit);
 
       res.send(announcements);
     }
