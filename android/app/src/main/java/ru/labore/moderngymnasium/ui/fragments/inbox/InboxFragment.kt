@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_inbox.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.repository.AppRepository
@@ -83,18 +84,18 @@ class InboxFragment(
         }
     }
 
-    private suspend fun updateAnnouncements(
+    private fun updateAnnouncements(
         forceFetch: AppRepository.Companion.UpdateParameters =
             AppRepository.Companion.UpdateParameters.DETERMINE,
         refresh: Boolean = false
-    ) = makeRequest ({
+    ): Job = makeRequest ({
         viewModel.updateAnnouncements(forceFetch, refresh)
     }, {
         viewModel.updateAnnouncements(
             AppRepository.Companion.UpdateParameters.DONT_UPDATE,
             refresh
         )
-    }).join()
+    })
 
 //    private fun addNewAnnouncements() = launch {
 //        if (!loading) {
@@ -112,7 +113,7 @@ class InboxFragment(
         updateAnnouncements(
             AppRepository.Companion.UpdateParameters.UPDATE,
             true
-        )
+        ).join()
 
         inboxRefreshLayout.isRefreshing = false
     }
@@ -129,7 +130,7 @@ class InboxFragment(
         params.bottomMargin = 50
 
         if (viewModel.itemCount == 0) {
-            updateAnnouncements()
+            updateAnnouncements().join()
         }
 
         inboxRefreshLayout.setOnRefreshListener {

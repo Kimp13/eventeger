@@ -20,7 +20,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/colorPrimaryDark" />
+                app:tint="@color/colorPrimary" />
 
             <TextView
                 android:id="@+id/inboxCardAuthorTextView"
@@ -28,6 +28,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textColor="?android:attr/textColorPrimaryInverse"
                 app:layout_constraintBottom_toTopOf="@id/inboxCardRankTextView"
                 app:layout_constraintStart_toEndOf="@id/inboxCardImageView"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -37,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBody2"
-                android:textColor="?android:attr/textColorSecondary"
+                android:textColor="?android:attr/textColorSecondaryInverse"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="@+id/inboxCardAuthorTextView"
                 app:layout_constraintTop_toBottomOf="@+id/inboxCardAuthorTextView" />
@@ -48,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:textColor="?android:attr/textColorSecondaryInverse" />
 
         <TextView
             android:layout_width="wrap_content"
