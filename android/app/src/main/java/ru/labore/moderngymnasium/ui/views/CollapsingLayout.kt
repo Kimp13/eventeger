@@ -48,7 +48,7 @@ class CollapsingLayout(
                 toolbar.setOnClickListener {
                     if (collapsed) {
                         expandContent() // Made in functions for convenience
-                        unrotateShevron() // AND kind of encapsulation! ^_^
+                        rotateShevronBack() // AND kind of encapsulation! ^_^
                     } else {
                         collapseContent() // ditto
                         rotateShevron() // ditto
@@ -104,7 +104,7 @@ class CollapsingLayout(
      *
      * TODO animation
      */
-    private fun unrotateShevron() {
+    private fun rotateShevronBack() {
         toolbar.getChildAt(1).rotation = 0F
     }
 }

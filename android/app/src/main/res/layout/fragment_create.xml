@@ -10,72 +10,78 @@
     android:orientation="vertical"
     tools:context=".ui.fragments.create.CreateFragment">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/createFragmentToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <LinearLayout
         android:id="@+id/createFragmentRootLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/createFragmentToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorPrimaryDark"
-            android:paddingStart="20dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="10dp">
-            <Button
-                android:id="@+id/createAnnouncementBackButton"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:background="@drawable/close_button_background"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+<!--        <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--            android:id="@+id/createFragmentToolbar"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:background="@color/colorPrimaryDark"-->
+<!--            android:paddingStart="20dp"-->
+<!--            android:paddingTop="10dp"-->
+<!--            android:paddingEnd="20dp"-->
+<!--            android:paddingBottom="10dp">-->
+<!--            <Button-->
+<!--                android:id="@+id/createAnnouncementBackButton"-->
+<!--                android:layout_width="28dp"-->
+<!--                android:layout_height="28dp"-->
+<!--                android:background="@drawable/close_button_background"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
 
-            <TextView
-                android:id="@+id/createAnnouncementTopLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="@string/create_announcement_new"
-                android:textColor="?android:attr/textColorPrimaryInverse"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@id/createAnnouncementBackButton"
-                app:layout_constraintStart_toEndOf="@id/createAnnouncementBackButton"
-                app:layout_constraintTop_toTopOf="@id/createAnnouncementBackButton" />
+<!--            <TextView-->
+<!--                android:id="@+id/createAnnouncementTopLabel"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginStart="10dp"-->
+<!--                android:text="@string/create_announcement_new"-->
+<!--                android:textColor="?android:attr/textColorPrimaryInverse"-->
+<!--                android:textSize="22sp"-->
+<!--                android:textStyle="bold"-->
+<!--                app:layout_constraintBottom_toBottomOf="@id/createAnnouncementBackButton"-->
+<!--                app:layout_constraintStart_toEndOf="@id/createAnnouncementBackButton"-->
+<!--                app:layout_constraintTop_toTopOf="@id/createAnnouncementBackButton" />-->
 
-            <Button
-                android:id="@+id/createAnnouncementSubmitButton"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:background="@drawable/submit_button_background"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/createAnnouncementBackButton"
-                app:layout_constraintBottom_toBottomOf="@id/createAnnouncementBackButton"/>
+<!--            <Button-->
+<!--                android:id="@+id/createAnnouncementSubmitButton"-->
+<!--                android:layout_width="28dp"-->
+<!--                android:layout_height="28dp"-->
+<!--                android:background="@drawable/submit_button_background"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="@id/createAnnouncementBackButton"-->
+<!--                app:layout_constraintBottom_toBottomOf="@id/createAnnouncementBackButton"/>-->
 
-            <ProgressBar
-                android:id="@+id/createAnnouncementSubmitProgress"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:indeterminate="true"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/createAnnouncementBackButton"
-                app:layout_constraintBottom_toBottomOf="@id/createAnnouncementBackButton"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
+<!--            <ProgressBar-->
+<!--                android:id="@+id/createAnnouncementSubmitProgress"-->
+<!--                android:layout_width="28dp"-->
+<!--                android:layout_height="28dp"-->
+<!--                android:indeterminate="true"-->
+<!--                android:visibility="gone"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="@id/createAnnouncementBackButton"-->
+<!--                app:layout_constraintBottom_toBottomOf="@id/createAnnouncementBackButton"/>-->
+<!--        </androidx.constraintlayout.widget.ConstraintLayout>-->
 
         <LinearLayout
+            android:id="@+id/createFragmentParametersLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="5dp">
+            android:padding="10dp">
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                custom:label="@string/enter_announcement_text">
+                android:layout_marginBottom="10dp"
+                custom:label="@string/create_announcement_text">
                 <EditText
                     android:id="@+id/createAnnouncementEditText"
                     style="@style/AppEditTextStyle"
@@ -89,12 +95,17 @@
             </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
 
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
-                android:id="@+id/createAnnouncementRoleChoose"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                custom:label="Получатели"
-                android:layout_marginBottom="5dp">
-
+                custom:label="@string/create_recipients"
+                android:layout_marginBottom="10dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/createAnnouncementRoleChoose"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"/>
             </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
         </LinearLayout>
     </LinearLayout>

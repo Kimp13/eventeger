@@ -53,12 +53,14 @@ class InboxViewModel(
     ) {
         if (refresh || !reachedEnd) {
             val offset = if (refresh) {
-                appRepository.now()
+                null
             } else {
                 currentOffset
             }
 
             val newAnnouncements = getAnnouncements(offset, forceFetch)
+
+            println(newAnnouncements.size)
 
             if (newAnnouncements.isNotEmpty())
                 currentOffset = newAnnouncements.last().createdAt
@@ -92,7 +94,7 @@ class InboxViewModel(
     }
 
     private suspend fun getAnnouncements(
-        offset: ZonedDateTime,
+        offset: ZonedDateTime?,
         forceFetch: AppRepository.Companion.UpdateParameters
     ) =
         appRepository.getAnnouncements(offset, forceFetch)

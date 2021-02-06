@@ -42,7 +42,7 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
 
     suspend fun fetchAnnouncements(
         jwt: String,
-        offset: ZonedDateTime
+        offset: ZonedDateTime?
     ) = utility.fetchAnnouncements(jwt, offset)
 
     suspend fun countAnnouncements(

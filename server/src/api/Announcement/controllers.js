@@ -1,33 +1,10 @@
 import getPermission from 'getPermission';
+import { parseDate, dateLess, UTC } from 'chrono';
 import { sort } from 'timsort';
 import search from 'binary-search';
 
-function parseDate(dateString) {
-  if (dateString.length >= 24) {
-    const date = new Date(
-      parseInt(dateString.substring(0, 4), 10),
-      parseInt(dateString.substring(5, 7), 10),
-      parseInt(dateString.substring(8, 10), 10),
-      parseInt(dateString.substring(11, 13), 10),
-      parseInt(dateString.substring(14, 16), 10),
-      parseInt(dateString.substring(17, 19), 10),
-      parseInt(dateString.substring(20, 23), 10)
-    );
-
-    if (isNaN(date.getTime())) {
-      return false;
-    } else {
-      return date;
-    }
-  }
-
-  return false;
-}
-
 export default {
   find: async (req, res) => {
-    console.log(req.query.offset);
-
     if (req.query.id) {
       const id = parseInt(req.query.id, 10);
 
@@ -52,55 +29,61 @@ export default {
       }
 
       res.throw(400);
-    } else if (typeof req.query.offset === 'string') {
+    } else {
       const offset = parseDate(req.query.offset);
 
-      if (offset) {
-        const roleIds = getPermission(
-          req.user.permissions,
-          ['announcement', 'read']
+      const roleIds = getPermission(
+        req.user.permissions,
+        ['announcement', 'read']
+      );
+
+      if (roleIds === false) {
+        res.send('[]');
+        return;
+      }
+
+      let announcements = mg.knex
+        .select('announcement.*')
+        .from('announcement')
+        .innerJoin(
+          'announcementClassRole',
+          'announcementClassRole.announcementId',
+          'announcement.id'
+        )
+        .where(
+          'announcementClassRole.classId',
+          req.user.classId
         );
 
-        if (roleIds === false) {
-          res.send('[]');
-          return;
+      if (Array.isArray(roleIds)) {
+        for (let i = 0; i < roleIds.length; i += 1) {
+          roleIds[i] = parseInt(roleIds[i], 10);
         }
 
-        let announcements = mg.knex
-          .select('announcement.*')
-          .from('announcement')
-          .innerJoin(
-            'announcementClassRole',
-            'announcementClassRole.announcementId',
-            'announcement.id'
-          )
-          .where(
-            'announcementClassRole.classId',
-            req.user.classId
-          );
+        announcements = announcements.andWhereIn(
+          'announcementClassRole.roleId',
+          roleIds
+        );
+      }
 
-        if (Array.isArray(roleIds)) {
-          for (let i = 0; i < roleIds.length; i += 1) {
-            roleIds[i] = parseInt(roleIds[i], 10);
-          }
-
-          announcements = announcements.andWhereIn(
-            'announcementClassRole.roleId',
-            roleIds
-          );
-        }
-
-        announcements = await announcements
-          .andWhere(
-            'announcement.createdAt',
-            '<',
-            offset
-          )
-          .orderBy('announcement.createdAt', 'desc');
-
-        res.send(announcements);
+      if (offset) {
+        res.send(
+          await announcements
+            .andWhere(
+              'announcement.createdAt',
+              '<=',
+              offset
+            )
+            .orderBy('announcement.createdAt', 'desc')
+            .offset(1)
+            .limit(25)
+        );
       } else {
-        res.throw(400);
+        res.send(
+          await announcements
+            .orderBy('announcement.createdAt', 'desc')
+            .limit(25)
+        );
       }
     }
   },
@@ -132,6 +115,21 @@ export default {
     ) {
       const explicit = req.body.recipients.constructor === Object;
       const usersMap = await mg.services.role.getUsersCreateMap(req.user);
+      const beginsAt = parseDate(req.body.beginsAt);
+      const endsAt = parseDate(req.body.endsAt);
+
+      if (beginsAt && endsAt) {
+        if (dateLess(beginsAt, UTC())) {
+          res.throw(400, "Некорректная дата начала мероприятия.");
+          return;
+        } else if (dateLess(endsAt, beginsAt, false)) {
+          res.throw(
+            400,
+            "Дата конца меньше или совпадает с датой начала мероприятия"
+          );
+          return;
+        }
+      }
 
       const map = (
         req.body.recipients === true ?
@@ -261,6 +259,6 @@ export default {
       }
     }
 
-    res.throw(400);
+    res.throw(400, "Предоставьте текст и получателей объявления");
   }
 };

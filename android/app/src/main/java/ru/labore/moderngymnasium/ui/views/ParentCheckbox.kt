@@ -106,6 +106,15 @@ class ParentCheckbox(
 
         checkbox.isChecked = state == CHECKED
 
+        if (state == CHECKED) {
+            checkbox.isChecked = true
+
+            checkboxLayout.visibility = View.GONE
+        } else {
+            checkbox.isChecked = false
+            checkboxLayout.visibility = View.VISIBLE
+        }
+
         if (notify) {
             checkedChangeHandler?.invoke(state)
         }

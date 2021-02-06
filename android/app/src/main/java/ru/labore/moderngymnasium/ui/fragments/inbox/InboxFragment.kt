@@ -97,18 +97,6 @@ class InboxFragment(
         )
     })
 
-//    private fun addNewAnnouncements() = launch {
-//        if (!loading) {
-//            loading = true
-//            inboxProgressBar.visibility = View.VISIBLE
-//
-//            updateAnnouncements()
-//
-//            loading = false
-//            inboxProgressBar.visibility = View.GONE
-//        }
-//    }
-
     private fun refreshUI() = launch {
         updateAnnouncements(
             AppRepository.Companion.UpdateParameters.UPDATE,
@@ -130,7 +118,10 @@ class InboxFragment(
         params.bottomMargin = 50
 
         if (viewModel.itemCount == 0) {
-            updateAnnouncements().join()
+            updateAnnouncements(
+                AppRepository.Companion.UpdateParameters.DETERMINE,
+                true
+            ).join()
         }
 
         inboxRefreshLayout.setOnRefreshListener {

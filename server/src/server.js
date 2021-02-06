@@ -69,8 +69,13 @@ let mgSpecs;
 global.mg = {};
 mg.knex = knex;
 
-function _throw(statusCode = 400, payload = {}) {
-  this.status(statusCode).send(payload);
+function _throw(statusCode = 400, errorMsg = "Error") {
+  this.status(statusCode).send({
+    error: {
+      errorCode: statusCode,
+      errorMessage: errorMsg
+    }
+  });
 }
 
 // conditional middleware

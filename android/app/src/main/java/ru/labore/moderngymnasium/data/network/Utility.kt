@@ -82,7 +82,7 @@ class Utility(
             @GET("announcements/getMine")
             suspend fun fetch(
                 @Header("Authentication") jwt: String,
-                @Query("offset") offset: ZonedDateTime
+                @Query("offset") offset: ZonedDateTime?
             ): Array<AnnouncementEntity>
         }
 
@@ -200,7 +200,7 @@ class Utility(
 
     suspend fun fetchAnnouncements(
         jwt: String,
-        offset: ZonedDateTime
+        offset: ZonedDateTime?
     ) = builder
         .create(FetchAnnouncements::class.java)
         .fetch(

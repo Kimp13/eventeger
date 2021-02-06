@@ -5,6 +5,14 @@ module.exports = {
   columns: {
     text: {
       type: 'text'
+    },
+
+    beginsAt: {
+      type: 'datetime'
+    },
+
+    endsAt: {
+      type: 'datetime'
     }
   },
 

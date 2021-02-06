@@ -16,8 +16,9 @@ class AnnouncementEntity(
     val authorId: Int,
     val text: String,
     var createdAt: ZonedDateTime,
-
-    var updatedAt: ZonedDateTime
+    var updatedAt: ZonedDateTime,
+    var startsAt: ZonedDateTime? = null,
+    var endsAt: ZonedDateTime? = null
 ) {
     @Ignore
     var author: UserEntity? = null

@@ -482,7 +482,7 @@ class AppRepository(
     }
 
     suspend fun getAnnouncements(
-        offset: ZonedDateTime = now(),
+        offset: ZonedDateTime? = null,
         forceFetch: UpdateParameters = UpdateParameters.DETERMINE
     ): Array<AnnouncementEntity> {
         val announcements: Array<AnnouncementEntity>
@@ -495,7 +495,7 @@ class AppRepository(
             UpdateParameters.UPDATE -> true
             UpdateParameters.DETERMINE -> {
                 val announcement: AnnouncementEntity? =
-                    announcementEntityDao.getAnnouncementAtOffset(offset)
+                    announcementEntityDao.getAnnouncementAtOffset(offset ?: now())
                 val now: ZonedDateTime = now()
                 val tenMinutesBefore = now.minusMinutes(10)
 
@@ -512,6 +512,8 @@ class AppRepository(
             )
 
             persistFetchedAnnouncements(announcements)
+        } else if (offset == null) {
+            announcements = announcementEntityDao.getFirstAnnouncements(DEFAULT_LIMIT)
         } else {
             announcements = announcementEntityDao.getAnnouncements(offset, DEFAULT_LIMIT)
         }
