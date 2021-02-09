@@ -14,6 +14,7 @@
         android:id="@+id/createFragmentToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
         <Button
             android:id="@+id/createAnnouncementBackButton"
             android:layout_width="28dp"
@@ -33,19 +34,22 @@
     </androidx.appcompat.widget.Toolbar>
 
     <ScrollView
+        android:id="@+id/createFragmentScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/createFragmentScrollView">
+        android:layout_height="match_parent">
+
         <LinearLayout
             android:id="@+id/createFragmentParametersLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 custom:label="@string/create_announcement_text">
+
                 <EditText
                     android:id="@+id/createAnnouncementEditText"
                     style="@style/AppEditTextStyle"
@@ -61,16 +65,24 @@
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                custom:label="@string/create_recipients"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="10dp"
+                custom:label="@string/create_recipients">
+
                 <LinearLayout
+                    android:id="@+id/createAnnouncementRoleChoose"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/createAnnouncementRoleChoose"
                     android:orientation="vertical"
                     android:paddingLeft="10dp"
-                    android:paddingRight="10dp"/>
+                    android:paddingRight="10dp" />
             </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
+
+            <ru.labore.moderngymnasium.ui.views.CollapsingCheckboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                custom:label="@string/event">
+            </ru.labore.moderngymnasium.ui.views.CollapsingCheckboxLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

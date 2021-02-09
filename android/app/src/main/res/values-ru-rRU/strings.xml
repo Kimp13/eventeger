@@ -53,4 +53,5 @@
     <string name="no_announcements">Список объявлений пока пуст.</string>
     <string name="create_recipients">Получатели</string>
     <string name="create_announcement_text">Текст объявления</string>
+    <string name="event">Мероприятие</string>
 </resources>

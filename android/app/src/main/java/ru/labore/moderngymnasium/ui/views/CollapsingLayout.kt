@@ -1,6 +1,6 @@
 package ru.labore.moderngymnasium.ui.views
 
-import android.animation.ObjectAnimator
+import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
@@ -10,23 +10,64 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.animation.addListener
 import androidx.core.view.children
+import androidx.core.view.doOnAttach
+import androidx.core.view.doOnLayout
 import ru.labore.moderngymnasium.R
 
-class CollapsingLayout(
+open class CollapsingLayout(
     context: Context,
     attrs: AttributeSet
 ) : LinearLayout(context) {
-    private val toolbar: ConstraintLayout
-    private var collapsed = false
+    protected val toolbar: ConstraintLayout
+    protected var collapsed = false
     private val animator = ValueAnimator()
     private val params = layoutParams ?: LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.WRAP_CONTENT
     )
 
+    protected open fun inflateToolbar() =
+        LayoutInflater
+            .from(context)
+            .inflate(
+                R.layout.collapsing_layout,
+                this,
+                false
+            ) as ConstraintLayout
+
+    protected open fun initializeToolbar() {
+        toolbar.setOnClickListener {
+            if (collapsed) {
+                expandContent() // Made in functions for convenience
+                rotateShevronBack() // AND kind of encapsulation! ^_^
+            } else {
+                collapseContent() // ditto - a new fancy word
+                rotateShevron() // ditto
+            }
+
+            collapsed = !collapsed
+        }
+    }
+
     init {
         orientation = LinearLayout.VERTICAL
+
+        toolbar = inflateToolbar()
+
+        doOnAttach {
+            toolbar.layoutParams = LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+
+            initializeToolbar()
+
+            addView(toolbar, 0)
+
+            animator.duration = 300
+        }
 
         context.theme.obtainStyledAttributes(
             attrs,
@@ -39,34 +80,7 @@ class CollapsingLayout(
                     R.styleable.CollapsingLayout_label
                 ) ?: "CollapsingLayout"
 
-                toolbar = LayoutInflater.from(context).inflate(
-                    R.layout.collapsing_layout,
-                    this@CollapsingLayout,
-                    false
-                ) as ConstraintLayout
-
-                toolbar.layoutParams = LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-
                 (toolbar.getChildAt(0) as TextView).text = label
-
-                toolbar.setOnClickListener {
-                    if (collapsed) {
-                        expandContent() // Made in functions for convenience
-                        rotateShevronBack() // AND kind of encapsulation! ^_^
-                    } else {
-                        collapseContent() // ditto - a new fancy word
-                        rotateShevron() // ditto
-                    }
-
-                    collapsed = !collapsed
-                }
-
-                addView(toolbar, 0)
-
-                animator.duration = 300
             } finally {
                 recycle()
             }
@@ -75,10 +89,12 @@ class CollapsingLayout(
 
     /**
      * Expand all children except the toolbar
-     *
-     * TODO animation
      */
-    private fun expandContent() {
+    protected fun expandContent() {
+        if (!animator.isRunning)
+            for (i in 1 until childCount)
+                getChildAt(i).visibility = View.VISIBLE
+
         this.measure(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -86,34 +102,63 @@ class CollapsingLayout(
 
         val height = this.measuredHeight
 
-        animator.removeAllUpdateListeners()
+        animator.removeAllListeners()
         animator.setIntValues(this.height, height)
         animator.addUpdateListener {
-            params.height =
-                if (it.currentPlayTime == it.duration)
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                else
-                    it.animatedValue as Int
+            params.height = it.animatedValue as Int
 
             layoutParams = params
         }
+
+        // Non-Kotlin way, but ??? it doesn't work Kotlin way
+        animator.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator?) {
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+
+                layoutParams = params
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+            }
+
+            override fun onAnimationRepeat(animation: Animator?) {
+            }
+        })
 
         animator.start()
     }
 
     /**
      * Collapse all children except the toolbar
-     *
-     * TODO animation
      */
-    private fun collapseContent() {
-        animator.removeAllUpdateListeners()
+    protected fun collapseContent() {
+        animator.removeAllListeners()
         animator.setIntValues(this.height, toolbar.height)
         animator.addUpdateListener {
             params.height = it.animatedValue as Int
 
             layoutParams = params
         }
+
+        // Non-Kotlin way, but ??? it doesn't work Kotlin way
+        animator.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator?) {
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                for (i in 1 until childCount)
+                    getChildAt(i).visibility = View.GONE
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+            }
+
+            override fun onAnimationRepeat(animation: Animator?) {
+            }
+        })
 
         animator.start()
     }
@@ -123,8 +168,8 @@ class CollapsingLayout(
      *
      * TODO animation
      */
-    private fun rotateShevron() {
-        toolbar.getChildAt(1).rotation = 180F
+    protected fun rotateShevron() {
+        toolbar.children.last().rotation = 180F
     }
 
     /**
@@ -132,7 +177,7 @@ class CollapsingLayout(
      *
      * TODO animation
      */
-    private fun rotateShevronBack() {
-        toolbar.getChildAt(1).rotation = 0F
+    protected fun rotateShevronBack() {
+        toolbar.children.last().rotation = 0F
     }
 }

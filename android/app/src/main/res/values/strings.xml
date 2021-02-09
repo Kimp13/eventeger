@@ -51,6 +51,7 @@
     <string name="choose_recipient_role">Choose at least one recipient</string>
     <string name="create_recipients">Recipients</string>
     <string name="create_announcement_text">Announcement text</string>
+    <string name="event">Event</string>
 
     <!-- Inbox fragment strings -->
     <string name="author_no_name">Noname</string>
