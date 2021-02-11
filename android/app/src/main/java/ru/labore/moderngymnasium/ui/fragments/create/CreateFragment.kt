@@ -1,5 +1,6 @@
 package ru.labore.moderngymnasium.ui.fragments.create
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,18 +12,91 @@ import androidx.core.view.get
 import androidx.fragment.app.viewModels
 import kotlinx.android.synthetic.main.fragment_create.*
 import kotlinx.coroutines.launch
+import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.db.entities.ClassEntity
-import ru.labore.moderngymnasium.data.db.entities.RoleEntity
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
+import ru.labore.moderngymnasium.ui.fragments.DatePickerFragment
+import ru.labore.moderngymnasium.ui.fragments.TimePickerFragment
 import ru.labore.moderngymnasium.ui.views.LabelledCheckbox
 import ru.labore.moderngymnasium.ui.views.ParentCheckbox
 import ru.labore.moderngymnasium.utils.hideKeyboard
 
 class CreateFragment(
-    controls: ListElementFragment.Companion.ListElementFragmentControls
+    controls: Companion.ListElementFragmentControls
 ) : ListElementFragment(controls) {
     override val viewModel: CreateViewModel by viewModels()
+    private val startDatePicker: DatePickerFragment
+    private val startTimePicker: TimePickerFragment
+    private val endDatePicker: DatePickerFragment
+    private val endTimePicker: TimePickerFragment
+    private var startDateTime: ZonedDateTime = viewModel.appRepository.zonedNow()
+    private var endDateTime: ZonedDateTime = startDateTime.plusHours(1)
+
+    init {
+        startDatePicker = DatePickerFragment { year, month, day ->
+            onStartDateChanged(year, month, day)
+        }
+
+        startTimePicker = TimePickerFragment { hour, minute ->
+            onStartTimeChanged(hour, minute)
+        }
+
+        endDatePicker = DatePickerFragment { year, month, day ->
+            onEndDateChanged(year, month, day)
+        }
+
+        endTimePicker = TimePickerFragment { hour, minute ->
+            onEndTimeChanged(hour, minute)
+        }
+
+        (startDatePicker.dialog as DatePickerDialog).datePicker.minDate =
+            startDateTime.toEpochSecond() * 1000
+
+        (endDatePicker.dialog as DatePickerDialog).datePicker.minDate =
+            endDateTime.toEpochSecond() * 1000
+    }
+
+    private fun verifyDateTimes() {
+        if (startDateTime.isBefore(viewModel.appRepository.zonedNow()))
+            startDateTime = viewModel.appRepository.zonedNow()
+
+        if (startDateTime.isAfter(endDateTime))
+            endDateTime = startDateTime.plusHours(1)
+    }
+
+    private fun onStartDateChanged(year: Int, month: Int, day: Int) {
+        startDateTime = startDateTime
+            .withYear(year)
+            .withMonth(month)
+            .withDayOfMonth(day)
+
+        verifyDateTimes()
+    }
+
+    private fun onStartTimeChanged(hour: Int, minute: Int) {
+        startDateTime = startDateTime
+            .withHour(hour)
+            .withMinute(minute)
+
+        verifyDateTimes()
+    }
+
+    private fun onEndDateChanged(year: Int, month: Int, day: Int) {
+        endDateTime = endDateTime
+            .withYear(year)
+            .withMonth(month)
+            .withDayOfMonth(day)
+
+        verifyDateTimes()
+    }
+
+    private fun onEndTimeChanged(hour: Int, minute: Int) {
+        endDateTime = endDateTime
+            .withHour(hour)
+            .withMinute(minute)
+
+        verifyDateTimes()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,6 +120,9 @@ class CreateFragment(
 
         launch {
             loadUI()
+
+            createRecipientsLoading?.visibility = View.GONE
+            createRecipientsProgressBar?.visibility = View.GONE
         }
 
         createFragmentToolbar.setOnMenuItemClickListener {
@@ -84,6 +161,21 @@ class CreateFragment(
         createFragmentParametersLayout?.children?.forEach {
             it.setOnClickListener { hideKeyboard() }
         }
+
+        createStartDate?.setOnClickListener {
+        }
+
+        createStartTime?.setOnClickListener {
+
+        }
+
+        createEndDate?.setOnClickListener {
+
+        }
+
+        createEndTime?.setOnClickListener {
+
+        }
     }
 
     private fun createAnnouncement(
@@ -92,7 +184,7 @@ class CreateFragment(
         if (viewModel.checkedRoles.keys.size == 0) {
             Toast.makeText(
                 activity,
-                getString(R.string.choose_recipient_role),
+                getString(R.string.choose_recipients),
                 Toast.LENGTH_SHORT
             ).show()
 

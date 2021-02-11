@@ -3,7 +3,7 @@ import pick from 'lodash/pick';
 import get from 'lodash/get';
 import parsePermissions from 'permissionArrayToObject';
 
-module.exports = {
+export default {
   find: async (req, res) => {
     if (Array.isArray(req.query.id)) {
       for (let i = 0; i < req.query.id.length; i += 1) {
@@ -171,8 +171,15 @@ module.exports = {
           ]
         ));
 
-        res.statusCode = 200;
-        res.end(JSON.stringify({
+        if (!mg.cache.roleClassMap[user.roleId].has(user.classId)) {
+          mg.cache.roleClassMap[user.roleId].add(user.classId);
+          await mg.knex.insert({
+            classId: user.classId,
+            roleId: user.roleId
+          }).into('class_role');
+        }
+
+        res.send({
           jwt,
           data: pick(user, [
             'firstName',
@@ -182,8 +189,7 @@ module.exports = {
             'roleId',
             'classId'
           ])
-        }));
-
+        });
         return;
       }
 

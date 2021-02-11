@@ -16,6 +16,10 @@ module.exports = {
     {
       type: 'one:many',
       with: 'user'
+    },
+    {
+      type: 'many:many',
+      with: 'role'
     }
   ]
 };

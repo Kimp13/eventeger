@@ -11,7 +11,7 @@ import androidx.core.view.children
 import androidx.core.view.doOnLayout
 import ru.labore.moderngymnasium.R
 
-class CollapsingCheckboxLayout(
+class CollapsingSwitchLayout(
     context: Context,
     attrs: AttributeSet
 ) : CollapsingLayout(context, attrs) {

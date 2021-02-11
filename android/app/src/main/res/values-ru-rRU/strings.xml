@@ -14,8 +14,8 @@
     <string name="no_internet">Ваше устройство не подключено к интернету</string>
 
     <string name="login_activity_label">&sign_in;&#09;•&#09;&app_name;</string>
-    <string name="username_hint">Логин</string>
-    <string name="password_hint">Пароль</string>
+    <string name="username">Логин</string>
+    <string name="password">Пароль</string>
     <string name="sign_in">&sign_in;</string>
     <string name="enter_username">Введите логин</string>
     <string name="username_incorrect">
@@ -25,19 +25,19 @@
     <string name="password_too_short">Пароль должен содержать как минимум 8 символов</string>
     <string name="invalid_credentials">Авторизация неудачна: неверный логин или пароль</string>
 
-    <string name="hint_create_announcement">Введите текст…</string>
-    <string name="create_announcement_label">Объявить</string>
+    <string name="enter_text">Введите текст…</string>
+    <string name="announce">Объявить</string>
     <string name="enter_announcement_text">Введите текст объявления</string>
 
-    <string name="author_no_name">Безымянный</string>
+    <string name="noname">Безымянный</string>
     <string name="author_label">Автор: %1$s</string>
     <string name="role_label">Роль: %1$s</string>
     <string name="class_label">Класс: %1$s</string>
     <string name="text_label">Текст: %1$s</string>
 
-    <string name="menu_inbox">Объявления</string>
-    <string name="menu_profile">Профиль</string>
-    <string name="choose_recipient_role">Выберите хотя бы одного получателя</string>
+    <string name="announcements">Объявления</string>
+    <string name="profile">Профиль</string>
+    <string name="choose_recipients">Выберите хотя бы одного получателя</string>
     <string name="loading">Загрузка…</string>
     <string name="no_rights_to_announce">Нет необходимых прав для объявления</string>
     <string name="notification_channel_name">&app_name;</string>
@@ -45,13 +45,19 @@
         Стандартный канал уведомлений приложения &app_name;.
     </string>
     <string name="no_author">Нет автора</string>
-    <string name="announcement_detailed_activity_action_bar_title">Объявление</string>
+    <string name="announcement">Объявление</string>
     <string name="expand_text">Читать далее...</string>
     <string name="session_timed_out">Ваша сессия истекла. Пожалуйста, войдите снова.</string>
-    <string name="create_announcement_new">Новое объявление</string>
-    <string name="menu_news">Новости</string>
+    <string name="new_announcement">Новое объявление</string>
+    <string name="news">Новости</string>
     <string name="no_announcements">Список объявлений пока пуст.</string>
-    <string name="create_recipients">Получатели</string>
-    <string name="create_announcement_text">Текст объявления</string>
+    <string name="recipients">Получатели</string>
+    <string name="announcement_text">Текст объявления</string>
     <string name="event">Мероприятие</string>
+    <string name="start_date">Дата начала</string>
+    <string name="start_time">Время начала</string>
+    <string name="end_date">Дата конца</string>
+    <string name="end_time">Время конца</string>
+    <string name="start">Начало</string>
+    <string name="end">Окончание</string>
 </resources>

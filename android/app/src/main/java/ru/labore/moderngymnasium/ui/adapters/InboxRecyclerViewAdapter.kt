@@ -124,7 +124,7 @@ class InboxRecyclerViewAdapter(
             } else {
                 val caption = announcementEntityToCaption(
                     announcements[pos],
-                    resources.getString(R.string.author_no_name)
+                    resources.getString(R.string.noname)
                 )
                 val comma = caption.indexOf(',')
 

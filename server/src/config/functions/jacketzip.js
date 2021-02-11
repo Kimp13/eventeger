@@ -38,7 +38,10 @@ module.exports = function jacketzip() {
     }
   }
 
+  // Initializing cache
+  mg.cache.roleClassMap = {};
   setInterval(updateCache, 300000);
+  // EO Initializing cache
 
   webpush.setVapidDetails(
     'mailto:akunec41@gmail.com',
@@ -55,5 +58,15 @@ module.exports = function jacketzip() {
   mg.fbAdmin = admin;
   mg.webpush = webpush;
 
-  return updateCache();
+  return mg.knex.select('*')
+    .from('class_role')
+    .then(junctions => {
+      for (let i = 0; i < junctions.length; i += 1) {
+        if (junctions[i].roleId in mg.cache.roleClassMap)
+          mg.cache.roleClassMap[junctions[i].roleId].add(junctions[i].classId);
+        else
+          mg.cache.roleClassMap[junctions[i].roleId] = new Set(junctions[i].classId);
+      }
+    })
+    .then(updateCache);
 };

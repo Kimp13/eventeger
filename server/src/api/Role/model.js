@@ -20,6 +20,10 @@ module.exports = {
       with: 'permission'
     },
     {
+      type: 'many:many',
+      with: 'class'
+    },
+    {
       type: 'one:many',
       with: 'user'
     }

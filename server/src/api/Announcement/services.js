@@ -1,3 +1,6 @@
+import { sortedHas } from 'arrays';
+import getPermission from 'getPermission';
+
 export default {
   getUsersTokens: async announcementId => {
     announcementId = Number(announcementId);
@@ -7,7 +10,7 @@ export default {
       const userIDs = await mg.knex
         .select('user.id')
         .from('user')
-        .innerJoin('announcement_class_role', function() {
+        .innerJoin('announcement_class_role', function () {
           this
             .on(
               'announcement_class_role.role_id',
@@ -39,7 +42,7 @@ export default {
 
       return result;
     }
-    
+
     return null;
   },
 
@@ -60,6 +63,32 @@ export default {
   },
 
   notify: async announcement => {
-    
+
+  },
+
+  isAvaiable: async (announcement, user) => {
+    const roles = getPermission(mg.cache.roles[user.roleId], ['announcement', 'read']);
+    const classes = getPermission(mg.cache.roles[user.roleId], ['class', 'multiple']);
+
+    if (roles === true && classes === true) {
+      return true;
+    } else if (roles && classes) {
+      const junctions = await mg.knex
+        .select('classId', 'roleId')
+        .from('announcementClassRole')
+        .where('announcementId', announcement.id);
+
+      for (let j = 0; j < junctions.length; j += 1)
+        if (
+          (roles === true || sortedHas(roles, junctions[j].roleId)) &&
+          (classes === true || sortedHas(classes, junctions[j].classId))
+        ) {
+          return true;
+        }
+    } else {
+      return false;
+    }
+
+    return false;
   }
 }

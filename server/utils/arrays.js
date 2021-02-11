@@ -1,3 +1,15 @@
+import bs from 'binary-search';
+
+export const sortedHas = (array, element) => {
+  return bs(
+    array,
+    element,
+    function comparator(element, needle) {
+      return element - needle;
+    }
+  ) >= 0;
+};
+
 export const arrayOf = (start, end) => {
   const result = [];
 

@@ -31,8 +31,8 @@
 
     <!-- Login Activity strings -->
     <string name="login_activity_label">&sign_in;&#09;•&#09;&app_name;</string>
-    <string name="username_hint">Username</string>
-    <string name="password_hint">Password</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
     <string name="enter_username">Enter username</string>
     <string name="username_incorrect">
                 Username must only contain english letters, digits and signs #, $, *, _
@@ -44,17 +44,23 @@
 
     <!-- Create fragment strings -->
     <string name="no_rights_to_announce">No required rights to announce.</string>
-    <string name="hint_create_announcement">Enter text…</string>
-    <string name="create_announcement_label">Announce</string>
-    <string name="create_announcement_new">New announcement</string>
+    <string name="enter_text">Enter text…</string>
+    <string name="announce">Announce</string>
+    <string name="new_announcement">New announcement</string>
     <string name="enter_announcement_text">Enter announcement text</string>
-    <string name="choose_recipient_role">Choose at least one recipient</string>
-    <string name="create_recipients">Recipients</string>
-    <string name="create_announcement_text">Announcement text</string>
+    <string name="choose_recipients">Choose at least one recipient</string>
+    <string name="recipients">Recipients</string>
+    <string name="announcement_text">Announcement text</string>
     <string name="event">Event</string>
+    <string name="start">Start</string>
+    <string name="start_date">Start date</string>
+    <string name="start_time">Start time</string>
+    <string name="end">End</string>
+    <string name="end_date">End date</string>
+    <string name="end_time">End time</string>
 
     <!-- Inbox fragment strings -->
-    <string name="author_no_name">Noname</string>
+    <string name="noname">Noname</string>
     <string name="no_author">No author</string>
     <string name="author_label">Author: %1$s</string>
     <string name="role_label">Role: %1$s</string>
@@ -62,12 +68,12 @@
     <string name="text_label">Text: %1$s</string>
 
     <!-- Bottom Nav strings -->
-    <string name="menu_news">News</string>
-    <string name="menu_inbox">Announcements</string>
-    <string name="menu_profile">Profile</string>
+    <string name="news">News</string>
+    <string name="announcements">Announcements</string>
+    <string name="profile">Profile</string>
 
     <!-- Announcement Detailed Activity strings -->
-    <string name="announcement_detailed_activity_action_bar_title">Announcement</string>
+    <string name="announcement">Announcement</string>
     <string name="expand_text">Expand text…</string>
     <string name="no_announcements">There are no announcements yet.</string>
 </resources>

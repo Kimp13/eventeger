@@ -2,7 +2,6 @@ package ru.labore.moderngymnasium.ui.fragments.detailedAnnouncement
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
@@ -42,7 +41,7 @@ class DetailedAnnouncementFragment(
         } else {
             val caption = announcementEntityToCaption(
                 announcement,
-                resources.getString(R.string.author_no_name)
+                resources.getString(R.string.noname)
             )
             val comma = caption.indexOf(',')
 

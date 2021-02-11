@@ -5,6 +5,6 @@
     <item
         android:id="@+id/action_done"
         android:icon="@drawable/ic_baseline_check"
-        android:title="@string/create_announcement_label"
+        android:title="@string/announce"
         app:showAsAction="ifRoom|withText"/>
 </menu>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/createFragmentRootLayout"
@@ -19,7 +20,7 @@
             android:id="@+id/createAnnouncementBackButton"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
             android:background="@drawable/close_button_background" />
 
         <TextView
@@ -27,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:text="@string/create_announcement_new"
+            android:text="@string/new_announcement"
             android:textColor="?android:attr/textColorPrimaryInverse"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -44,11 +45,12 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Announcement text -->
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-                custom:label="@string/create_announcement_text">
+                custom:label="@string/announcement_text">
 
                 <EditText
                     android:id="@+id/createAnnouncementEditText"
@@ -57,16 +59,31 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:hint="@string/hint_create_announcement"
+                    android:hint="@string/enter_text"
                     android:importantForAutofill="no"
                     android:inputType="textMultiLine" />
             </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
 
+            <!-- Recipients -->
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-                custom:label="@string/create_recipients">
+                custom:label="@string/recipients">
+
+                <ProgressBar
+                    android:id="@+id/createRecipientsProgressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:indeterminate="true" />
+
+                <TextView
+                    android:id="@+id/createRecipientsLoading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:text="@string/loading" />
 
                 <LinearLayout
                     android:id="@+id/createAnnouncementRoleChoose"
@@ -77,12 +94,86 @@
                     android:paddingRight="10dp" />
             </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
 
-            <ru.labore.moderngymnasium.ui.views.CollapsingCheckboxLayout
+            <ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 custom:label="@string/event">
-            </ru.labore.moderngymnasium.ui.views.CollapsingCheckboxLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/createStartHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="5dp"
+                        android:text="@string/start"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <Button
+                        android:id="@+id/createStartDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/start_date"
+                        app:layout_constraintEnd_toStartOf="@id/createStartTime"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/createStartHeader" />
+
+                    <Button
+                        android:id="@+id/createStartTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/start_time"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/createStartDate"
+                        app:layout_constraintTop_toBottomOf="@id/createStartHeader" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/createEndHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="5dp"
+                        android:text="@string/end"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <Button
+                        android:id="@+id/createEndDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/end_date"
+                        app:layout_constraintEnd_toStartOf="@id/createEndTime"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/createEndHeader" />
+
+                    <Button
+                        android:id="@+id/createEndTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/end_time"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/createEndDate"
+                        app:layout_constraintTop_toBottomOf="@id/createEndHeader" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

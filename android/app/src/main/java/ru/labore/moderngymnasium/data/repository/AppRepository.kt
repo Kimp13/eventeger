@@ -7,7 +7,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.R
@@ -93,7 +92,8 @@ class AppRepository(
         }
     }
 
-    fun now() = ZonedDateTime.now(ZoneId.of("UTC"))
+    fun now(): ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC"))!!
+    fun zonedNow(): ZonedDateTime = ZonedDateTime.now()!!
 
     suspend fun onMainActivityCreated() {
         if (user != null) {
@@ -439,7 +439,7 @@ class AppRepository(
                     .setContentTitle(
                         announcementEntityToCaption(
                             entity,
-                            context.getString(R.string.author_no_name)
+                            context.getString(R.string.noname)
                         )
                     )
                     .setContentText(entity.text)
