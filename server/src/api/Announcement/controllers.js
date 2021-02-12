@@ -1,7 +1,7 @@
-import getPermission from 'getPermission';
-import { parseDate, dateLess, UTC } from 'chrono';
-import { sort } from 'timsort';
-import search from 'binary-search';
+import getPermission from "getPermission";
+import { parseDate, dateLess, UTC } from "chrono";
+import { sort } from "timsort";
+import search from "binary-search";
 
 export default {
   find: async (req, res) => {
@@ -9,10 +9,10 @@ export default {
       const id = parseInt(req.query.id, 10);
 
       if (id) {
-        const announcement = mg.query('announcement').findOne({ id });
+        const announcement = mg.query("announcement").findOne({ id });
 
         if (announcement) {
-          const relation = mg.query('announcementClassRole').findOne({
+          const relation = mg.query("announcementClassRole").findOne({
             announcementId: announcement.id,
             roleId: req.user.roleId,
             classId: req.user.classId
@@ -34,24 +34,24 @@ export default {
 
       const roleIds = getPermission(
         req.user.permissions,
-        ['announcement', 'read']
+        ["announcement", "read"]
       );
 
       if (roleIds === false) {
-        res.send('[]');
+        res.send([]);
         return;
       }
 
       let announcements = mg.knex
-        .select('announcement.*')
-        .from('announcement')
+        .select("announcement.*")
+        .from("announcement")
         .innerJoin(
-          'announcementClassRole',
-          'announcementClassRole.announcementId',
-          'announcement.id'
+          "announcementClassRole",
+          "announcementClassRole.announcementId",
+          "announcement.id"
         )
         .where(
-          'announcementClassRole.classId',
+          "announcementClassRole.classId",
           req.user.classId
         );
 
@@ -61,7 +61,7 @@ export default {
         }
 
         announcements = announcements.andWhereIn(
-          'announcementClassRole.roleId',
+          "announcementClassRole.roleId",
           roleIds
         );
       }
@@ -70,40 +70,128 @@ export default {
         res.send(
           await announcements
             .andWhere(
-              'announcement.createdAt',
-              '<=',
+              "announcement.createdAt",
+              "<=",
               offset
             )
-            .orderBy('announcement.createdAt', 'desc')
+            .orderBy("announcement.createdAt", "desc")
             .offset(1)
             .limit(25)
         );
       } else {
         res.send(
           await announcements
-            .orderBy('announcement.createdAt', 'desc')
+            .orderBy("announcement.createdAt", "desc")
             .limit(25)
         );
       }
     }
   },
 
-  count: async (req, res) => {
-    const count = (await mg.knex('announcement')
-      .count('*')
+  lastEvents: async (req, res) => {
+    let offset;
+
+    if ("offset" in req.query) {
+      offset = parseDate(req.query.offset);
+
+      if (!offset) {
+        res.throw(400, "Некорректная дата последнего комментария");
+        return;
+      }
+    }
+
+    const roleIds = getPermission(
+      user.permissions,
+      ["announcement", "read"]
+    );
+
+    if (roleIds === false) {
+      res.send([]);
+      return;
+    }
+
+    const classesIds = getPermission(
+      user.permissions,
+      ["class", "multiple"]
+    );
+
+    if (classesIds === false && user.classId === null) {
+      res.send([]);
+      return;
+    }
+
+    let announcements = mg.knex
+      .select("announcement.*")
+      .from("announcement")
       .innerJoin(
-        'announcementClassRole',
-        'announcementClassRole.announcementId',
-        'announcement.id'
+        "announcementClassRole",
+        "announcementClassRole.announcementId",
+        "announcement.id"
+      )
+      .where(builder =>
+        builder.where("beginsAt", "!=", null).orWhere("endsAt", "!=", null)
+      );
+
+    if (Array.isArray(classesIds)) {
+      andNeeded = true;
+
+      for (let i = 0; i < classesIds.length; i += 1)
+        classesIds[i] = parseInt(classesIds[i], 10);
+
+      announcements = announcements
+        .andWhereIn("announcementClassRole.classId", classesIds);
+    }
+
+    if (Array.isArray(rolesIds)) {
+      for (let i = 0; i < rolesIds.length; i += 1)
+        rolesIds[i] = parseInt(rolesIds[i], 10);
+
+      announcements = announcements
+        .andWhereIn("announcementClassRole.roleId", rolesIds);
+    }
+
+    if (offset) {
+      res.send(
+        await announcements
+          .andWhere(
+            "announcement.beginsAt",
+            ">=",
+            offset
+          )
+          .orderBy("announcement.beginsAt", "asc")
+          .offset(1)
+          .limit(25)
+      );
+    } else {
+      res.send(
+        await announcements
+          .andWhere(
+            "announcement.beginsAt",
+            ">=",
+            UTC()
+          )
+          .orderBy("announcement.beginsAt", "asc")
+          .limit(25)
+      );
+    }
+  },
+
+  count: async (req, res) => {
+    const count = (await mg.knex("announcement")
+      .count("*")
+      .innerJoin(
+        "announcementClassRole",
+        "announcementClassRole.announcementId",
+        "announcement.id"
       )
       .where(
-        'announcementClassRole.classId',
+        "announcementClassRole.classId",
         req.user.classId
       )
       .andWhere(
-        'announcementClassRole.roleId',
+        "announcementClassRole.roleId",
         req.user.roleId
-      ))[0]['count(*)'];
+      ))[0]["count(*)"];
 
     res.send(String(count));
   },
@@ -115,14 +203,24 @@ export default {
     ) {
       const explicit = req.body.recipients.constructor === Object;
       const usersMap = await mg.services.role.getUsersCreateMap(req.user);
-      const beginsAt = parseDate(req.body.beginsAt);
-      const endsAt = parseDate(req.body.endsAt);
+      let beginsAt;
+      let endsAt;
 
-      if (beginsAt && endsAt) {
-        if (dateLess(beginsAt, UTC())) {
-          res.throw(400, "Некорректная дата начала мероприятия.");
+      if (req.body.beginsAt) {
+        beginsAt = parseDate(req.body.beginsAt);
+
+        if (!beginsAt) {
+          res.throw(400, "Некорректная дата начала мероприятия");
+        }
+      }
+
+      if (req.body.endsAt) {
+        endsAt = parseDate(req.body.endsAt);
+
+        if (!endsAt) {
+          res.throw(400, "Некорректная дата конца мероприятия");
           return;
-        } else if (dateLess(endsAt, beginsAt, false)) {
+        } else if (beginsAt && dateLess(endsAt, beginsAt, false)) {
           res.throw(
             400,
             "Дата конца меньше или совпадает с датой начала мероприятия"
@@ -153,7 +251,7 @@ export default {
                   parseInt(classId, 10),
                   compFunction
                 ) < 0) {
-                  console.log('throwing 1');
+                  console.log("throwing 1");
                   res.throw(403);
                   return;
                 }
@@ -169,9 +267,11 @@ export default {
           announcementId,
           recipients
         } = await mg.knex.transaction(t =>
-          mg.query('announcement').create({
+          mg.query("announcement").create({
             text: req.body.text,
-            authorId: req.user.id
+            authorId: req.user.id,
+            beginsAt: beginsAt || null,
+            endsAt: endsAt || null
           }).then(announcement => {
             const recipientsArray = new Array();
 
@@ -188,7 +288,7 @@ export default {
             }
 
             return t.insert(recipientsArray)
-              .into('announcementClassRole')
+              .into("announcementClassRole")
               .then(() => ({
                 announcementId: announcement[0],
                 recipients: recipientsArray
@@ -203,8 +303,8 @@ export default {
             const permission = getPermission(
               role.permissions,
               [
-                'announcement',
-                'create'
+                "announcement",
+                "create"
               ]
             );
 
@@ -215,9 +315,9 @@ export default {
                 return a - b;
               })
             ) {
-              const users = await mg.query('user').find({
+              const users = await mg.query("user").find({
                 classId: recipient.classId
-              }, {}, ['id']);
+              }, {}, ["id"]);
 
               for (const user of users) {
                 userIds.add(user.id);
@@ -226,7 +326,7 @@ export default {
           }
         }
 
-        const tokens = await mg.query('pushOptions').find({
+        const tokens = await mg.query("pushOptions").find({
           userId_in: Array.from(userIds)
         }, {});
 
@@ -240,13 +340,27 @@ export default {
           }
         }
 
+        const createdAt = new Date().toISOString();
+        const beginsAtString = (
+          beginsAt ?
+            beginsAt.toISOString() :
+            "null"
+        );
+        const endsAtString = (
+          endsAt ?
+            endsAt.toISOString() :
+            "null"
+        );
+
         await mg.fbAdmin.messaging()
           .sendMulticast({
             data: {
               text: req.body.text,
               authorId: String(req.user.id),
               id: String(announcementId),
-              createdAt: new Date().toISOString()
+              createdAt,
+              beginsAt: beginsAtString,
+              endsAt: endsAtString
             },
             tokens: notificationTokens
           })
@@ -254,7 +368,39 @@ export default {
             console.log(e);
           });
 
-        res.status(200).send({});
+        if (beginsAt) {
+          const notify = () =>
+            mg.fbAdmin.messaging()
+              .sendMulticast({
+                data: {
+                  type: "startsSoon",
+                  text: req.body.text,
+                  authorId: String(req.user.id),
+                  id: String(announcementId),
+                  createdAt,
+                  beginsAt: beginsAtString,
+                  endsAt: endsAtString
+                },
+                tokens: notificationTokens
+              })
+              .catch(e => {
+                console.log(e);
+              });
+
+          const pushTime = new Date(beginsAt);
+          const now = UTC();
+          pushTime.setTime(pushTime.getTime() - 3600000);
+
+          const difference = pushTime.getTime() - now.getTime();
+
+          if (difference <= 0) {
+            notify();
+          } else {
+            setTimeout(notify, difference);
+          }
+        }
+
+        res.send({});
         return;
       }
     }

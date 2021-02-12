@@ -23,6 +23,9 @@ class TimePickerFragment(
         timeChangeListener = changeListener
     }
 
+    fun updateTime(hour: Int, minute: Int) =
+        (dialog as TimePickerDialog?)?.updateTime(hour, minute)
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return TimePickerDialog(
             activity,

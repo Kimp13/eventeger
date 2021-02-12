@@ -4,7 +4,8 @@ module.exports = {
 
   columns: {
     text: {
-      type: 'text'
+      type: 'text',
+      notNull: true
     },
 
     beginsAt: {

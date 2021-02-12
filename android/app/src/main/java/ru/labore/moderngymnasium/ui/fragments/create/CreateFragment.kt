@@ -29,73 +29,76 @@ class CreateFragment(
     private val startTimePicker: TimePickerFragment
     private val endDatePicker: DatePickerFragment
     private val endTimePicker: TimePickerFragment
-    private var startDateTime: ZonedDateTime = viewModel.appRepository.zonedNow()
-    private var endDateTime: ZonedDateTime = startDateTime.plusHours(1)
+    private var startDateTime: ZonedDateTime? = null
+        set(value) {
+            if (value != null) {
+                field = if (value.isBefore(viewModel.appRepository.zonedNow()))
+                    viewModel.appRepository.zonedNow()
+                else
+                    value
+
+                startDatePicker.updateDate(
+                    field!!.year,
+                    field!!.monthValue,
+                    field!!.dayOfMonth
+                )
+                startTimePicker.updateTime(
+                    field!!.hour,
+                    field!!.minute
+                )
+
+                endDatePicker.minDate = field!!.toEpochSecond() * 1000
+                endDateTime = endDateTime ?: field!!.plusHours(1)
+            }
+        }
+    private var endDateTime: ZonedDateTime? = null
+        set(value) {
+            if (value != null) {
+                val other = startDateTime ?: viewModel.appRepository.zonedNow()
+
+                field = if (value.isBefore(other))
+                    other.plusHours(1)
+                else
+                    value
+
+                endDatePicker.updateDate(
+                    field!!.year,
+                    field!!.monthValue,
+                    field!!.dayOfMonth
+                )
+                endTimePicker.updateTime(
+                    field!!.hour,
+                    field!!.minute
+                )
+            }
+        }
 
     init {
         startDatePicker = DatePickerFragment { year, month, day ->
-            onStartDateChanged(year, month, day)
+            startDateTime = (startDateTime ?: viewModel.appRepository.zonedNow())
+                .withYear(year)
+                .withMonth(month + 1)
+                .withDayOfMonth(day)
         }
 
         startTimePicker = TimePickerFragment { hour, minute ->
-            onStartTimeChanged(hour, minute)
+            startDateTime = (startDateTime ?: viewModel.appRepository.zonedNow())
+                .withHour(hour)
+                .withMinute(minute)
         }
 
         endDatePicker = DatePickerFragment { year, month, day ->
-            onEndDateChanged(year, month, day)
+            endDateTime = (endDateTime ?: viewModel.appRepository.zonedNow())
+                .withYear(year)
+                .withMonth(month + 1)
+                .withDayOfMonth(day)
         }
 
         endTimePicker = TimePickerFragment { hour, minute ->
-            onEndTimeChanged(hour, minute)
+            endDateTime = (endDateTime ?: viewModel.appRepository.zonedNow())
+                .withHour(hour)
+                .withMinute(minute)
         }
-
-        (startDatePicker.dialog as DatePickerDialog).datePicker.minDate =
-            startDateTime.toEpochSecond() * 1000
-
-        (endDatePicker.dialog as DatePickerDialog).datePicker.minDate =
-            endDateTime.toEpochSecond() * 1000
-    }
-
-    private fun verifyDateTimes() {
-        if (startDateTime.isBefore(viewModel.appRepository.zonedNow()))
-            startDateTime = viewModel.appRepository.zonedNow()
-
-        if (startDateTime.isAfter(endDateTime))
-            endDateTime = startDateTime.plusHours(1)
-    }
-
-    private fun onStartDateChanged(year: Int, month: Int, day: Int) {
-        startDateTime = startDateTime
-            .withYear(year)
-            .withMonth(month)
-            .withDayOfMonth(day)
-
-        verifyDateTimes()
-    }
-
-    private fun onStartTimeChanged(hour: Int, minute: Int) {
-        startDateTime = startDateTime
-            .withHour(hour)
-            .withMinute(minute)
-
-        verifyDateTimes()
-    }
-
-    private fun onEndDateChanged(year: Int, month: Int, day: Int) {
-        endDateTime = endDateTime
-            .withYear(year)
-            .withMonth(month)
-            .withDayOfMonth(day)
-
-        verifyDateTimes()
-    }
-
-    private fun onEndTimeChanged(hour: Int, minute: Int) {
-        endDateTime = endDateTime
-            .withHour(hour)
-            .withMinute(minute)
-
-        verifyDateTimes()
     }
 
     override fun onCreateView(
@@ -114,6 +117,11 @@ class CreateFragment(
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        val minDate = viewModel.appRepository.zonedNow().toEpochSecond() * 1000
+
+        startDatePicker.minDate = minDate
+        endDatePicker.minDate = minDate
 
         val progressBar = ProgressBar(activity)
         progressBar.isIndeterminate = true
@@ -163,18 +171,19 @@ class CreateFragment(
         }
 
         createStartDate?.setOnClickListener {
+            startDatePicker.show(parentFragmentManager, "startDatePicker")
         }
 
         createStartTime?.setOnClickListener {
-
+            startTimePicker.show(parentFragmentManager, "startTimePicker")
         }
 
         createEndDate?.setOnClickListener {
-
+            endDatePicker.show(parentFragmentManager, "endDatePicker")
         }
 
         createEndTime?.setOnClickListener {
-
+            endTimePicker.show(parentFragmentManager, "endTimePicker")
         }
     }
 

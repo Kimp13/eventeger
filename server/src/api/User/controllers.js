@@ -1,7 +1,7 @@
-import bcrypt from 'bcrypt';
-import pick from 'lodash/pick';
-import get from 'lodash/get';
-import parsePermissions from 'permissionArrayToObject';
+import bcrypt from "bcrypt";
+import pick from "lodash/pick";
+import get from "lodash/get";
+import parsePermissions from "permissionArrayToObject";
 
 export default {
   find: async (req, res) => {
@@ -15,15 +15,15 @@ export default {
         }
       }
 
-      res.send(await mg.query('user').find(
+      res.send(await mg.query("user").find(
         { id_in: req.query.id },
         [],
         [
-          'id',
-          'firstName',
-          'lastName',
-          'roleId',
-          'classId'
+          "id",
+          "firstName",
+          "lastName",
+          "roleId",
+          "classId"
         ]
       ));
       return;
@@ -31,14 +31,14 @@ export default {
       const id = parseInt(req.query.id, 10);
 
       if (!isNaN(id)) {
-        res.send(await mg.query('user').findOne({
+        res.send(await mg.query("user").findOne({
           id
         }, [], [
-          'id',
-          'firstName',
-          'lastName',
-          'roleId',
-          'classId'
+          "id",
+          "firstName",
+          "lastName",
+          "roleId",
+          "classId"
         ]));
         return;
       }
@@ -70,73 +70,67 @@ export default {
   },
 
   signUp: async (req, res) => {
-    const { username, password } = req.body;
+    const {
+      username,
+      password,
+      firstName = null,
+      lastName = null
+    } = req.body;
 
     if (
       !password ||
       password.length < 8 ||
-      /[^0-9a-zA-Z#$*_]/.test(username)
+      /[^0-9a-zA-Z#$^*_]/.test(username)
     ) {
-      res.statusCode = 400;
-      res.end('{}');
-
+      res.throw(400, "Некорректное имя пользователя или пароль");
       return;
     }
 
-    try {
-      if (mg.cache.usersCount === 0) {
-        const hash = await bcrypt.hash(password, 10);
-        const user = await mg.knex
-          .select('*')
-          .from('user')
-          .where('id', (
-            await mg.knex('user')
-              .insert({
-                username,
-                password: hash,
-                role_id: 1
-              })
-          )[0]);
+    const count = await mg.knex('user').count('*');
 
-        const jwt = mg.services.jwt.issue({
-          id: user.attributes.id
-        });
+    if (count === 0) {
+      const hash = await bcrypt.hash(password, 10);
+      const user = await mg.knex
+        .select("*")
+        .from("user")
+        .where("id", (
+          await mg.knex("user")
+            .insert({
+              username,
+              firstName,
+              lastName,
+              password: hash
+            })
+        )[0]);
 
-        if (jwt) {
-          res.statusCode = 200;
-          res.end(JSON.stringify({
-            user: Object.assign({
-              isAuthenticated: true
-            }, pick(user, [
-              'first_name',
-              'last_name',
-              'username',
-              'permissions',
-              'role_id',
-              'class_id'
-            ])),
-            jwt
-          }));
+      const jwt = mg.services.jwt.issue({
+        id: user.attributes.id
+      });
 
-          mg.cache.usersCount += 1;
+      if (jwt) {
+        res.statusCode = 200;
+        res.end(JSON.stringify({
+          user: Object.assign({
+            isAuthenticated: true
+          }, pick(user, [
+            "first_name",
+            "last_name",
+            "username",
+            "permissions",
+            "role_id",
+            "class_id"
+          ])),
+          jwt
+        }));
 
-          return;
-        }
-
-        console.log(`Jwt test failed! It's ${jwt}`);
-
-        res.statusCode = 500;
-        res.end('{}');
-      } else {
-
+        return;
       }
-    } catch (e) {
-      console.log(e);
 
-      res.statusCode = 500;
-      res.end('{}');
+      console.log(`Jwt test failed! It's ${jwt}`);
 
-      return;
+      res.throw(500, "Внутренняя ошибка сервера");
+    } else {
+
     }
   },
 
@@ -149,9 +143,9 @@ export default {
       password.length >= 8 &&
       !/[^0-9a-zA-Z#$*_]/.test(username)
     ) {
-      const user = await mg.query('user').findOne({
+      const user = await mg.query("user").findOne({
         username
-      }, ['role.permission']);
+      }, ["role.permission"]);
 
       if (
         user &&
@@ -164,43 +158,45 @@ export default {
         user.permissions = parsePermissions(get(
           user,
           [
-            '_relations',
-            'role',
-            '_relations',
-            'permission'
+            "_relations",
+            "role",
+            "_relations",
+            "permission"
           ]
         ));
 
-        if (!mg.cache.roleClassMap[user.roleId].has(user.classId)) {
-          mg.cache.roleClassMap[user.roleId].add(user.classId);
+        if (user.roleId) {
+          if (!(user.roleId in mg.cache.roleClassMap))
+            mg.cache.roleClassMap[user.roleId] = new Set([user.classId]);
+          else if (!mg.cache.roleClassMap[user.roleId].has(user.classId))
+            mg.cache.roleClassMap[user.roleId].add(user.classId);
+
           await mg.knex.insert({
             classId: user.classId,
             roleId: user.roleId
-          }).into('class_role');
+          }).into("class_role");
         }
 
         res.send({
           jwt,
           data: pick(user, [
-            'firstName',
-            'lastName',
-            'username',
-            'permissions',
-            'roleId',
-            'classId'
+            "firstName",
+            "lastName",
+            "username",
+            "permissions",
+            "roleId",
+            "classId"
           ])
         });
         return;
       }
 
-      res.statusCode = 401;
-      res.end('{}');
-
+      res.throw(401, "Неправильный логин или пароль");
       return;
     }
 
     res.statusCode = 400;
-    res.end('{}');
+    res.end("{}");
 
     return;
   }

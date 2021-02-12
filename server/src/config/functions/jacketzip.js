@@ -65,7 +65,8 @@ module.exports = function jacketzip() {
         if (junctions[i].roleId in mg.cache.roleClassMap)
           mg.cache.roleClassMap[junctions[i].roleId].add(junctions[i].classId);
         else
-          mg.cache.roleClassMap[junctions[i].roleId] = new Set(junctions[i].classId);
+          mg.cache.roleClassMap[junctions[i].roleId] =
+            new Set([junctions[i].classId]);
       }
     })
     .then(updateCache);

@@ -1,10 +1,12 @@
 package ru.labore.moderngymnasium.ui.fragments
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.widget.DatePicker
 import androidx.fragment.app.DialogFragment
+import ru.labore.moderngymnasium.R
 import java.util.*
 
 class DatePickerFragment(
@@ -13,6 +15,16 @@ class DatePickerFragment(
     var years: Int
     var months: Int
     var days: Int
+    var minDate: Long = 0
+        set(value) {
+            field = value
+
+            val dlg = dialog as DatePickerDialog?
+
+            if (dlg != null) {
+                dlg.datePicker.minDate = value
+            }
+        }
     var dateChangeListener: (Int, Int, Int) -> Unit
 
     init {
@@ -23,19 +35,34 @@ class DatePickerFragment(
         dateChangeListener = changeListener
     }
 
+    fun updateDate(year: Int, month: Int, day: Int) {
+        years = year
+        months = month - 1
+        days = day
+
+        (dialog as DatePickerDialog?)?.updateDate(years, months, days)
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val cnt = context
 
-        return if (cnt != null)
-            DatePickerDialog(
+        return if (cnt != null) {
+            println("$years, $months, $days")
+            val dialog = DatePickerDialog(
                 cnt,
+                R.style.DatePickerStyle,
                 this,
                 years,
                 months,
                 days
             )
-        else
+
+            dialog.datePicker.minDate = minDate
+
+            dialog
+        } else {
             super.onCreateDialog(savedInstanceState)
+        }
     }
 
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {

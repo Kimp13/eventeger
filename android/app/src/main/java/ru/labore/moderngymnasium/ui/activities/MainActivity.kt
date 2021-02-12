@@ -44,8 +44,16 @@ class MainActivity : BaseActivity() {
     private val menuItemIdToIndex = HashMap<Int, Int>()
     private val animator = ObjectAnimator()
     private var hidden = false
+    private var currentIndex: Int = 0
     private val fragments = Array<ArrayList<Fragment>>(rootFragments.size) {
         arrayListOf(rootFragments[it])
+    }
+
+    override fun onBackPressed() {
+        if (fragments[currentIndex].size == 1)
+            super.onBackPressed()
+        else
+            dropFragment()()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -125,7 +133,9 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun dropFragment(index: Int): () -> Unit = {
+    private fun dropFragment(
+        index: Int = currentIndex
+    ): () -> Unit = {
         fragments[index].removeLast()
         loadFragment(index)
     }
@@ -135,11 +145,13 @@ class MainActivity : BaseActivity() {
         loadFragment(index)
     }
 
-    private fun loadFragment(index: Int) {
+    private fun loadFragment(
+        index: Int = currentIndex
+    ) {
         val ft = supportFragmentManager.beginTransaction()
 
         bottomNav.menu[index].isChecked = true
-
+        currentIndex = index
         ft.replace(
             R.id.mainFragmentContainer,
             fragments[index].last()

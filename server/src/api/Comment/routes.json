@@ -1,0 +1,32 @@
+[
+    {
+        "method": "GET",
+        "path": "/get",
+        "handler": "find",
+        "config": {
+            "policies": [
+                "userStrict"
+            ]
+        }
+    },
+    {
+        "method": "GET",
+        "path": "/",
+        "handler": "findOne",
+        "config": {
+            "policies": [
+                "userStrict"
+            ]
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/create",
+        "handler": "create",
+        "config": {
+            "policies": [
+                "userStrict"
+            ]
+        }
+    }
+]

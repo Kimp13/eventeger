@@ -74,4 +74,9 @@
         <item name="paddingStart">5dp</item>
         <item name="paddingEnd">5dp</item>
     </style>
+
+    <style name="DatePickerStyle" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:buttonBarButtonStyle">@style/AppTextButtonStyle</item>
+        <item name="android:colorBackground">@color/colorDarkVariant</item>
+    </style>
 </resources>
