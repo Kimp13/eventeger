@@ -15,7 +15,7 @@ export default {
           const relation = mg.query("announcementClassRole").findOne({
             announcementId: announcement.id,
             roleId: req.user.roleId,
-            classId: req.user.classId
+            classId: req.user.classId,
           });
 
           if (relation) {
@@ -32,10 +32,10 @@ export default {
     } else {
       const offset = parseDate(req.query.offset);
 
-      const roleIds = getPermission(
-        req.user.permissions,
-        ["announcement", "read"]
-      );
+      const roleIds = getPermission(req.user.permissions, [
+        "announcement",
+        "read",
+      ]);
 
       if (roleIds === false) {
         res.send([]);
@@ -50,10 +50,7 @@ export default {
           "announcementClassRole.announcementId",
           "announcement.id"
         )
-        .where(
-          "announcementClassRole.classId",
-          req.user.classId
-        );
+        .where("announcementClassRole.classId", req.user.classId);
 
       if (Array.isArray(roleIds)) {
         for (let i = 0; i < roleIds.length; i += 1) {
@@ -69,11 +66,7 @@ export default {
       if (offset) {
         res.send(
           await announcements
-            .andWhere(
-              "announcement.createdAt",
-              "<=",
-              offset
-            )
+            .andWhere("announcement.createdAt", "<=", offset)
             .orderBy("announcement.createdAt", "desc")
             .offset(1)
             .limit(25)
@@ -100,20 +93,14 @@ export default {
       }
     }
 
-    const roleIds = getPermission(
-      user.permissions,
-      ["announcement", "read"]
-    );
+    const roleIds = getPermission(user.permissions, ["announcement", "read"]);
 
     if (roleIds === false) {
       res.send([]);
       return;
     }
 
-    const classesIds = getPermission(
-      user.permissions,
-      ["class", "multiple"]
-    );
+    const classesIds = getPermission(user.permissions, ["class", "multiple"]);
 
     if (classesIds === false && user.classId === null) {
       res.send([]);
@@ -128,7 +115,7 @@ export default {
         "announcementClassRole.announcementId",
         "announcement.id"
       )
-      .where(builder =>
+      .where((builder) =>
         builder.where("beginsAt", "!=", null).orWhere("endsAt", "!=", null)
       );
 
@@ -138,26 +125,26 @@ export default {
       for (let i = 0; i < classesIds.length; i += 1)
         classesIds[i] = parseInt(classesIds[i], 10);
 
-      announcements = announcements
-        .andWhereIn("announcementClassRole.classId", classesIds);
+      announcements = announcements.andWhereIn(
+        "announcementClassRole.classId",
+        classesIds
+      );
     }
 
     if (Array.isArray(rolesIds)) {
       for (let i = 0; i < rolesIds.length; i += 1)
         rolesIds[i] = parseInt(rolesIds[i], 10);
 
-      announcements = announcements
-        .andWhereIn("announcementClassRole.roleId", rolesIds);
+      announcements = announcements.andWhereIn(
+        "announcementClassRole.roleId",
+        rolesIds
+      );
     }
 
     if (offset) {
       res.send(
         await announcements
-          .andWhere(
-            "announcement.beginsAt",
-            ">=",
-            offset
-          )
+          .andWhere("announcement.beginsAt", ">=", offset)
           .orderBy("announcement.beginsAt", "asc")
           .offset(1)
           .limit(25)
@@ -165,11 +152,7 @@ export default {
     } else {
       res.send(
         await announcements
-          .andWhere(
-            "announcement.beginsAt",
-            ">=",
-            UTC()
-          )
+          .andWhere("announcement.beginsAt", ">=", UTC())
           .orderBy("announcement.beginsAt", "asc")
           .limit(25)
       );
@@ -177,30 +160,24 @@ export default {
   },
 
   count: async (req, res) => {
-    const count = (await mg.knex("announcement")
-      .count("*")
-      .innerJoin(
-        "announcementClassRole",
-        "announcementClassRole.announcementId",
-        "announcement.id"
-      )
-      .where(
-        "announcementClassRole.classId",
-        req.user.classId
-      )
-      .andWhere(
-        "announcementClassRole.roleId",
-        req.user.roleId
-      ))[0]["count(*)"];
+    const count = (
+      await mg
+        .knex("announcement")
+        .count("*")
+        .innerJoin(
+          "announcementClassRole",
+          "announcementClassRole.announcementId",
+          "announcement.id"
+        )
+        .where("announcementClassRole.classId", req.user.classId)
+        .andWhere("announcementClassRole.roleId", req.user.roleId)
+    )[0]["count(*)"];
 
     res.send(String(count));
   },
 
   create: async (req, res) => {
-    if (
-      req.body.text &&
-      req.body.recipients
-    ) {
+    if (req.body.text && req.body.recipients) {
       const explicit = req.body.recipients.constructor === Object;
       const usersMap = await mg.services.role.getUsersCreateMap(req.user);
       let beginsAt;
@@ -229,13 +206,12 @@ export default {
         }
       }
 
-      const map = (
-        req.body.recipients === true ?
-          usersMap :
-          explicit ?
-            req.body.recipients :
-            null
-      );
+      const map =
+        req.body.recipients === true
+          ? usersMap
+          : explicit
+          ? req.body.recipients
+          : null;
 
       if (map !== null) {
         if (explicit) {
@@ -246,11 +222,13 @@ export default {
               sort(map[roleId], compFunction);
 
               for (const classId of map[roleId]) {
-                if (search(
-                  usersMap[roleId],
-                  parseInt(classId, 10),
-                  compFunction
-                ) < 0) {
+                if (
+                  search(
+                    usersMap[roleId],
+                    parseInt(classId, 10),
+                    compFunction
+                  ) < 0
+                ) {
                   console.log("throwing 1");
                   res.throw(403);
                   return;
@@ -263,61 +241,63 @@ export default {
           }
         }
 
-        const {
-          announcementId,
-          recipients
-        } = await mg.knex.transaction(t =>
-          mg.query("announcement").create({
-            text: req.body.text,
-            authorId: req.user.id,
-            beginsAt: beginsAt || null,
-            endsAt: endsAt || null
-          }).then(announcement => {
-            const recipientsArray = new Array();
+        const { announcementId, recipients } = await mg.knex.transaction((t) =>
+          mg
+            .query("announcement")
+            .create({
+              text: req.body.text,
+              authorId: req.user.id,
+              beginsAt: beginsAt || null,
+              endsAt: endsAt || null,
+            })
+            .then((announcement) => {
+              const recipientsArray = new Array();
 
-            for (const roleId in map) {
-              const numberRoleId = parseInt(roleId, 10);
+              for (const roleId in map) {
+                const numberRoleId = parseInt(roleId, 10);
 
-              for (const classId of map[roleId]) {
-                recipientsArray.push({
-                  announcementId: announcement[0],
-                  roleId: numberRoleId,
-                  classId
-                });
+                for (const classId of map[roleId]) {
+                  recipientsArray.push({
+                    announcementId: announcement[0],
+                    roleId: numberRoleId,
+                    classId,
+                  });
+                }
               }
-            }
 
-            return t.insert(recipientsArray)
-              .into("announcementClassRole")
-              .then(() => ({
-                announcementId: announcement[0],
-                recipients: recipientsArray
-              }));
-          })
+              return t
+                .insert(recipientsArray)
+                .into("announcementClassRole")
+                .then(() => ({
+                  announcementId: announcement[0],
+                  recipients: recipientsArray,
+                }));
+            })
         );
 
         const userIds = new Set();
 
         for (const recipient of recipients) {
           for (const role of mg.cache.roles) {
-            const permission = getPermission(
-              role.permissions,
-              [
-                "announcement",
-                "create"
-              ]
-            );
+            const permission = getPermission(role.permissions, [
+              "announcement",
+              "create",
+            ]);
 
             if (
               permission === true ||
-              Array.isArray(permission) &&
-              search(permission, recipient.roleId, function compare(a, b) {
-                return a - b;
-              })
+              (Array.isArray(permission) &&
+                search(permission, recipient.roleId, function compare(a, b) {
+                  return a - b;
+                }))
             ) {
-              const users = await mg.query("user").find({
-                classId: recipient.classId
-              }, {}, ["id"]);
+              const users = await mg.query("user").find(
+                {
+                  classId: recipient.classId,
+                },
+                {},
+                ["id"]
+              );
 
               for (const user of users) {
                 userIds.add(user.id);
@@ -326,33 +306,27 @@ export default {
           }
         }
 
-        const tokens = await mg.query("pushOptions").find({
-          userId_in: Array.from(userIds)
-        }, {});
+        const tokens = await mg.query("pushOptions").find(
+          {
+            userId_in: Array.from(userIds),
+          },
+          {}
+        );
 
         const notificationTokens = [];
 
         for (let i = 0; i < tokens.length; i += 1) {
           if (tokens[i].gcm) {
-            notificationTokens.push(
-              tokens[i].subscription
-            );
+            notificationTokens.push(tokens[i].subscription);
           }
         }
 
         const createdAt = new Date().toISOString();
-        const beginsAtString = (
-          beginsAt ?
-            beginsAt.toISOString() :
-            "null"
-        );
-        const endsAtString = (
-          endsAt ?
-            endsAt.toISOString() :
-            "null"
-        );
+        const beginsAtString = beginsAt ? beginsAt.toISOString() : "null";
+        const endsAtString = endsAt ? endsAt.toISOString() : "null";
 
-        await mg.fbAdmin.messaging()
+        await mg.fbAdmin
+          .messaging()
           .sendMulticast({
             data: {
               text: req.body.text,
@@ -360,17 +334,18 @@ export default {
               id: String(announcementId),
               createdAt,
               beginsAt: beginsAtString,
-              endsAt: endsAtString
+              endsAt: endsAtString,
             },
-            tokens: notificationTokens
+            tokens: notificationTokens,
           })
-          .catch(e => {
+          .catch((e) => {
             console.log(e);
           });
 
-        if (beginsAt) {
+        if (beginsAt && endsAt) {
           const notify = () =>
-            mg.fbAdmin.messaging()
+            mg.fbAdmin
+              .messaging()
               .sendMulticast({
                 data: {
                   type: "startsSoon",
@@ -379,11 +354,11 @@ export default {
                   id: String(announcementId),
                   createdAt,
                   beginsAt: beginsAtString,
-                  endsAt: endsAtString
+                  endsAt: endsAtString,
                 },
-                tokens: notificationTokens
+                tokens: notificationTokens,
               })
-              .catch(e => {
+              .catch((e) => {
                 console.log(e);
               });
 
@@ -393,11 +368,7 @@ export default {
 
           const difference = pushTime.getTime() - now.getTime();
 
-          if (difference <= 0) {
-            notify();
-          } else {
-            setTimeout(notify, difference);
-          }
+          if (difference >= 0) setTimeout(notify, difference);
         }
 
         res.send({});
@@ -406,5 +377,5 @@ export default {
     }
 
     res.throw(400, "Предоставьте текст и получателей объявления");
-  }
+  },
 };

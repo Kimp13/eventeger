@@ -58,14 +58,20 @@
     <string name="end">End</string>
     <string name="end_date">End date</string>
     <string name="end_time">End time</string>
+    <string name="starts_now">Starts now</string>
+    <string name="never_ends">Never ends</string>
+    <string name="starts_at_fmt">Starts %2$s.%1$s.%3$d at %4$s:%5$s</string>
+    <string name="ends_at_fmt">Ends %2$s.%1$s.%3$d at %4$s:%5$s</string>
+    <string name="started_at_fmt">Started %2$s.%1$s.%3$d at %4$s:%5$s</string>
+    <string name="ended_at_fmt">Ended %2$s.%1$s.%3$d at %4$s:%5$s</string>
 
     <!-- Inbox fragment strings -->
     <string name="noname">Noname</string>
     <string name="no_author">No author</string>
-    <string name="author_label">Author: %1$s</string>
-    <string name="role_label">Role: %1$s</string>
-    <string name="class_label">Class: %1$s</string>
-    <string name="text_label">Text: %1$s</string>
+    <string name="author_fmt">Author: %1$s</string>
+    <string name="role_fmt">Role: %1$s</string>
+    <string name="class_fmt">Class: %1$s</string>
+    <string name="text_fmt">Text: %1$s</string>
 
     <!-- Bottom Nav strings -->
     <string name="news">News</string>

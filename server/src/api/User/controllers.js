@@ -166,15 +166,21 @@ export default {
         ));
 
         if (user.roleId) {
-          if (!(user.roleId in mg.cache.roleClassMap))
-            mg.cache.roleClassMap[user.roleId] = new Set([user.classId]);
-          else if (!mg.cache.roleClassMap[user.roleId].has(user.classId))
-            mg.cache.roleClassMap[user.roleId].add(user.classId);
+          let insertNeeded = false;
 
-          await mg.knex.insert({
-            classId: user.classId,
-            roleId: user.roleId
-          }).into("class_role");
+          if (!(user.roleId in mg.cache.roleClassMap)) {
+            mg.cache.roleClassMap[user.roleId] = new Set([user.classId]);
+            insertNeeded = true;
+          } else if (!mg.cache.roleClassMap[user.roleId].has(user.classId)) {
+            mg.cache.roleClassMap[user.roleId].add(user.classId);
+            insertNeeded = true;
+          }
+
+          if (insertNeeded)
+            await mg.knex.insert({
+              classId: user.classId,
+              roleId: user.roleId
+            }).into("class_role");
         }
 
         res.send({

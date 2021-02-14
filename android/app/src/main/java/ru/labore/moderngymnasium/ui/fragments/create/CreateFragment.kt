@@ -1,17 +1,22 @@
 package ru.labore.moderngymnasium.ui.fragments.create
 
-import android.app.DatePickerDialog
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.children
 import androidx.core.view.get
 import androidx.fragment.app.viewModels
 import kotlinx.android.synthetic.main.fragment_create.*
 import kotlinx.coroutines.launch
+import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
@@ -24,18 +29,41 @@ import ru.labore.moderngymnasium.utils.hideKeyboard
 class CreateFragment(
     controls: Companion.ListElementFragmentControls
 ) : ListElementFragment(controls) {
+
+    companion object Derived {
+        private val timeFilter = IntentFilter()
+
+        init {
+            timeFilter.addAction(Intent.ACTION_TIME_TICK)
+            timeFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED)
+            timeFilter.addAction(Intent.ACTION_TIME_CHANGED)
+        }
+    }
+
     override val viewModel: CreateViewModel by viewModels()
+    private val timeChangedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            writeStartHeader()
+            writeEndHeader()
+        }
+    }
     private val startDatePicker: DatePickerFragment
     private val startTimePicker: TimePickerFragment
     private val endDatePicker: DatePickerFragment
     private val endTimePicker: TimePickerFragment
     private var startDateTime: ZonedDateTime? = null
         set(value) {
-            if (value != null) {
-                field = if (value.isBefore(viewModel.appRepository.zonedNow()))
-                    viewModel.appRepository.zonedNow()
-                else
-                    value
+            if (value == null) {
+                field = null
+            } else if (
+                endDateTime != null && (
+                        value.isAfter(endDateTime) ||
+                                value.isEqual(endDateTime)
+                        )
+            ) {
+                field = endDateTime!!.minusMinutes(1)
+            } else {
+                field = value.withSecond(0).withNano(0)
 
                 startDatePicker.updateDate(
                     field!!.year,
@@ -47,19 +75,30 @@ class CreateFragment(
                     field!!.minute
                 )
 
-                endDatePicker.minDate = field!!.toEpochSecond() * 1000
-                endDateTime = endDateTime ?: field!!.plusHours(1)
+                endDatePicker.minDate = if (
+                    field!!.hour == 23 &&
+                    field!!.minute == 59
+                )
+                    field!!.plusMinutes(1).toEpochSecond() * 1000
+                else
+                    field!!.toEpochSecond() * 1000
             }
+
+            writeStartHeader()
         }
     private var endDateTime: ZonedDateTime? = null
         set(value) {
-            if (value != null) {
-                val other = startDateTime ?: viewModel.appRepository.zonedNow()
-
-                field = if (value.isBefore(other))
-                    other.plusHours(1)
-                else
-                    value
+            if (value == null) {
+                field = null
+            } else if (
+                startDateTime != null && (
+                        value.isBefore(startDateTime) ||
+                                value.isEqual(startDateTime)
+                        )
+            ) {
+                field = startDateTime!!.plusMinutes(1)
+            } else {
+                field = value.withSecond(0).withNano(0)
 
                 endDatePicker.updateDate(
                     field!!.year,
@@ -70,7 +109,17 @@ class CreateFragment(
                     field!!.hour,
                     field!!.minute
                 )
+
+                startDatePicker.maxDate = if (
+                    field!!.hour == 0 &&
+                    field!!.minute == 0
+                )
+                    field!!.minusMinutes(1).toEpochSecond() * 1000
+                else
+                    field!!.toEpochSecond() * 1000
             }
+
+            writeEndHeader()
         }
 
     init {
@@ -118,7 +167,16 @@ class CreateFragment(
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val minDate = viewModel.appRepository.zonedNow().toEpochSecond() * 1000
+        val minDate = ZonedDateTime.of(
+            2021,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            ZoneId.systemDefault()
+        ).toEpochSecond() * 1000
 
         startDatePicker.minDate = minDate
         endDatePicker.minDate = minDate
@@ -185,6 +243,63 @@ class CreateFragment(
         createEndTime?.setOnClickListener {
             endTimePicker.show(parentFragmentManager, "endTimePicker")
         }
+
+        writeStartHeader()
+        writeEndHeader()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        activity?.registerReceiver(timeChangedReceiver, timeFilter)
+    }
+
+    private fun writeHeader(
+        header: TextView?,
+        nullId: Int,
+        futureFmtId: Int,
+        pastFmtId: Int,
+        date: ZonedDateTime?
+    ) {
+        if (header != null) {
+            header.text =
+                if (date == null) {
+                    resources.getString(
+                        nullId
+                    )
+                } else {
+                    val now = viewModel.appRepository.zonedNow()
+
+                    resources.getString(
+                        if (date.isBefore(now) || date.isEqual(now)) pastFmtId else futureFmtId,
+                        if (date.dayOfMonth < 10) "0${date.dayOfMonth}" else date.dayOfMonth,
+                        if (date.monthValue < 10) "0${date.monthValue}" else date.monthValue,
+                        date.year,
+                        if (date.hour < 10) "0${date.hour}" else date.hour,
+                        if (date.minute < 10) "0${date.minute}" else date.minute
+                    )
+                }
+        }
+    }
+
+    private fun writeStartHeader() {
+        writeHeader(
+            createStartHeader,
+            R.string.starts_now,
+            R.string.starts_at_fmt,
+            R.string.started_at_fmt,
+            startDateTime
+        )
+    }
+
+    private fun writeEndHeader() {
+        writeHeader(
+            createEndHeader,
+            R.string.never_ends,
+            R.string.ends_at_fmt,
+            R.string.ended_at_fmt,
+            endDateTime
+        )
     }
 
     private fun createAnnouncement(
@@ -340,5 +455,11 @@ class CreateFragment(
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        activity?.unregisterReceiver(timeChangedReceiver)
     }
 }

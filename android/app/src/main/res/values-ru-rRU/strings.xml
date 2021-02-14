@@ -30,10 +30,10 @@
     <string name="enter_announcement_text">Введите текст объявления</string>
 
     <string name="noname">Безымянный</string>
-    <string name="author_label">Автор: %1$s</string>
-    <string name="role_label">Роль: %1$s</string>
-    <string name="class_label">Класс: %1$s</string>
-    <string name="text_label">Текст: %1$s</string>
+    <string name="author_fmt">Автор: %1$s</string>
+    <string name="role_fmt">Роль: %1$s</string>
+    <string name="class_fmt">Класс: %1$s</string>
+    <string name="text_fmt">Текст: %1$s</string>
 
     <string name="announcements">Объявления</string>
     <string name="profile">Профиль</string>
@@ -60,4 +60,11 @@
     <string name="end_time">Время конца</string>
     <string name="start">Начало</string>
     <string name="end">Окончание</string>
+    <string name="now">Сейчас</string>
+    <string name="starts_now">Начинается сейчас</string>
+    <string name="never_ends">Никогда не кончается</string>
+    <string name="starts_at_fmt">Начинается %1$s.%2$s.%3$d в %4$s:%5$s</string>
+    <string name="ends_at_fmt">Оканчивается %1$s.%2$s.%3$d в %4$s:%5$s</string>
+    <string name="started_at_fmt">Началось %1$s.%2$s.%3$d в %4$s:%5$s</string>
+    <string name="ended_at_fmt">Кончилось %1$s.%2$s.%3$d в %4$s:%5$s</string>
 </resources>

@@ -21,10 +21,20 @@ class DatePickerFragment(
 
             val dlg = dialog as DatePickerDialog?
 
-            if (dlg != null) {
+            if (dlg != null)
                 dlg.datePicker.minDate = value
-            }
         }
+
+    var maxDate: Long = Long.MAX_VALUE
+        set(value) {
+            field = value
+
+            val dlg = dialog as DatePickerDialog?
+
+            if (dlg != null)
+                dlg.datePicker.maxDate = value
+        }
+
     var dateChangeListener: (Int, Int, Int) -> Unit
 
     init {
@@ -58,6 +68,7 @@ class DatePickerFragment(
             )
 
             dialog.datePicker.minDate = minDate
+            dialog.datePicker.maxDate = maxDate
 
             dialog
         } else {
