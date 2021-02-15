@@ -1,0 +1,27 @@
+{
+  "name": "mgo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kimp13/moderngymnasium.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kimp13/moderngymnasium/issues"
+  },
+  "homepage": "https://github.com/Kimp13/moderngymnasium#readme",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-livereload": "^4.0.2",
+    "gulp-sync": "^0.1.4",
+    "gulp-util": "^3.0.8",
+    "node-notifier": "^9.0.0"
+  }
+}

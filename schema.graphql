@@ -1,3 +1,53 @@
+scalar Date
+
+schema {
+  query: Query
+}
+
 type Query {
-  hello: String!
+  info: String!
+}
+
+type Role {
+  id: ID!
+  name: String!
+  permissions: [Permission!]
+}
+
+type Class {
+  id: ID!
+  grade: Int!
+  letter: String!
+  students: [User!]
+}
+
+type Permission {
+  id: ID!
+  type: String!
+  operation: String
+  target: String
+  roles: [Role!]
+}
+
+type Announcement {
+  id: ID!
+  text: String!
+  createdAt: Date!
+  updatedAt: Date!
+  beginsAt: Date
+  endsAt: Date
+  author: User!
+  seenByRoles: [Role!]
+  seenByClasses: [Class!]
+}
+
+type User {
+  id: ID!
+  firstName: String
+  lastName: String
+  username: String!
+  password: String!
+  role: Role
+  class: Class
+  announcements: [Announcement!]
 }

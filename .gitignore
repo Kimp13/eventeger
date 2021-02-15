@@ -1,0 +1,3 @@
+*.http
+*.exe
+node_modules

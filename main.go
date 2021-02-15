@@ -9,19 +9,21 @@ import (
 	"github.com/graph-gophers/graphql-go/relay"
 )
 
-type query struct{}
+type RootResolver struct{}
 
-func (_ *query) Hello() string { return "Hello, world!" }
+func (*RootResolver) Info() (string, error) {
+	return "Hello, world!", nil
+}
 
 func main() {
 	data, err := ioutil.ReadFile("./schema.graphql")
 
 	if err != nil {
-		log.Fatal("Provide GraphQL schema!")
-		return
+		panic(err)
 	}
 
-	schema := graphql.MustParseSchema(string(data), &query{})
+	schema := graphql.MustParseSchema(string(data), &RootResolver{})
+
 	http.Handle("/query", &relay.Handler{Schema: schema})
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
