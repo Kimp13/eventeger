@@ -1,6 +1,5 @@
 package ru.labore.moderngymnasium.ui.views
 
-import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
@@ -19,7 +18,7 @@ import ru.labore.moderngymnasium.R
 open class CollapsingLayout(
     context: Context,
     attrs: AttributeSet
-) : LinearLayout(context) {
+) : LinearLayout(context, attrs) {
     companion object {
         const val ANIMATION_DURATION = 300L
     }
@@ -35,7 +34,7 @@ open class CollapsingLayout(
     )
 
     init {
-        orientation = LinearLayout.VERTICAL
+        orientation = VERTICAL
 
         // Children
         toolbar = inflateToolbar()

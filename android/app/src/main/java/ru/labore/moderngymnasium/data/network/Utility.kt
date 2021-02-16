@@ -17,9 +17,9 @@ import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 
 class Utility(
-    private val context: Context,
+    context: Context,
     requestInterceptor: Interceptor,
-    private val gson: Gson
+    gson: Gson
 ) {
     companion object {
         data class UserCredentials(val username: String, val password: String)
@@ -29,105 +29,91 @@ class Utility(
             val recipients: HashMap<Int, HashSet<Int>>
         )
 
+        data class FullPackageAnnouncement(
+            val text: String,
+            val recipients: HashMap<Int, HashSet<Int>>,
+            val beginsAt: ZonedDateTime?,
+            val endsAt: ZonedDateTime?,
+            val event: Boolean = true
+        )
+
         data class TokenPayload(val token: String)
 
         data class CountResponse(val count: Int)
 
-        private interface FetchMe {
+        private interface FetchUtility {
             @GET("users/me")
             suspend fun fetchMe(
                 @Header("Authentication") jwt: String
             ): User?
-        }
 
-        private interface FetchMap {
             @GET("roles/mine")
-            suspend fun fetchMap(
+            suspend fun fetchAnnounceMap(
                 @Header("Authentication") jwt: String
             ): AnnounceMap
-        }
 
-        private interface SignIn {
             @POST("users/signin")
             suspend fun signIn(
                 @Body body: UserCredentials
             ): User?
-        }
 
-        private interface CreateAnnouncement {
             @POST("announcements/create")
             suspend fun createAnnouncement(
                 @Header("Authentication") jwt: String,
                 @Body body: AnnouncementTextAndRecipients
             )
-        }
 
-        private interface PushToken {
+            @POST("announcements/create")
+            suspend fun createAnnouncement(
+                @Header("Authorization") jwt: String,
+                @Body body: FullPackageAnnouncement
+            )
+
             @POST("tokens/add")
             suspend fun pushToken(
                 @Header("Authentication") jwt: String,
                 @Body body: TokenPayload
             )
-        }
 
-        private interface FetchAnnouncement {
             @GET("announcements/get")
-            suspend fun fetch(
+            suspend fun fetchAnnouncement(
                 @Header("Authentication") jwt: String,
                 @Query("id") id: Int
             ): AnnouncementEntity?
-        }
 
-        private interface FetchAnnouncements {
             @GET("announcements/getMine")
-            suspend fun fetch(
+            suspend fun fetchAnnouncements(
                 @Header("Authentication") jwt: String,
                 @Query("offset") offset: ZonedDateTime?
             ): Array<AnnouncementEntity>
-        }
 
-        private interface CountAnnouncements {
             @GET("announcements/countMine")
-            suspend fun count(
+            suspend fun countAnnouncements(
                 @Header("Authentication") jwt: String
             ): CountResponse
-        }
 
-        private interface FetchUser {
             @GET("users")
-            suspend fun fetch(@Query("id") id: Int): UserEntity?
-        }
+            suspend fun fetchUser(@Query("id") id: Int): UserEntity?
 
-        private interface FetchUsers {
             @GET("users")
-            suspend fun fetch(@Query("id[]") id: Array<Int>): Array<UserEntity>
-        }
+            suspend fun fetchUsers(@Query("id[]") id: Array<Int>): Array<UserEntity>
 
-        private interface FetchRole {
             @GET("roles")
-            suspend fun fetch(@Query("id") id: Int): RoleEntity?
-        }
+            suspend fun fetchRole(@Query("id") id: Int): RoleEntity?
 
-        private interface FetchRoles {
             @GET("roles")
-            suspend fun fetch(@Query("id[]") ids: Array<Int>): Array<RoleEntity>
-        }
+            suspend fun fetchRoles(@Query("id[]") ids: Array<Int>): Array<RoleEntity>
 
-        private interface FetchAllRoles {
             @GET("roles/all")
-            suspend fun fetch(
+            suspend fun fetchAllRoles(
                 @Header("Authentication") jwt: String
             ): Array<RoleEntity?>
-        }
 
-        private interface FetchClass {
             @GET("class")
-            suspend fun fetch(@Query("id") id: Int): ClassEntity?
-        }
+            suspend fun fetchClass(@Query("id") id: Int): ClassEntity?
 
-        private interface FetchClasses {
             @GET("class")
-            suspend fun fetch(@Query("id[]") ids: Array<Int>):
+            suspend fun fetchClasses(@Query("id[]") ids: Array<Int>):
                     Array<ClassEntity>
         }
     }
@@ -147,24 +133,22 @@ class Utility(
         )
         .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
+        .create(FetchUtility::class.java)
 
     suspend fun fetchMe(
         jwt: String
     ): User? = builder
-        .create(FetchMe::class.java)
         .fetchMe(jwt)
 
     suspend fun fetchAnnouncementMap(
         jwt: String
     ): AnnounceMap = builder
-        .create(FetchMap::class.java)
-        .fetchMap(jwt)
+        .fetchAnnounceMap(jwt)
 
     suspend fun signIn(
         username: String,
         password: String
     ): User? = builder
-        .create(SignIn::class.java)
         .signIn(UserCredentials(username, password))
 
     suspend fun createAnnouncement(
@@ -172,17 +156,27 @@ class Utility(
         text: String,
         recipients: HashMap<Int, HashSet<Int>>
     ) = builder
-        .create(CreateAnnouncement::class.java)
         .createAnnouncement(
             jwt,
             AnnouncementTextAndRecipients(text, recipients)
+        )
+
+    suspend fun createAnnouncement(
+        jwt: String,
+        text: String,
+        recipients: HashMap<Int, HashSet<Int>>,
+        beginsAt: ZonedDateTime?,
+        endsAt: ZonedDateTime?
+    ) = builder
+        .createAnnouncement(
+            jwt,
+            FullPackageAnnouncement(text, recipients, beginsAt, endsAt)
         )
 
     suspend fun pushToken(
         jwt: String,
         token: String
     ) = builder
-        .create(PushToken::class.java)
         .pushToken(
             jwt,
             TokenPayload(token)
@@ -192,8 +186,7 @@ class Utility(
         jwt: String,
         id: Int
     ) = builder
-        .create(FetchAnnouncement::class.java)
-        .fetch(
+        .fetchAnnouncement(
             jwt,
             id
         )
@@ -202,8 +195,7 @@ class Utility(
         jwt: String,
         offset: ZonedDateTime?
     ) = builder
-        .create(FetchAnnouncements::class.java)
-        .fetch(
+        .fetchAnnouncements(
             jwt,
             offset
         )
@@ -211,52 +203,43 @@ class Utility(
     suspend fun countAnnouncements(
         jwt: String
     ) = builder
-        .create(CountAnnouncements::class.java)
-        .count(
+        .countAnnouncements(
             jwt
         ).count
 
     suspend fun fetchUser(
         id: Int
     ) = builder
-        .create(FetchUser::class.java)
-        .fetch(id)
+        .fetchUser(id)
 
     suspend fun fetchUsers(
         ids: Array<Int>
     ) = builder
-        .create(FetchUsers::class.java)
-        .fetch(ids)
-
+        .fetchUsers(ids)
 
     suspend fun fetchRole(
         id: Int
     ) = builder
-        .create(FetchRole::class.java)
-        .fetch(id)
+        .fetchRole(id)
 
     suspend fun fetchRoles(
         ids: Array<Int>
     ) = builder
-        .create(FetchRoles::class.java)
-        .fetch(ids)
+        .fetchRoles(ids)
 
     suspend fun fetchAllRoles(
         jwt: String
     ) = builder
-        .create(FetchAllRoles::class.java)
-        .fetch(jwt)
+        .fetchAllRoles(jwt)
 
     suspend fun fetchClass(
         id: Int
     ) = builder
-        .create(FetchClass::class.java)
-        .fetch(id)
+        .fetchClass(id)
 
     suspend fun fetchClasses(
         ids: Array<Int>
     ) = builder
-        .create(FetchClasses::class.java)
-        .fetch(ids)
+        .fetchClasses(ids)
 }
 

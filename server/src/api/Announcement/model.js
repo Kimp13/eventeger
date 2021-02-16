@@ -8,6 +8,11 @@ module.exports = {
       notNull: true
     },
 
+    isEvent: {
+      type: 'boolean',
+      notNull: true
+    },
+
     beginsAt: {
       type: 'datetime'
     },

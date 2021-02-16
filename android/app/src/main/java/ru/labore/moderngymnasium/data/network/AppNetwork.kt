@@ -2,6 +2,8 @@ package ru.labore.moderngymnasium.data.network
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import okhttp3.Interceptor
@@ -14,7 +16,7 @@ import ru.labore.moderngymnasium.data.db.entities.UserEntity
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 
-class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
+class AppNetwork(context: Context, gson: Gson) : Interceptor {
     private val appContext = context.applicationContext
     private val utility = Utility(appContext, this, gson)
     val fetchedAnnouncementEntities = MutableLiveData<Array<AnnouncementEntity>>()
@@ -45,15 +47,19 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
         offset: ZonedDateTime?
     ) = utility.fetchAnnouncements(jwt, offset)
 
-    suspend fun countAnnouncements(
-        jwt: String
-    ) = utility.countAnnouncements(jwt)
-
     suspend fun createAnnouncement(
         jwt: String,
         text: String,
         recipients: HashMap<Int, HashSet<Int>>
     ) = utility.createAnnouncement(jwt, text, recipients)
+
+    suspend fun createAnnouncement(
+        jwt: String,
+        text: String,
+        recipients: HashMap<Int, HashSet<Int>>,
+        beginsAt: ZonedDateTime?,
+        endsAt: ZonedDateTime?
+    ) = utility.createAnnouncement(jwt, text, recipients, beginsAt, endsAt)
 
     suspend fun signIn(
         username: String,
@@ -76,8 +82,6 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
         ids: Array<Int>
     ) = utility.fetchRoles(ids)
 
-    suspend fun fetchAllRoles(jwt: String) = utility.fetchAllRoles(jwt)
-
     suspend fun fetchClass(
         id: Int
     ) = utility.fetchClass(id)
@@ -98,7 +102,7 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
                 }
 
                 return response
-            } catch(e: SocketTimeoutException) {
+            } catch (e: SocketTimeoutException) {
                 throw ConnectException()
             }
         } else {
@@ -108,9 +112,20 @@ class AppNetwork(context: Context, private val gson: Gson) : Interceptor {
 
     private fun isOnline(): Boolean {
         val connectivityManager = appContext.getSystemService(Context.CONNECTIVITY_SERVICE)
-                as ConnectivityManager
-        val networkInfo = connectivityManager.activeNetworkInfo
+                as ConnectivityManager? ?: return false
 
-        return (networkInfo != null && networkInfo.isConnected)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = connectivityManager.activeNetwork ?: return false
+            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+            return (
+                    actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                            actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) ||
+                            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    )
+        } else {
+            @Suppress("DEPRECATION")
+            return connectivityManager.activeNetworkInfo?.isConnected ?: false
+        }
     }
 }

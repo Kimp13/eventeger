@@ -20,6 +20,7 @@ class CollapsingSwitchLayout(
     }
 
     private lateinit var switch: SwitchCompat
+    var switchListener: ((Boolean) -> Unit)? = null
 
     override fun inflateToolbar(): ConstraintLayout {
         return LayoutInflater
@@ -48,6 +49,8 @@ class CollapsingSwitchLayout(
     private fun switchListener(
         isChecked: Boolean = switch.isChecked
     ) {
+        switchListener?.invoke(isChecked)
+
         if (isChecked) {
             toolbar.children.last().alpha = 1F
 

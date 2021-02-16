@@ -48,7 +48,7 @@ class JsonDateSerializerImpl : JsonSerializer<ZonedDateTime> {
         context: JsonSerializationContext?
     ): JsonElement {
         return if (src == null) {
-            JsonPrimitive("")
+            JsonPrimitive("null")
         } else {
             JsonPrimitive(src.toString())
         }

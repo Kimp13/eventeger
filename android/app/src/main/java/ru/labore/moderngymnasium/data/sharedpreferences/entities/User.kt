@@ -24,6 +24,9 @@ class User(
             operator fun get(index: Int) =
                 contents[index]
 
+            fun isEmpty() = contents.isEmpty()
+            fun isNotEmpty() = contents.isNotEmpty()
+
             fun serialize(): JsonElement = when {
                 all -> JsonPrimitive(true)
                 size == 0 -> JsonPrimitive(false)

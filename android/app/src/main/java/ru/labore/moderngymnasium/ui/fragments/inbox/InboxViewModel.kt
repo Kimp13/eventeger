@@ -28,7 +28,7 @@ class InboxViewModel(
 
     init {
         appRepository.unreadAnnouncementsPushListener = {
-            announcements.add(InboxRecyclerViewAdapter.additionalItems, it)
+            announcements.add(viewAdapter.additionalItems.size, it)
             viewAdapter.prependAnnouncement()
         }
     }
@@ -38,6 +38,7 @@ class InboxViewModel(
     ): InboxRecyclerViewAdapter {
         viewAdapter = InboxRecyclerViewAdapter(
             app.resources,
+            appRepository,
             announcements,
             {
                 controls.push(CreateFragment(controls))

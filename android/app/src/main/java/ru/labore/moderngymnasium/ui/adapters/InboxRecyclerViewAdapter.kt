@@ -8,27 +8,31 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
+import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.ui.base.BaseRecyclerViewAdapter
+import ru.labore.moderngymnasium.ui.base.BaseViewHolder
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 import kotlin.math.min
 
 class InboxRecyclerViewAdapter(
     private val resources: Resources,
+    private val appRepository: AppRepository,
     private val announcements: MutableList<AnnouncementEntity>,
     private val createClickHandler: () -> Unit,
     private val announcementClickHandler: (AnnouncementEntity) -> Unit = {}
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : BaseRecyclerViewAdapter() {
     companion object {
-        private fun isWordCharacter(character: Char): Boolean = when(character.toInt()) {
-            in 0..47 -> false
-            in 58..64 -> false
-            in 91..96 -> false
-            in 123..126 -> false
-            else -> true
-        }
+        private fun isWordCharacter(character: Char): Boolean =
+            when (character.toInt()) {
+                in 0..47 -> false
+                in 58..64 -> false
+                in 91..96 -> false
+                in 123..126 -> false
+                else -> true
+            }
 
         private fun trimText(text: String): String {
             if (text.length <= shortTextCharCount) {
@@ -44,7 +48,7 @@ class InboxRecyclerViewAdapter(
             }
 
             val indexAfterFirstLoop = i
-            while(isWordCharacter(text[--i])) {
+            while (isWordCharacter(text[--i])) {
                 if (i == 0) {
                     return "${text.substring(indexAfterFirstLoop + 1)}…"
                 }
@@ -53,108 +57,119 @@ class InboxRecyclerViewAdapter(
             return "${text.substring(0, i + 1)}…"
         }
 
-        const val additionalItems = 1
         private const val shortTextCharCount = 200
-
-        const val CREATE_VIEW_POSITION = 0
-        const val ANNOUNCEMENT_VIEW_POSITION = -1
     }
 
-    init {
-        println(announcements.size)
-    }
+    class AnnouncementViewHolder(private val card: MaterialCardView) :
+        BaseViewHolder(card) {
+        override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+            if (parent is InboxRecyclerViewAdapter) {
+                val linearLayout = card.getChildAt(0) as LinearLayout
+                val constraintLayout = linearLayout.getChildAt(0) as ConstraintLayout
+                val authorView = constraintLayout.getChildAt(1) as TextView
+                val authorRankView = constraintLayout.getChildAt(2) as TextView
+                val textView = linearLayout.getChildAt(1) as TextView
+                val expandButton = linearLayout.getChildAt(2)
+                val pos = position - parent.additionalItems.size
 
-    class AnnouncementViewHolder(val card: MaterialCardView) :
-        RecyclerView.ViewHolder(card)
+                card.setOnClickListener {
+                    parent.announcementClickHandler(
+                        parent.announcements[pos]
+                    )
+                }
 
-    class CreateViewHolder(val layout: ConstraintLayout) :
-        RecyclerView.ViewHolder(layout)
-
-    override fun getItemViewType(position: Int): Int =
-        when (position) {
-            CREATE_VIEW_POSITION -> CREATE_VIEW_POSITION
-            else -> ANNOUNCEMENT_VIEW_POSITION
-        }
-
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): RecyclerView.ViewHolder = when(viewType) {
-        CREATE_VIEW_POSITION -> CreateViewHolder(
-                LayoutInflater.from(parent.context)
-                .inflate(
-                    R.layout.inbox_create_view,
-                    parent,
-                    false
-                ) as ConstraintLayout
-            )
-        else -> AnnouncementViewHolder(
-                LayoutInflater.from(parent.context)
-                .inflate(
-                    R.layout.inbox_recycler_view,
-                    parent,
-                    false
-                ) as MaterialCardView
-            )
-    }
-
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is CreateViewHolder) {
-            val button = holder.layout.getChildAt(0) as Button
-
-            button.setOnClickListener {
-                createClickHandler()
-            }
-        } else if (holder is AnnouncementViewHolder) {
-            val linearLayout = holder.card.getChildAt(0) as LinearLayout
-            val constraintLayout = linearLayout.getChildAt(0) as ConstraintLayout
-            val authorView = constraintLayout.getChildAt(1) as TextView
-            val authorRankView = constraintLayout.getChildAt(2) as TextView
-            val textView = linearLayout.getChildAt(1) as TextView
-            val expandButton = linearLayout.getChildAt(2)
-            val pos = position - additionalItems
-
-            holder.card.setOnClickListener {
-                announcementClickHandler(announcements[pos])
-            }
-
-            authorView.text = if (announcements[pos].author == null) {
-                authorRankView.visibility = View.GONE
-                resources.getString(R.string.no_author)
-            } else {
-                val caption = announcementEntityToCaption(
-                    announcements[pos],
-                    resources.getString(R.string.noname)
-                )
-                val comma = caption.indexOf(',')
-
-                if (comma == -1) {
+                authorView.text = if (parent.announcements[pos].author == null) {
                     authorRankView.visibility = View.GONE
-                    caption
+                    parent.resources.getString(R.string.no_author)
                 } else {
-                    authorRankView.text = caption.substring(comma + 2)
-                    caption.substring(0, comma)
-                }
-            }
+                    val caption = announcementEntityToCaption(
+                        parent.announcements[pos],
+                        parent.resources.getString(R.string.noname)
+                    )
+                    val comma = caption.indexOf(',')
 
-            if (announcements[pos].text.length <= shortTextCharCount) {
-                textView.text = announcements[pos].text
-                expandButton.visibility = View.GONE
-            } else {
-                textView.text = trimText(announcements[pos].text)
-                expandButton.visibility = View.VISIBLE
-                expandButton.setOnClickListener {
-                    textView.text = announcements[pos].text
-                    it.visibility = View.GONE
+                    if (comma == -1) {
+                        authorRankView.visibility = View.GONE
+                        caption
+                    } else {
+                        authorRankView.text = caption.substring(comma + 2)
+                        caption.substring(0, comma)
+                    }
+                }
+
+                if (parent.announcements[pos].text.length <= shortTextCharCount) {
+                    textView.text = parent.announcements[pos].text
+                    expandButton.visibility = View.GONE
+                } else {
+                    textView.text = trimText(parent.announcements[pos].text)
+                    expandButton.visibility = View.VISIBLE
+                    expandButton.setOnClickListener {
+                        textView.text = parent.announcements[pos].text
+                        it.visibility = View.GONE
+                    }
                 }
             }
         }
     }
 
-    override fun getItemCount() = announcements.size + additionalItems
+    class CreateViewHolder(private val layout: ConstraintLayout) :
+        BaseViewHolder(layout) {
+        override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+            if (parent is InboxRecyclerViewAdapter) {
+                val button = layout.getChildAt(0) as Button?
+
+                button?.setOnClickListener {
+                    parent.createClickHandler()
+                }
+            }
+        }
+    }
+
+    override fun createDefaultViewHolder(
+        parent: ViewGroup
+    ) = AnnouncementViewHolder(
+        LayoutInflater.from(parent.context)
+            .inflate(
+                R.layout.inbox_recycler_view,
+                parent,
+                false
+            ) as MaterialCardView
+    )
+
+    override fun updateAdditionalItems() {
+        if (
+            appRepository
+                .user
+                ?.data
+                ?.permissions
+                ?.get("announcement")
+                ?.get("create")
+                ?.isNotEmpty() == true
+        ) {
+            if (additionalItems.isEmpty())
+                additionalItems.add { parent ->
+                    CreateViewHolder(
+                        LayoutInflater.from(parent.context)
+                            .inflate(
+                                R.layout.inbox_recycler_view,
+                                parent,
+                                false
+                            ) as ConstraintLayout
+                    )
+                }
+        } else if (additionalItems.size == 1) {
+            additionalItems.clear()
+        }
+    }
+
+    override fun getItemCount(): Int {
+        updateAdditionalItems()
+
+        return announcements.size + additionalItems.size
+    }
 
     fun prependAnnouncement() {
-        notifyItemInserted(additionalItems)
+        notifyItemInserted(additionalItems.size)
     }
 
     fun refreshAnnouncements(
@@ -163,13 +178,13 @@ class InboxRecyclerViewAdapter(
     ) {
         if (previousSize > newSize) {
             notifyItemRangeRemoved(
-                additionalItems + newSize,
-            previousSize - newSize
+                additionalItems.size + newSize,
+                previousSize - newSize
             )
         }
 
         notifyItemRangeChanged(
-            additionalItems,
+            additionalItems.size,
             min(newSize, previousSize)
         )
 
@@ -186,7 +201,7 @@ class InboxRecyclerViewAdapter(
         addedSize: Int
     ) {
         notifyItemRangeInserted(
-            previousSize + additionalItems,
+            previousSize + additionalItems.size,
             addedSize
         )
     }

@@ -121,6 +121,7 @@ class CreateFragment(
 
             writeEndHeader()
         }
+    private var isEvent: Boolean = false
 
     init {
         startDatePicker = DatePickerFragment { year, month, day ->
@@ -162,6 +163,10 @@ class CreateFragment(
         super.onViewCreated(view, savedInstanceState)
 
         createFragmentToolbar.inflateMenu(R.menu.create_toolbar_menu)
+        createEvent.switchListener = {
+            println(it)
+            isEvent = it
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -327,15 +332,29 @@ class CreateFragment(
                 ).show()
 
                 afterAll()
-            } else makeRequest({
-                viewModel.createAnnouncement(text)
+            } else {
+                val act = activity
 
-                createAnnouncementEditText.setText("")
+                if (act != null)
+                launch {
+                    if (isEvent)
+                        viewModel.createAnnouncement(
+                            act,
+                            text,
+                            startDateTime,
+                            endDateTime
+                        )
+                    else
+                        viewModel.createAnnouncement(
+                            act,
+                            text
+                        )
 
-                afterAll()
-            }, {
-                afterAll()
-            })
+                    createAnnouncementEditText?.setText("")
+
+                    afterAll()
+                }
+            }
         }
     }
 

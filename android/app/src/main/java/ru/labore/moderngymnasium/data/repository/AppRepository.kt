@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import kotlinx.coroutines.*
 import org.threeten.bp.ZoneId
@@ -47,9 +46,6 @@ class AppRepository(
             val roles: HashMap<Int, Deferred<RoleEntity?>>
         )
     }
-
-    val inboxAnnouncement: MutableLiveData<AnnouncementEntity> =
-        MutableLiveData()
 
     var isAppForeground: Boolean = true
     var user: User? = null
@@ -174,15 +170,32 @@ class AppRepository(
         }
     }
 
-    private fun fetchDeferredUser(id: Int) = GlobalScope.async {
+    suspend fun createAnnouncement(
+        text: String,
+        recipients: HashMap<Int, HashSet<Int>>,
+        beginsAt: ZonedDateTime?,
+        endsAt: ZonedDateTime?
+    ) {
+        if (user?.jwt != null) {
+            appNetwork.createAnnouncement(
+                user!!.jwt,
+                text,
+                recipients,
+                beginsAt,
+                endsAt
+            )
+        }
+    }
+
+    private fun fetchDeferredUserAsync(id: Int) = GlobalScope.async {
         appNetwork.fetchUser(id)
     }
 
-    private fun fetchDeferredRole(id: Int) = GlobalScope.async {
+    private fun fetchDeferredRoleAsync(id: Int) = GlobalScope.async {
         appNetwork.fetchRole(id)
     }
 
-    private fun fetchDeferredClass(id: Int) = GlobalScope.async {
+    private fun fetchDeferredClassAsync(id: Int) = GlobalScope.async {
         appNetwork.fetchClass(id)
     }
 
@@ -228,6 +241,8 @@ class AppRepository(
                 if (users.containsKey(it.authorId))
                     it.author = users[it.authorId]!!
             }
+
+            persistFetchedUsers(fetchedUsers)
         }
 
         when (forceFetch) {
@@ -340,7 +355,7 @@ class AppRepository(
                     ?.isBefore(oneDayBefore) != false
             ) {
                 if (!updated.users.containsKey(entity.authorId)) {
-                    updated.users[entity.authorId] = fetchDeferredUser(
+                    updated.users[entity.authorId] = fetchDeferredUserAsync(
                         entity.authorId
                     )
                 }
@@ -371,7 +386,7 @@ class AppRepository(
                             !updated.roles.containsKey(entity.author!!.roleId)
                         ) {
                             updated.roles[entity.author!!.roleId!!] =
-                                fetchDeferredRole(entity.author!!.roleId!!)
+                                fetchDeferredRoleAsync(entity.author!!.roleId!!)
                         }
 
                         entity.authorRole =
@@ -400,7 +415,7 @@ class AppRepository(
                     ) {
                         if (!updated.classes.containsKey(entity.author!!.classId)) {
                             updated.classes[entity.author!!.classId!!] =
-                                fetchDeferredClass(entity.author!!.classId!!)
+                                fetchDeferredClassAsync(entity.author!!.classId!!)
                         }
 
                         entity.authorClass =
@@ -458,29 +473,6 @@ class AppRepository(
         }
     }
 
-    suspend fun getAnnouncement(id: Int): AnnouncementEntity? {
-        if (user == null) {
-            return null
-        }
-
-        var announcement: AnnouncementEntity? = announcementEntityDao.getAnnouncement(id)
-        val now: ZonedDateTime = now()
-        val tenMinutesBefore = now.minusMinutes(10)
-
-        if (
-            announcement?.updatedAt?.isAfter(now) != false ||
-            announcement.updatedAt!!.isBefore(tenMinutesBefore)
-        ) {
-            announcement = appNetwork.fetchAnnouncement(user!!.jwt, id)
-        }
-
-        if (announcement != null) {
-            populateAnnouncementEntity(announcement)
-        }
-
-        return announcement
-    }
-
     suspend fun getAnnouncements(
         offset: ZonedDateTime? = null,
         forceFetch: UpdateParameters = UpdateParameters.DETERMINE
@@ -500,22 +492,26 @@ class AppRepository(
                 val tenMinutesBefore = now.minusMinutes(10)
 
                 announcement?.createdAt?.isAfter(now) != false ||
-                        announcement.createdAt!!.isBefore(tenMinutesBefore)
+                        announcement.createdAt.isBefore(tenMinutesBefore)
             }
             UpdateParameters.DONT_UPDATE -> false
         }
 
-        if (isNeededToUpdate) {
-            announcements = appNetwork.fetchAnnouncements(
-                user!!.jwt,
-                offset
-            )
+        when {
+            isNeededToUpdate -> {
+                announcements = appNetwork.fetchAnnouncements(
+                    user!!.jwt,
+                    offset
+                )
 
-            persistFetchedAnnouncements(announcements)
-        } else if (offset == null) {
-            announcements = announcementEntityDao.getFirstAnnouncements(DEFAULT_LIMIT)
-        } else {
-            announcements = announcementEntityDao.getAnnouncements(offset, DEFAULT_LIMIT)
+                persistFetchedAnnouncements(announcements)
+            }
+            offset == null -> {
+                announcements = announcementEntityDao.getFirstAnnouncements(DEFAULT_LIMIT)
+            }
+            else -> {
+                announcements = announcementEntityDao.getAnnouncements(offset, DEFAULT_LIMIT)
+            }
         }
 
         populateAnnouncements(announcements, forceFetch)
