@@ -9,10 +9,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import ru.labore.moderngymnasium.data.db.entities.ClassEntity
-import ru.labore.moderngymnasium.data.db.entities.RoleEntity
-import ru.labore.moderngymnasium.data.db.entities.UserEntity
+import ru.labore.moderngymnasium.data.db.entities.*
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 
@@ -75,7 +72,20 @@ class Utility(
                 @Body body: TokenPayload
             )
 
-            @GET("announcements/get")
+            @GET("comments/")
+            suspend fun fetchComment(
+                @Header("Authorization") jwt: String,
+                @Query("id") id: Int
+            ): CommentEntity?
+
+            @GET("comments/get")
+            suspend fun fetchComments(
+                @Header("Authorization") jwt: String,
+                @Query("announcementId") announcementId: Int,
+                @Query("offset") offset: Int
+            ): Array<CommentEntity>
+
+            @GET("announcements/getMine")
             suspend fun fetchAnnouncement(
                 @Header("Authentication") jwt: String,
                 @Query("id") id: Int
@@ -84,7 +94,7 @@ class Utility(
             @GET("announcements/getMine")
             suspend fun fetchAnnouncements(
                 @Header("Authentication") jwt: String,
-                @Query("offset") offset: ZonedDateTime?
+                @Query("offset") offset: Int
             ): Array<AnnouncementEntity>
 
             @GET("announcements/countMine")
@@ -103,11 +113,6 @@ class Utility(
 
             @GET("roles")
             suspend fun fetchRoles(@Query("id[]") ids: Array<Int>): Array<RoleEntity>
-
-            @GET("roles/all")
-            suspend fun fetchAllRoles(
-                @Header("Authentication") jwt: String
-            ): Array<RoleEntity?>
 
             @GET("class")
             suspend fun fetchClass(@Query("id") id: Int): ClassEntity?
@@ -137,29 +142,25 @@ class Utility(
 
     suspend fun fetchMe(
         jwt: String
-    ): User? = builder
-        .fetchMe(jwt)
+    ): User? = builder.fetchMe(jwt)
 
     suspend fun fetchAnnouncementMap(
         jwt: String
-    ): AnnounceMap = builder
-        .fetchAnnounceMap(jwt)
+    ): AnnounceMap = builder.fetchAnnounceMap(jwt)
 
     suspend fun signIn(
         username: String,
         password: String
-    ): User? = builder
-        .signIn(UserCredentials(username, password))
+    ): User? = builder.signIn(UserCredentials(username, password))
 
     suspend fun createAnnouncement(
         jwt: String,
         text: String,
         recipients: HashMap<Int, HashSet<Int>>
-    ) = builder
-        .createAnnouncement(
-            jwt,
-            AnnouncementTextAndRecipients(text, recipients)
-        )
+    ) = builder.createAnnouncement(
+        jwt,
+        AnnouncementTextAndRecipients(text, recipients)
+    )
 
     suspend fun createAnnouncement(
         jwt: String,
@@ -167,79 +168,64 @@ class Utility(
         recipients: HashMap<Int, HashSet<Int>>,
         beginsAt: ZonedDateTime?,
         endsAt: ZonedDateTime?
-    ) = builder
-        .createAnnouncement(
-            jwt,
-            FullPackageAnnouncement(text, recipients, beginsAt, endsAt)
-        )
+    ) = builder.createAnnouncement(
+        jwt,
+        FullPackageAnnouncement(text, recipients, beginsAt, endsAt)
+    )
 
     suspend fun pushToken(
         jwt: String,
         token: String
-    ) = builder
-        .pushToken(
-            jwt,
-            TokenPayload(token)
-        )
+    ) = builder.pushToken(jwt, TokenPayload(token))
+
+    suspend fun fetchComment(
+        jwt: String,
+        id: Int
+    ) = builder.fetchComment(jwt, id)
+
+    suspend fun fetchComments(
+        jwt: String,
+        announcementId: Int,
+        offset: Int
+    ) = builder.fetchComments(jwt, announcementId, offset)
 
     suspend fun fetchAnnouncement(
         jwt: String,
         id: Int
-    ) = builder
-        .fetchAnnouncement(
-            jwt,
-            id
-        )
+    ) = builder.fetchAnnouncement(jwt, id)
 
     suspend fun fetchAnnouncements(
         jwt: String,
-        offset: ZonedDateTime?
+        offset: Int
     ) = builder
-        .fetchAnnouncements(
-            jwt,
-            offset
-        )
+        .fetchAnnouncements(jwt, offset)
 
     suspend fun countAnnouncements(
         jwt: String
-    ) = builder
-        .countAnnouncements(
-            jwt
-        ).count
+    ) = builder.countAnnouncements(jwt).count
 
     suspend fun fetchUser(
         id: Int
-    ) = builder
-        .fetchUser(id)
+    ) = builder.fetchUser(id)
 
     suspend fun fetchUsers(
         ids: Array<Int>
-    ) = builder
-        .fetchUsers(ids)
+    ) = builder.fetchUsers(ids)
 
     suspend fun fetchRole(
         id: Int
-    ) = builder
-        .fetchRole(id)
+    ) = builder.fetchRole(id)
 
     suspend fun fetchRoles(
         ids: Array<Int>
-    ) = builder
-        .fetchRoles(ids)
-
-    suspend fun fetchAllRoles(
-        jwt: String
-    ) = builder
-        .fetchAllRoles(jwt)
+    ) = builder.fetchRoles(ids)
 
     suspend fun fetchClass(
         id: Int
-    ) = builder
-        .fetchClass(id)
+    ) = builder.fetchClass(id)
 
     suspend fun fetchClasses(
         ids: Array<Int>
-    ) = builder
-        .fetchClasses(ids)
+    ) = builder.fetchClasses(ids)
 }
 

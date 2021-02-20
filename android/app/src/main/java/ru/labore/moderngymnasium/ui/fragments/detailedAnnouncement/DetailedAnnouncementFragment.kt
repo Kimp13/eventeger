@@ -34,26 +34,5 @@ class DetailedAnnouncementFragment(
         announcementDetailedBackButton.setOnClickListener {
             controls.finish()
         }
-
-        announcementDetailedAuthorName.text = if (announcement.author == null) {
-            announcementDetailedAuthorRank.visibility = View.GONE
-            resources.getString(R.string.no_author)
-        } else {
-            val caption = announcementEntityToCaption(
-                announcement,
-                resources.getString(R.string.noname)
-            )
-            val comma = caption.indexOf(',')
-
-            if (comma == -1) {
-                announcementDetailedAuthorRank.visibility = View.GONE
-                caption
-            } else {
-                announcementDetailedAuthorRank.text = caption.substring(comma + 2)
-                caption.substring(0, comma)
-            }
-        }
-
-        announcementDetailedText.text = announcement.text
     }
 }

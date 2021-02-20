@@ -28,7 +28,7 @@ import getRouteName from 'getRouteName';
 
 // knex instance
 const connobj = {
-  client: process.env.DB_CLIENT || 'mysql'
+  client: process.env.DB_CLIENT || 'mysql',
 };
 
 if (!(process.env.DB_NO_CONNECTION || process.env.DB_CLIENT === 'sqlite')) {

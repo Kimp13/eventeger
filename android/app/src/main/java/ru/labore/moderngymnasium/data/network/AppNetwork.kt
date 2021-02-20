@@ -13,6 +13,8 @@ import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.db.entities.ClassEntity
 import ru.labore.moderngymnasium.data.db.entities.RoleEntity
 import ru.labore.moderngymnasium.data.db.entities.UserEntity
+import ru.labore.moderngymnasium.data.network.exceptions.ClientConnectionException
+import ru.labore.moderngymnasium.data.network.exceptions.ClientErrorException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 
@@ -37,6 +39,17 @@ class AppNetwork(context: Context, gson: Gson) : Interceptor {
         jwt: String
     ) = utility.fetchAnnouncementMap(jwt)
 
+    suspend fun fetchComment(
+        jwt: String,
+        id: Int
+    ) = utility.fetchComment(jwt, id)
+
+    suspend fun fetchComments(
+        jwt: String,
+        announcementId: Int,
+        offset: Int
+    ) = utility.fetchComments(jwt, announcementId, offset)
+
     suspend fun fetchAnnouncement(
         jwt: String,
         id: Int
@@ -44,7 +57,7 @@ class AppNetwork(context: Context, gson: Gson) : Interceptor {
 
     suspend fun fetchAnnouncements(
         jwt: String,
-        offset: ZonedDateTime?
+        offset: Int
     ) = utility.fetchAnnouncements(jwt, offset)
 
     suspend fun createAnnouncement(

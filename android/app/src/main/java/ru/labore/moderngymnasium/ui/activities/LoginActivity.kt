@@ -8,8 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.network.ClientConnectionException
-import ru.labore.moderngymnasium.data.network.ClientErrorException
+import ru.labore.moderngymnasium.data.network.exceptions.ClientConnectionException
+import ru.labore.moderngymnasium.data.network.exceptions.ClientErrorException
 import ru.labore.moderngymnasium.ui.base.BaseActivity
 import ru.labore.moderngymnasium.utils.hideKeyboard
 import java.net.ConnectException
@@ -30,13 +30,15 @@ class LoginActivity : BaseActivity() {
                 Toast.makeText(this, getString(R.string.enter_username), Toast.LENGTH_SHORT).show()
                 isCorrect = false
             } else if (regex.containsMatchIn(username)) {
-                Toast.makeText(this, getString(R.string.username_incorrect), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.username_incorrect), Toast.LENGTH_SHORT)
+                    .show()
                 isCorrect = false
             } else if (password.isEmpty()) {
                 Toast.makeText(this, getString(R.string.enter_password), Toast.LENGTH_SHORT).show()
                 isCorrect = false
             } else if (password.length < 8) {
-                Toast.makeText(this, getString(R.string.password_too_short), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.password_too_short), Toast.LENGTH_SHORT)
+                    .show()
                 isCorrect = false
             }
 
@@ -47,7 +49,8 @@ class LoginActivity : BaseActivity() {
                     try {
                         repository.signIn(username.toString(), password.toString())
 
-                        startActivity(Intent(
+                        startActivity(
+                            Intent(
                                 this@LoginActivity,
                                 MainActivity::class.java
                             )
@@ -76,6 +79,6 @@ class LoginActivity : BaseActivity() {
             }
         }
 
-        rootLoginLayout.setOnClickListener {hideKeyboard()}
+        rootLoginLayout.setOnClickListener { hideKeyboard() }
     }
 }

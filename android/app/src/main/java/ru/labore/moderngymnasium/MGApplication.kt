@@ -15,7 +15,7 @@ import org.kodein.di.android.x.androidXModule
 import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.data.db.AppDatabase
 import ru.labore.moderngymnasium.data.network.AppNetwork
-import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
 import ru.labore.moderngymnasium.utils.*
@@ -52,12 +52,14 @@ class MGApplication : Application(), DIAware, LifecycleObserver {
         import(androidXModule(this@MGApplication))
 
         bind() from singleton { AppDatabase(instance()) }
+        bind() from singleton { instance<AppDatabase>().commentEntityDao() }
         bind() from singleton { instance<AppDatabase>().announcementEntityDao() }
         bind() from singleton { instance<AppDatabase>().userEntityDao() }
         bind() from singleton { instance<AppDatabase>().roleEntityDao() }
         bind() from singleton { instance<AppDatabase>().classEntityDao() }
         bind() from singleton { AppNetwork(instance(), gson) }
         bind() from singleton { AppRepository(
+            instance(),
             instance(),
             instance(),
             instance(),

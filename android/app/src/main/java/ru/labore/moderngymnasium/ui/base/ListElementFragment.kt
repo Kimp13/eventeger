@@ -8,9 +8,7 @@ abstract class ListElementFragment(
     companion object {
         data class ListElementFragmentControls(
             val push: (ListElementFragment) -> Unit,
-            val finish: () -> Unit,
-            val showBottomNav: () -> Unit,
-            val hideBottomNav: () -> Unit
+            val finish: () -> Unit
         )
     }
 }

@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_inbox.*
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.ui.activities.MainActivity
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
 
@@ -98,6 +98,8 @@ class InboxFragment(
                 forceFetch,
                 refresh
             )
+
+
     }
 
     private fun refreshUI() = launch {
@@ -132,7 +134,7 @@ class InboxFragment(
 
             if (viewModel.itemCount == 0) {
                 if (noAnnouncementsTextView == null) {
-                    LayoutInflater
+                    noAnnouncementsTextView = LayoutInflater
                         .from(context)
                         .inflate(
                             R.layout.inbox_no_announcements_textview,

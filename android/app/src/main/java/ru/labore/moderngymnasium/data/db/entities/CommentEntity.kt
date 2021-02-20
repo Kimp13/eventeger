@@ -3,15 +3,16 @@ package ru.labore.moderngymnasium.data.db.entities
 import androidx.room.Entity
 import org.threeten.bp.ZonedDateTime
 
-@Entity(tableName = "announcement")
-class AnnouncementEntity(
+@Entity(tableName = "comment")
+class CommentEntity(
     id: Int,
+
     authorId: Int,
+    val announcementId: Int,
+    val replyTo: Int?,
     val text: String,
     createdAt: ZonedDateTime,
-    updatedAt: ZonedDateTime,
-    var startsAt: ZonedDateTime? = null,
-    var endsAt: ZonedDateTime? = null
+    updatedAt: ZonedDateTime
 ) : AuthoredEntity(
     id,
     authorId,

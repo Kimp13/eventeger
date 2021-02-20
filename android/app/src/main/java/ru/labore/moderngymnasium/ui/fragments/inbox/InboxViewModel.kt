@@ -5,9 +5,8 @@ import android.app.Application
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import org.threeten.bp.ZonedDateTime
+import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import ru.labore.moderngymnasium.data.repository.AppRepository
 import ru.labore.moderngymnasium.ui.adapters.InboxRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseViewModel
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
@@ -18,7 +17,7 @@ class InboxViewModel(
     private val app: Application
 ) : BaseViewModel(app) {
     private lateinit var viewAdapter: InboxRecyclerViewAdapter
-    private var currentOffset = appRepository.now()
+    private var currentOffset = 0
     val itemCount
         get() = announcements.size
 
@@ -60,41 +59,41 @@ class InboxViewModel(
         if (current == null || !current!!.isActive) {
             if (refresh || !reachedEnd) {
                 val offset = if (refresh) {
-                    null
+                    0
                 } else {
                     currentOffset
                 }
 
-                var newAnnouncements = arrayOf<AnnouncementEntity>()
+                val newAnnouncements = hashMapOf<Int, AnnouncementEntity>()
 
                 current = GlobalScope.async {
                     makeRequest(
                         activity,
                         {
-                            newAnnouncements = getAnnouncements(offset, forceFetch)
+                            getAnnouncements(offset, forceFetch).forEach {
+                                newAnnouncements[it.id] = it
+                            }
                         },
                         {
-                            newAnnouncements = getAnnouncements(
+                            getAnnouncements(
                                 offset,
                                 AppRepository.Companion.UpdateParameters.DONT_UPDATE
-                            )
+                            ).forEach {
+                                newAnnouncements[it.id] = it
+                            }
                         }
                     )
                 }
 
                 current?.join()
 
-                println(newAnnouncements.size)
-
-                if (newAnnouncements.isNotEmpty())
-                    currentOffset = newAnnouncements.last().createdAt
-
                 if (refresh) {
                     val previousSize = itemCount
 
+                    currentOffset = 0
                     reachedEnd = false
                     announcements.clear()
-                    announcements.addAll(newAnnouncements)
+                    announcements.addAll(newAnnouncements.values)
 
                     viewAdapter.refreshAnnouncements(
                         previousSize,
@@ -104,9 +103,22 @@ class InboxViewModel(
                     if (newAnnouncements.isEmpty()) {
                         reachedEnd = true
                     } else {
+                        val iterator = announcements.listIterator()
+
+                        while (iterator.hasNext()) {
+                            val it = iterator.next()
+                            val newValue = newAnnouncements[it.id]
+
+                            if (newValue != null) {
+                                iterator.set(newValue)
+                                newAnnouncements.remove(it.id)
+                            }
+                        }
+
                         val previousSize = itemCount
 
-                        announcements.addAll(newAnnouncements)
+                        currentOffset += newAnnouncements.size
+                        announcements.addAll(newAnnouncements.values)
 
                         viewAdapter.pushAnnouncements(
                             previousSize,
@@ -121,7 +133,7 @@ class InboxViewModel(
     }
 
     private suspend fun getAnnouncements(
-        offset: ZonedDateTime?,
+        offset: Int,
         forceFetch: AppRepository.Companion.UpdateParameters
     ) =
         appRepository.getAnnouncements(offset, forceFetch)

@@ -24,11 +24,11 @@ interface AnnouncementEntityDao {
 
     @Query("""
         select * from announcement
-        where createdAt <= :offset
         order by createdAt desc
         limit 1
+        offset :offset
     """)
-    suspend fun getAnnouncementAtOffset(offset: ZonedDateTime): AnnouncementEntity?
+    suspend fun getAnnouncementAtOffset(offset: Int): AnnouncementEntity?
 
     @Transaction
     @Query("""
@@ -41,9 +41,9 @@ interface AnnouncementEntityDao {
     @Transaction
     @Query("""
         select * from announcement
-        where createdAt <= :offset
         order by createdAt desc
-        limit 1, :limit
+        limit :limit
+        offset :offset
     """)
-    suspend fun getAnnouncements(offset: ZonedDateTime, limit: Int): Array<AnnouncementEntity>
+    suspend fun getAnnouncements(offset: Int, limit: Int): Array<AnnouncementEntity>
 }

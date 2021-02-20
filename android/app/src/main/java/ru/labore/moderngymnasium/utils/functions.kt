@@ -1,29 +1,35 @@
 package ru.labore.moderngymnasium.utils
 
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import java.util.*
+import ru.labore.moderngymnasium.data.db.entities.ClassEntity
+import ru.labore.moderngymnasium.data.db.entities.RoleEntity
+import ru.labore.moderngymnasium.data.db.entities.UserEntity
 
-fun announcementEntityToCaption(entity: AnnouncementEntity, noName: String): String {
-    var result = if (entity.author!!.firstName != null) {
-        if (entity.author!!.lastName != null) {
-            entity.author!!.firstName + " " +
-                    entity.author!!.lastName
-        } else {
-            entity.author!!.firstName!!
-        }
-    } else if (entity.author!!.lastName != null) {
-        entity.author!!.lastName!!
+fun announcementEntityToCaption(
+    author: UserEntity?,
+    noName: String,
+    role: RoleEntity? = null,
+    `class`: ClassEntity? = null
+): String {
+    var result = if (author != null) {
+        if (author.firstName != null) {
+            if (author.lastName != null) {
+                author.firstName + " " +
+                        author.lastName
+            } else {
+                author.firstName
+            }
+        } else author.lastName ?: noName
     } else {
         noName
     }
 
-    if (entity.authorRole != null) {
-        result += ", ${entity.authorRole!!.name}"
-    }
+    if (role != null)
+        result += ", ${role.name}"
 
-    if (entity.authorClass != null) {
-        result += ", ${entity.authorClass!!.grade}${entity.authorClass!!.letter}"
-    }
+
+    if (`class` != null)
+        result += ", ${`class`.grade}${`class`.letter}"
+
 
     return result
 }

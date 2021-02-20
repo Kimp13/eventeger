@@ -5,14 +5,13 @@ import android.app.Application
 import android.content.Intent
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
-import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.network.ClientConnectionException
-import ru.labore.moderngymnasium.data.network.ClientErrorException
-import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.data.AppRepository
+import ru.labore.moderngymnasium.data.network.exceptions.ClientConnectionException
+import ru.labore.moderngymnasium.data.network.exceptions.ClientErrorException
 import ru.labore.moderngymnasium.ui.activities.LoginActivity
 import java.net.ConnectException
 

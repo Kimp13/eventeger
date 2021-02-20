@@ -6,8 +6,6 @@ import com.google.gson.Gson
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import ru.labore.moderngymnasium.data.repository.AppRepository
 
 class AppFirebaseMessagingService : FirebaseMessagingService(), DIAware {
     override val di: DI by lazy { (applicationContext as DIAware).di }

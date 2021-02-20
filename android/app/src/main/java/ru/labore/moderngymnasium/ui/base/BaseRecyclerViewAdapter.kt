@@ -26,7 +26,7 @@ abstract class BaseRecyclerViewAdapter
         parent: ViewGroup,
         viewType: Int
     ): RecyclerView.ViewHolder =
-        if (viewType < additionalItems.size)
+        if (viewType < additionalItems.size && viewType >= 0)
             additionalItems[viewType](parent)
         else
             createDefaultViewHolder(parent)

@@ -14,7 +14,8 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/createFragmentToolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark">
 
         <Button
             android:id="@+id/createAnnouncementBackButton"

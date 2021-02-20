@@ -11,7 +11,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.card.MaterialCardView
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.ui.base.BaseRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseViewHolder
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
@@ -71,6 +71,11 @@ class InboxRecyclerViewAdapter(
                 val textView = linearLayout.getChildAt(1) as TextView
                 val expandButton = linearLayout.getChildAt(2)
                 val pos = position - parent.additionalItems.size
+                val author = parent.appRepository.users[
+                        parent.announcements[pos].authorId
+                ]
+                val role = parent.appRepository.roles[author?.roleId]
+                val `class` = parent.appRepository.classes[author?.classId]
 
                 card.setOnClickListener {
                     parent.announcementClickHandler(
@@ -78,13 +83,15 @@ class InboxRecyclerViewAdapter(
                     )
                 }
 
-                authorView.text = if (parent.announcements[pos].author == null) {
+                authorView.text = if (author == null) {
                     authorRankView.visibility = View.GONE
                     parent.resources.getString(R.string.no_author)
                 } else {
                     val caption = announcementEntityToCaption(
-                        parent.announcements[pos],
-                        parent.resources.getString(R.string.noname)
+                        author,
+                        parent.resources.getString(R.string.noname),
+                        role,
+                        `class`,
                     )
                     val comma = caption.indexOf(',')
 
@@ -151,7 +158,7 @@ class InboxRecyclerViewAdapter(
                     CreateViewHolder(
                         LayoutInflater.from(parent.context)
                             .inflate(
-                                R.layout.inbox_recycler_view,
+                                R.layout.inbox_create_view,
                                 parent,
                                 false
                             ) as ConstraintLayout

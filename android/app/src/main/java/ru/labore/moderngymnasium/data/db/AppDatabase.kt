@@ -5,28 +5,30 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import ru.labore.moderngymnasium.data.db.daos.AnnouncementEntityDao
-import ru.labore.moderngymnasium.data.db.daos.ClassEntityDao
-import ru.labore.moderngymnasium.data.db.daos.RoleEntityDao
-import ru.labore.moderngymnasium.data.db.daos.UserEntityDao
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import ru.labore.moderngymnasium.data.db.entities.ClassEntity
-import ru.labore.moderngymnasium.data.db.entities.RoleEntity
-import ru.labore.moderngymnasium.data.db.entities.UserEntity
+import ru.labore.moderngymnasium.data.db.daos.*
+import ru.labore.moderngymnasium.data.db.entities.*
 
 @Database(
-    entities = [AnnouncementEntity::class, RoleEntity::class, UserEntity::class, ClassEntity::class],
+    entities = [
+        CommentEntity::class,
+        AnnouncementEntity::class,
+        RoleEntity::class,
+        UserEntity::class,
+        ClassEntity::class
+    ],
     version = 1
 )
 @TypeConverters(DateTimeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun announcementEntityDao() : AnnouncementEntityDao
-    abstract fun userEntityDao() : UserEntityDao
-    abstract fun roleEntityDao() : RoleEntityDao
-    abstract fun classEntityDao() : ClassEntityDao
+    abstract fun commentEntityDao(): CommentEntityDao
+    abstract fun announcementEntityDao(): AnnouncementEntityDao
+    abstract fun userEntityDao(): UserEntityDao
+    abstract fun roleEntityDao(): RoleEntityDao
+    abstract fun classEntityDao(): ClassEntityDao
 
     companion object {
-        @Volatile private var instance: AppDatabase? = null
+        @Volatile
+        private var instance: AppDatabase? = null
         private val LOCK = Any()
 
         operator fun invoke(context: Context) = instance ?: synchronized(LOCK) {
@@ -35,10 +37,10 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "moderngymnasium.db"
-                )
+                context.applicationContext,
+                AppDatabase::class.java,
+                "moderngymnasium.db"
+            )
                 .build()
     }
 }

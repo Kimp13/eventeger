@@ -1,4 +1,4 @@
-package ru.labore.moderngymnasium.data.repository
+package ru.labore.moderngymnasium.data
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,14 +9,8 @@ import kotlinx.coroutines.*
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.db.daos.AnnouncementEntityDao
-import ru.labore.moderngymnasium.data.db.daos.ClassEntityDao
-import ru.labore.moderngymnasium.data.db.daos.RoleEntityDao
-import ru.labore.moderngymnasium.data.db.daos.UserEntityDao
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
-import ru.labore.moderngymnasium.data.db.entities.ClassEntity
-import ru.labore.moderngymnasium.data.db.entities.RoleEntity
-import ru.labore.moderngymnasium.data.db.entities.UserEntity
+import ru.labore.moderngymnasium.data.db.daos.*
+import ru.labore.moderngymnasium.data.db.entities.*
 import ru.labore.moderngymnasium.data.network.AppNetwork
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.AnnounceMap
 import ru.labore.moderngymnasium.data.sharedpreferences.entities.User
@@ -24,6 +18,7 @@ import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 
 class AppRepository(
     private val context: Context,
+    private val commentEntityDao: CommentEntityDao,
     private val announcementEntityDao: AnnouncementEntityDao,
     private val userEntityDao: UserEntityDao,
     private val roleEntityDao: RoleEntityDao,
@@ -39,12 +34,6 @@ class AppRepository(
         enum class UpdateParameters {
             UPDATE, DONT_UPDATE, DETERMINE
         }
-
-        data class DeferredAnnouncementInfo(
-            val users: HashMap<Int, Deferred<UserEntity?>>,
-            val classes: HashMap<Int, Deferred<ClassEntity?>>,
-            val roles: HashMap<Int, Deferred<RoleEntity?>>
-        )
     }
 
     var isAppForeground: Boolean = true
@@ -53,6 +42,9 @@ class AppRepository(
     var unreadAnnouncements: MutableList<AnnouncementEntity> = mutableListOf()
     var unreadAnnouncementsPushListener: ((AnnouncementEntity) -> Unit)? = null
 
+    val users = hashMapOf<Int, UserEntity>()
+    val roles = hashMapOf<Int, RoleEntity>()
+    val classes = hashMapOf<Int, ClassEntity>()
     private val sharedPreferences = context.getSharedPreferences(
         context.getString(R.string.utility_shared_preference_file_key),
         Context.MODE_PRIVATE
@@ -187,26 +179,11 @@ class AppRepository(
         }
     }
 
-    private fun fetchDeferredUserAsync(id: Int) = GlobalScope.async {
-        appNetwork.fetchUser(id)
-    }
-
-    private fun fetchDeferredRoleAsync(id: Int) = GlobalScope.async {
-        appNetwork.fetchRole(id)
-    }
-
-    private fun fetchDeferredClassAsync(id: Int) = GlobalScope.async {
-        appNetwork.fetchClass(id)
-    }
-
-    private suspend fun populateAnnouncements(
-        entities: Array<AnnouncementEntity>,
+    private suspend fun populateAuthoredEntities(
+        entities: Array<out AuthoredEntity>,
         forceFetch: UpdateParameters = UpdateParameters.DETERMINE
     ) {
         val now = now()
-        val roles = HashMap<Int, RoleEntity>()
-        val classes = HashMap<Int, ClassEntity>()
-        val users = HashMap<Int, UserEntity>()
         val rolesToUpdate = HashSet<Int>()
         val classesToUpdate = HashSet<Int>()
         val usersToUpdate = HashSet<Int>()
@@ -216,17 +193,31 @@ class AppRepository(
                 usersToUpdate.add(it.authorId)
             }
             UpdateParameters.DETERMINE -> entities.forEach {
-                it.author = userEntityDao.getUser(it.authorId)
+                val author: UserEntity? = if (users.contains(it.authorId)) {
+                    users[it.authorId]
+                } else {
+                    val queried = userEntityDao.getUser(it.authorId)
+
+                    if (queried != null)
+                        users[it.authorId] = queried
+
+                    queried
+                }
+
 
                 if (
-                    it.author?.updatedAt == null ||
-                    now <= it.author!!.updatedAt!!.plusWeeks(1)
-                ) {
+                    author?.updatedAt == null ||
+                    now <= author.updatedAt!!.plusWeeks(1)
+                )
                     usersToUpdate.add(it.authorId)
-                }
             }
             else -> entities.forEach {
-                it.author = userEntityDao.getUser(it.authorId)
+                if (!users.contains(it.authorId)) {
+                    val queried = userEntityDao.getUser(it.authorId)
+
+                    if (queried != null)
+                        users[it.authorId] = queried
+                }
             }
         }
 
@@ -237,49 +228,77 @@ class AppRepository(
                 users[it.id] = it
             }
 
-            entities.forEach {
-                if (users.containsKey(it.authorId))
-                    it.author = users[it.authorId]!!
-            }
-
             persistFetchedUsers(fetchedUsers)
         }
 
         when (forceFetch) {
             UpdateParameters.UPDATE -> entities.forEach {
-                if (it.author?.roleId != null)
-                    rolesToUpdate.add(it.author!!.roleId!!)
+                users[it.authorId]?.let { user ->
+                    if (user.roleId != null)
+                        rolesToUpdate.add(user.roleId!!)
 
-                if (it.author?.classId != null)
-                    classesToUpdate.add(it.author!!.classId!!)
+                    if (user.classId != null)
+                        classesToUpdate.add(user.classId!!)
+                }
             }
             UpdateParameters.DETERMINE -> entities.forEach {
-                if (it.author?.roleId != null)
-                    it.authorRole = roleEntityDao.getRole(it.author!!.roleId!!)
+                val user = users[it.authorId]
 
-                if (it.author?.classId != null)
-                    it.authorClass = classEntityDao.getClass(it.author!!.classId!!)
+                if (user != null) {
+                    if (user.roleId != null && roles[user.roleId] == null) {
+                        val queried = roleEntityDao.getRole(user.roleId!!)
 
-                if (
-                    it.authorRole?.updatedAt == null ||
-                            now < it.authorRole!!.updatedAt!!.plusWeeks(1)
-                )
-                    if (it.author?.roleId != null)
-                        rolesToUpdate.add(it.author!!.roleId!!)
+                        if (queried != null)
+                            roles[user.roleId!!] = queried
+                    }
 
-                if (
-                    it.authorClass?.updatedAt == null ||
-                    now < it.authorClass!!.updatedAt!!.plusWeeks(1)
-                )
-                    if (it.author?.classId != null)
-                        classesToUpdate.add(it.author!!.classId!!)
+                    if (user.classId != null && classes[user.classId] == null) {
+                        val queried = classEntityDao.getClass(user.classId!!)
+
+                        if (queried != null)
+                            classes[user.classId!!] = queried
+                    }
+
+                    val role = roles[user.roleId]
+                    val `class` = classes[user.classId]
+
+                    if (
+                        (
+                                role?.updatedAt == null ||
+                                        now < role.updatedAt!!.plusWeeks(1)
+                                ) &&
+                        user.roleId != null
+                    )
+                        rolesToUpdate.add(user.roleId!!)
+
+                    if (
+                        (
+                                `class`?.updatedAt == null ||
+                                        now < `class`.updatedAt!!.plusWeeks(1)
+                                ) &&
+                        user.classId != null
+                    )
+                        classesToUpdate.add(user.classId!!)
+                }
             }
             else -> entities.forEach {
-                if (it.author?.roleId != null)
-                    it.authorRole = roleEntityDao.getRole(it.author!!.roleId!!)
+                val user = users[it.authorId]
 
-                if (it.author?.classId != null)
-                    it.authorClass = classEntityDao.getClass(it.author!!.classId!!)
+                if (user != null) {
+                    if (user.roleId != null && roles[user.roleId] == null) {
+                        val queried = roleEntityDao.getRole(user.roleId!!)
+
+                        if (queried != null)
+                            roles[user.roleId!!] = queried
+                    }
+
+                    if (user.classId != null && classes[user.classId] == null) {
+                        val queried = classEntityDao.getClass(user.classId!!)
+
+                        if (queried != null)
+                            classes[user.classId!!] = queried
+                    }
+                }
             }
         }
 
@@ -294,13 +313,8 @@ class AppRepository(
                     fetchedRoles.forEach {
                         roles[it.id] = it
                     }
-
-                    entities.forEach {
-                        if (roles.containsKey(it.author?.roleId))
-                            it.authorRole = roles[it.author!!.roleId!!]!!
-                    }
                 }
-            }, GlobalScope.launch  {
+            }, GlobalScope.launch {
                 if (classesToUpdate.isNotEmpty()) {
                     val fetchedClasses =
                         appNetwork.fetchClasses(classesToUpdate.toTypedArray())
@@ -310,11 +324,6 @@ class AppRepository(
                     fetchedClasses.forEach {
                         classes[it.id] = it
                     }
-
-                    entities.forEach {
-                        if (classes.containsKey(it.author?.classId))
-                            it.authorClass = classes[it.author!!.classId!!]!!
-                    }
                 }
             }).joinAll()
         }
@@ -322,109 +331,72 @@ class AppRepository(
 
     private suspend fun populateAnnouncementEntity(
         entity: AnnouncementEntity,
-        updated: DeferredAnnouncementInfo = DeferredAnnouncementInfo(
-            HashMap(),
-            HashMap(),
-            HashMap()
-        ),
         forceFetch: UpdateParameters = UpdateParameters.DETERMINE
     ) {
-        if (forceFetch == UpdateParameters.DONT_UPDATE) {
-            entity.author = userEntityDao.getUser(entity.authorId)
-            entity.authorRole = if (entity.author?.roleId != null) {
-                roleEntityDao.getRole(entity.author!!.roleId!!)
-            } else {
-                null
+        val queriedUser = userEntityDao.getUser(entity.authorId)
+        var queriedRole: RoleEntity? = null
+        var queriedClass: ClassEntity? = null
+
+        if (queriedUser != null) {
+            if (queriedUser.roleId != null) {
+                queriedRole = roleEntityDao.getRole(queriedUser.roleId!!)
+
+                if (queriedRole != null && !roles.contains(queriedRole.id))
+                    roles[queriedRole.id] = queriedRole
             }
-            entity.authorClass = if (entity.author?.classId != null) {
-                classEntityDao.getClass(entity.author!!.classId!!)
-            } else {
-                null
+
+            if (queriedUser.classId != null) {
+                queriedClass = classEntityDao.getClass(queriedUser.classId!!)
+
+                if (queriedClass != null && !classes.contains(queriedClass.id))
+                    classes[queriedClass.id] = queriedClass
             }
-        } else {
+        }
+
+        if (forceFetch != UpdateParameters.DONT_UPDATE) {
             val oneDayBefore = now().minusDays(1)
-            if (forceFetch == UpdateParameters.UPDATE) {
-                entity.author = userEntityDao
-                    .getUser(entity.authorId)
-            }
 
             if (
-                forceFetch == UpdateParameters.UPDATE ||
-                entity.author
-                    ?.updatedAt
-                    ?.isBefore(oneDayBefore) != false
+                queriedUser?.updatedAt?.isBefore(oneDayBefore) != false ||
+                forceFetch == UpdateParameters.UPDATE
             ) {
-                if (!updated.users.containsKey(entity.authorId)) {
-                    updated.users[entity.authorId] = fetchDeferredUserAsync(
-                        entity.authorId
-                    )
-                }
+                val oneWeekBefore = oneDayBefore.minusDays(6)
+                val fetched = appNetwork.fetchUser(entity.authorId)
 
-                entity.author =
-                    updated.users[entity.authorId]?.await()
+                if (fetched != null) {
+                    persistFetchedUser(fetched)
 
-                persistFetchedUser(entity.author!!)
-            }
+                    users[entity.authorId] = fetched
 
-            if (entity.author != null) {
-                val weekBefore = now().minusWeeks(1)
+                    if (
+                        fetched.roleId != null &&
+                        (
+                                queriedRole?.updatedAt?.isBefore(oneWeekBefore) != false ||
+                                        forceFetch == UpdateParameters.UPDATE
+                                )
+                    ) {
+                        val fetchedRole = appNetwork.fetchRole(fetched.roleId!!)
 
-                if (entity.author!!.roleId != null) {
-                    if (forceFetch == UpdateParameters.DETERMINE) {
-                        entity.authorRole = roleEntityDao.getRole(
-                            entity.author!!.roleId!!
-                        )
+                        if (fetchedRole != null) {
+                            persistFetchedRole(fetchedRole)
+
+                            roles[fetchedRole.id] = fetchedRole
+                        }
                     }
 
                     if (
-                        forceFetch == UpdateParameters.UPDATE ||
-                        entity.authorRole
-                            ?.updatedAt
-                            ?.isBefore(weekBefore) != false
+                        fetched.classId != null &&
+                        (
+                                queriedClass?.updatedAt?.isBefore(oneWeekBefore) != false ||
+                                        forceFetch == UpdateParameters.UPDATE
+                                )
                     ) {
-                        if (
-                            !updated.roles.containsKey(entity.author!!.roleId)
-                        ) {
-                            updated.roles[entity.author!!.roleId!!] =
-                                fetchDeferredRoleAsync(entity.author!!.roleId!!)
-                        }
+                        val fetchedClass = appNetwork.fetchClass(fetched.classId!!)
 
-                        entity.authorRole =
-                            updated.roles[entity.author!!.roleId!!]?.await()
+                        if (fetchedClass != null) {
+                            persistFetchedClass(fetchedClass)
 
-                        if (entity.authorRole != null) {
-                            persistFetchedRole(
-                                entity.authorRole!!
-                            )
-                        }
-                    }
-                }
-
-                if (entity.author!!.classId != null) {
-                    if (forceFetch == UpdateParameters.DETERMINE) {
-                        entity.authorClass = classEntityDao.getClass(
-                            entity.author!!.classId!!
-                        )
-                    }
-
-                    if (
-                        forceFetch == UpdateParameters.UPDATE ||
-                        entity.authorClass
-                            ?.updatedAt
-                            ?.isBefore(weekBefore) != false
-                    ) {
-                        if (!updated.classes.containsKey(entity.author!!.classId)) {
-                            updated.classes[entity.author!!.classId!!] =
-                                fetchDeferredClassAsync(entity.author!!.classId!!)
-                        }
-
-                        entity.authorClass =
-                            updated.classes[entity.author!!.classId!!]?.await()
-
-                        if (entity.authorClass != null) {
-                            persistFetchedClass(
-                                entity.authorClass!!
-                            )
+                            classes[fetchedClass.id] = fetchedClass
                         }
                     }
                 }
@@ -453,7 +425,7 @@ class AppRepository(
                 notificationBuilder
                     .setContentTitle(
                         announcementEntityToCaption(
-                            entity,
+                            users[entity.authorId],
                             context.getString(R.string.noname)
                         )
                     )
@@ -473,22 +445,70 @@ class AppRepository(
         }
     }
 
-    suspend fun getAnnouncements(
-        offset: ZonedDateTime? = null,
-        forceFetch: UpdateParameters = UpdateParameters.DETERMINE
-    ): Array<AnnouncementEntity> {
-        val announcements: Array<AnnouncementEntity>
-
-        if (user == null) {
+    suspend fun getComments(
+        announcementId: Int,
+        offset: Int,
+        forceFetch: UpdateParameters
+    ): Array<CommentEntity> {
+        if (user == null)
             return emptyArray()
-        }
+
+        val comments: Array<CommentEntity>
 
         val isNeededToUpdate: Boolean = when (forceFetch) {
             UpdateParameters.UPDATE -> true
             UpdateParameters.DETERMINE -> {
-                val announcement: AnnouncementEntity? =
-                    announcementEntityDao.getAnnouncementAtOffset(offset ?: now())
-                val now: ZonedDateTime = now()
+                val comment =
+                    commentEntityDao.getCommentAtOffset(announcementId, offset)
+                val now = now()
+                val hourBefore = now.minusHours(1)
+
+                comment?.createdAt?.isAfter(now) != false ||
+                        comment.createdAt.isBefore(hourBefore)
+            }
+            else -> false
+        }
+
+        when {
+            isNeededToUpdate -> {
+                comments = appNetwork.fetchComments(
+                    user!!.jwt,
+                    announcementId,
+                    offset
+                )
+
+                persistFetchedComments(comments)
+            }
+            offset == 0 -> {
+                comments =
+                    commentEntityDao.getFirstComments(announcementId, DEFAULT_LIMIT)
+            }
+            else -> {
+                comments =
+                    commentEntityDao.getComments(announcementId, offset, DEFAULT_LIMIT)
+            }
+        }
+
+        populateAuthoredEntities(comments)
+
+        return comments
+    }
+
+    suspend fun getAnnouncements(
+        offset: Int = 0,
+        forceFetch: UpdateParameters = UpdateParameters.DETERMINE
+    ): Array<AnnouncementEntity> {
+        if (user == null)
+            return emptyArray()
+
+        val announcements: Array<AnnouncementEntity>
+
+        val isNeededToUpdate: Boolean = when (forceFetch) {
+            UpdateParameters.UPDATE -> true
+            UpdateParameters.DETERMINE -> {
+                val announcement =
+                    announcementEntityDao.getAnnouncementAtOffset(offset)
+                val now = now()
                 val tenMinutesBefore = now.minusMinutes(10)
 
                 announcement?.createdAt?.isAfter(now) != false ||
@@ -506,7 +526,7 @@ class AppRepository(
 
                 persistFetchedAnnouncements(announcements)
             }
-            offset == null -> {
+            offset == 0 -> {
                 announcements = announcementEntityDao.getFirstAnnouncements(DEFAULT_LIMIT)
             }
             else -> {
@@ -514,7 +534,7 @@ class AppRepository(
             }
         }
 
-        populateAnnouncements(announcements, forceFetch)
+        populateAuthoredEntities(announcements, forceFetch)
 
         return announcements
     }
@@ -613,6 +633,26 @@ class AppRepository(
         }
 
         return keyed
+    }
+
+    private suspend fun persistFetchedComment(
+        fetchedComment: CommentEntity
+    ) {
+        fetchedComment.updatedAt = now()
+
+        commentEntityDao.upsert(fetchedComment)
+    }
+
+    private suspend fun persistFetchedComments(
+        fetchedComments: Array<CommentEntity>
+    ) {
+        val now = now()
+
+        fetchedComments.forEach {
+            it.updatedAt = now
+        }
+
+        commentEntityDao.upsertArray(fetchedComments)
     }
 
     private suspend fun persistFetchedAnnouncement(

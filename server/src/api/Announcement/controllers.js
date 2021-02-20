@@ -30,54 +30,80 @@ export default {
 
             res.throw(400);
         } else {
-            const offset = parseDate(req.query.offset);
+            let offset;
 
-            const roleIds = getPermission(req.user.permissions, [
-                "announcement",
-                "read",
-            ]);
+            if ("offset" in req.query) {
+                offset = parseInt(req.query.offset, 10);
 
-            if (roleIds === false) {
-                res.send([]);
+                if (isNaN(offset)) {
+                    res.throw(400, "Некорректный отступ");
+                    return;
+                }
+            } else {
+                offset = 0;
+            }
+
+            const rolesIds = getPermission(req.user.permissions, ["announcement", "read"]);
+
+            if (rolesIds === false) {
+                res.throw(403, "У Вас нет прав на чтение объявлений");
+                return;
+            }
+
+            const classesIds = getPermission(req.user.permissions, ["class", "multiple"]);
+
+            if (classesIds === false && req.user.classId === null) {
+                res.throw(403, "У Вас нет прав на чтение объявлений");
                 return;
             }
 
             let announcements = mg.knex
                 .select("announcement.*")
+                .count("comment.id as commentCount")
                 .from("announcement")
                 .innerJoin(
                     "announcementClassRole",
                     "announcementClassRole.announcementId",
                     "announcement.id"
                 )
-                .where("announcementClassRole.classId", req.user.classId);
+                .innerJoin(
+                    "comment",
+                    "comment.announcementId",
+                    "announcement.id"
+                )
+                .where(builder =>
+                    builder
+                        .where("comment.hidden", 0)
+                        .orWhere("comment.authorId", req.user.id)
+                        .orWhere("announcement.authorId", req.user.id)
+                );
 
-            if (Array.isArray(roleIds)) {
-                for (let i = 0; i < roleIds.length; i += 1) {
-                    roleIds[i] = parseInt(roleIds[i], 10);
-                }
+            if (Array.isArray(classesIds)) {
+                for (let i = 0; i < classesIds.length; i += 1)
+                    classesIds[i] = parseInt(classesIds[i], 10);
+
+                announcements = announcements.andWhereIn(
+                    "announcementClassRole.classId",
+                    classesIds
+                );
+            }
+
+            if (Array.isArray(rolesIds)) {
+                for (let i = 0; i < rolesIds.length; i += 1)
+                    rolesIds[i] = parseInt(rolesIds[i], 10);
 
                 announcements = announcements.andWhereIn(
                     "announcementClassRole.roleId",
-                    roleIds
+                    rolesIds
                 );
             }
 
-            if (offset) {
-                res.send(
-                    await announcements
-                        .andWhere("announcement.createdAt", "<=", offset)
-                        .orderBy("announcement.createdAt", "desc")
-                        .offset(1)
-                        .limit(25)
-                );
-            } else {
-                res.send(
-                    await announcements
-                        .orderBy("announcement.createdAt", "desc")
-                        .limit(25)
-                );
-            }
+            res.send(
+                await announcements
+                    .groupBy("comment.announcementId")
+                    .offset(offset)
+                    .limit(25)
+            );
         }
     },
 
@@ -85,25 +111,27 @@ export default {
         let offset;
 
         if ("offset" in req.query) {
-            offset = parseDate(req.query.offset);
+            offset = parseInt(req.query.offset, 10);
 
-            if (!offset) {
-                res.throw(400, "Некорректная дата последнего комментария");
+            if (isNaN(offset)) {
+                res.throw(400, "Некорректный отступ");
                 return;
             }
+        } else {
+            offset = 0;
         }
 
-        const roleIds = getPermission(user.permissions, ["announcement", "read"]);
+        const rolesIds = getPermission(req.user.permissions, ["announcement", "read"]);
 
-        if (roleIds === false) {
-            res.send([]);
+        if (rolesIds === false) {
+            res.throw(403, "У Вас нет прав на чтение объявлений");
             return;
         }
 
-        const classesIds = getPermission(user.permissions, ["class", "multiple"]);
+        const classesIds = getPermission(req.user.permissions, ["class", "multiple"]);
 
-        if (classesIds === false && user.classId === null) {
-            res.send([]);
+        if (classesIds === false && req.user.classId === null) {
+            res.throw(403, "У Вас нет прав на чтение объявлений");
             return;
         }
 
@@ -115,13 +143,11 @@ export default {
                 "announcementClassRole.announcementId",
                 "announcement.id"
             )
-            .where((builder) =>
+            .where(builder =>
                 builder.where("beginsAt", "!=", null).orWhere("endsAt", "!=", null)
             );
 
         if (Array.isArray(classesIds)) {
-            andNeeded = true;
-
             for (let i = 0; i < classesIds.length; i += 1)
                 classesIds[i] = parseInt(classesIds[i], 10);
 
@@ -141,22 +167,11 @@ export default {
             );
         }
 
-        if (offset) {
-            res.send(
-                await announcements
-                    .andWhere("announcement.beginsAt", ">=", offset)
-                    .orderBy("announcement.beginsAt", "asc")
-                    .offset(1)
-                    .limit(25)
-            );
-        } else {
-            res.send(
-                await announcements
-                    .andWhere("announcement.beginsAt", ">=", UTC())
-                    .orderBy("announcement.beginsAt", "asc")
-                    .limit(25)
-            );
-        }
+        res.send(
+            await announcements
+                .offset(offset)
+                .limit(25)
+        );
     },
 
     count: async (req, res) => {

@@ -1,10 +1,7 @@
 package ru.labore.moderngymnasium.ui.activities
 
-import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
-import android.util.DisplayMetrics
-import android.util.TypedValue
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.core.view.children
@@ -15,9 +12,9 @@ import com.google.android.material.bottomnavigation.LabelVisibilityMode
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.network.ClientConnectionException
-import ru.labore.moderngymnasium.data.network.ClientErrorException
-import ru.labore.moderngymnasium.data.repository.AppRepository
+import ru.labore.moderngymnasium.data.AppRepository
+import ru.labore.moderngymnasium.data.network.exceptions.ClientConnectionException
+import ru.labore.moderngymnasium.data.network.exceptions.ClientErrorException
 import ru.labore.moderngymnasium.ui.base.BaseActivity
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
 import ru.labore.moderngymnasium.ui.fragments.inbox.InboxFragment
@@ -25,28 +22,22 @@ import ru.labore.moderngymnasium.ui.fragments.news.NewsFragment
 import java.net.ConnectException
 
 class MainActivity : BaseActivity() {
-    private val rootFragments = arrayOf<Fragment>(
+    private val rootFragments = arrayOf(
         NewsFragment(ListElementFragment.Companion.ListElementFragmentControls(
             pushFragment(0),
-            dropFragment(0),
-            { showBottomNav() },
-            { hideBottomNav() }
+            dropFragment(0)
         )),
         InboxFragment(ListElementFragment.Companion.ListElementFragmentControls(
             pushFragment(1),
-            dropFragment(1),
-            { showBottomNav() },
-            { hideBottomNav() }
+            dropFragment(1)
         ))
     )
 
     private var inboxBadge: BadgeDrawable? = null
     private val menuItemIdToIndex = HashMap<Int, Int>()
-    private val animator = ObjectAnimator()
-    private var hidden = false
     private var currentIndex: Int = 0
-    private val fragments = Array<ArrayList<Fragment>>(rootFragments.size) {
-        arrayListOf(rootFragments[it])
+    private val fragments = Array<MutableList<Fragment>>(rootFragments.size) {
+        mutableListOf(rootFragments[it])
     }
 
     override fun onBackPressed() {
@@ -60,16 +51,12 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        animator.target = bottomNav
-        animator.duration = 400
-        animator.setPropertyName("translationY")
-
         if (repository.user == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
             bottomNav.labelVisibilityMode = LabelVisibilityMode.LABEL_VISIBILITY_LABELED
-            inboxBadge = bottomNav.getOrCreateBadge(bottomNav.menu.getItem(0).itemId)
+            inboxBadge = bottomNav.getOrCreateBadge(bottomNav.menu.getItem(1).itemId)
             inboxBadge?.isVisible = false
 
             for (i in 0 until bottomNav.menu.children.count()) {
@@ -179,78 +166,5 @@ class MainActivity : BaseActivity() {
         }
 
         return false
-    }
-
-    private fun showBottomNav() {
-        if (hidden) {
-            hidden = false
-
-            val displayHeight =
-                if (
-                    android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R
-                ) {
-                    windowManager.currentWindowMetrics.bounds.height()
-                } else {
-                    val metrics: DisplayMetrics = DisplayMetrics()
-
-                    windowManager.defaultDisplay.getMetrics(metrics)
-
-                    metrics.heightPixels
-                }
-
-            val out = TypedValue()
-            resources.getValue(R.dimen.bottom_nav_vertical_bias, out, true)
-
-            val yDelta = (1 - out.float) * displayHeight * 3;
-            val multiplier: Float
-
-            if (animator.isRunning) {
-                multiplier =
-                    animator.currentPlayTime.toFloat() / animator.duration.toFloat()
-
-                animator.end()
-            } else {
-                multiplier = 1f
-            }
-
-            animator.setFloatValues(yDelta * multiplier, 0F)
-            animator.start()
-        }
-    }
-
-    private fun hideBottomNav() {
-        if (!hidden) {
-            hidden = true
-            val displayHeight =
-                if (
-                    android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R
-                ) {
-                    windowManager.currentWindowMetrics.bounds.height()
-                } else {
-                    var metrics: DisplayMetrics = DisplayMetrics()
-
-                    windowManager.defaultDisplay.getMetrics(metrics)
-
-                    metrics.heightPixels
-                }
-
-            val out = TypedValue()
-            resources.getValue(R.dimen.bottom_nav_vertical_bias, out, true)
-
-            val yDelta = (1 - out.float) * displayHeight * 3;
-            val multiplier: Float
-
-            if (animator.isRunning) {
-                multiplier =
-                    animator.currentPlayTime.toFloat() / animator.duration.toFloat()
-
-                animator.end()
-            } else {
-                multiplier = 1f
-            }
-
-            animator.setFloatValues(yDelta - (yDelta * multiplier), yDelta)
-            animator.start()
-        }
     }
 }

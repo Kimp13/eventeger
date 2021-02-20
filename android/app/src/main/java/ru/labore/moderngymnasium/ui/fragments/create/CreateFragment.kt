@@ -211,22 +211,6 @@ class CreateFragment(
             controls.finish()
         }
 
-        createFragmentScrollView
-            .viewTreeObserver
-            .addOnScrollChangedListener {
-                val scrollView = createFragmentScrollView
-
-                if (scrollView != null) {
-                    val difference = scrollView.children.last().bottom -
-                            scrollView.height - scrollView.scrollY
-
-                    if (difference <= 50)
-                        controls.hideBottomNav()
-                    else
-                        controls.showBottomNav()
-                }
-            }
-
         createFragmentScrollView?.setOnClickListener { hideKeyboard() }
         createFragmentParametersLayout?.setOnClickListener { hideKeyboard() }
         createFragmentParametersLayout?.children?.forEach {

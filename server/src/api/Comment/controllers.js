@@ -1,107 +1,144 @@
-import get from 'lodash/get';
-import omit from 'lodash/omit';
-import { parseDate } from 'chrono';
-
 export default {
     async find(req, res) {
         const id = parseInt(req.query.announcementId, 10);
 
-        if (!isNaN(id)) {
-            const announcement = mg.query('announcement').findOne({
-                id
-            });
-
-            if (await mg.query.announcement.isAvailable(
-                announcement,
-                req.user
-            )) {
-                const queryObj = (
-                    announcement.authorId === req.user.id ?
-                        {} :
-                        {
-                            hidden: false
-                        }
-                );
-
-                queryObj.announcementId = id;
-                queryObj._limit = 25;
-
-                if (req.query.last) {
-                    const date = parseDate(req.query.last);
-
-                    if (!date) {
-                        res.throw(400, "Некорректный последний комментарий");
-                        return;
-                    }
-
-                    queryObj.createdAt_lt = date;
-                    queryObj._skip = 1;
-                }
-
-                if (req.query.replyTo) {
-                    const replyToId = parseInt(req.query.replyTo, 10);
-
-                    if (isNaN(replyToId)) {
-                        res.throw(400, "Некорректный id комментария-родителя");
-                        return;
-                    }
-
-                    const replyTo = await mg.query('comment').findOne({
-                        id: replyToId
-                    });
-
-                    if (!replyTo || replyTo.announcementId !== announcement.id) {
-                        res.throw(400, "Некорректный комментарий-родитель");
-                        return;
-                    }
-
-                    queryObj.replyTo = replyToId;
-                }
-
-                req.send(
-                    await mg.query('comment').find(
-                        queryObj
-                    )
-                );
-                return;
-            }
-
-            req.throw(403, "Вам недоступно это объявление");
+        if (isNaN(id)) {
+            res.throw(400, "Некорректный идентификатор объявления");
             return;
         }
 
-        req.throw(400, "Некорректный id объявления");
+        const announcement = mg.query('announcement').findOne({
+            id
+        });
+
+        if (!(await mg.query.announcement.isAvailable(
+            announcement,
+            req.user
+        ))) {
+            res.throw(403, "Вам недоступно это объявление");
+            return;
+        }
+
+        let offset;
+
+        if ('offset' in req.query) {
+            offset = parseInt(req.query.offset, 10);
+
+            if (isNaN(offset)) {
+                res.throw(400, "Некорректный отступ");
+                return;
+            }
+        } else {
+            offset = 0;
+        }
+
+        let comments = mg.knex
+            .select("parent.*")
+            .count("children.id as childrenCount")
+            .from("comment as parent")
+            .innerJoin(
+                "comment as children",
+                "children.replyTo",
+                "parent.id"
+            )
+            .where("parent.announcementId", announcementId);
+
+        if (req.query.replyTo) {
+            const replyToId = parseInt(req.query.replyTo, 10);
+
+            if (isNaN(replyToId)) {
+                res.throw(400, "Некорректный идентификатор комментария-родителя");
+                return;
+            }
+
+            const replyTo = await mg.query('comment').findOne({
+                id: replyToId
+            });
+
+            if (!replyTo || replyTo.announcementId !== announcement.id) {
+                res.throw(400, "Некорректный комментарий-родитель");
+                return;
+            }
+
+            if (
+                replyTo.hidden &&
+                replyTo.authorId !== req.user.id &&
+                announcement.authorId !== req.user.id
+            ) {
+                res.throw(403, "Вы не имеете доступа к комментарию-родителю");
+                return;
+            }
+
+            comments = comments
+                .andWhere("replyTo", replyToId);
+        }
+
+        if (announcement.authorId !== req.user.id) {
+            comments = comments
+                .andWhere(builder =>
+                    builder
+                        .where("parent.authorId", req.user.id)
+                        .orWhere("parent.hidden", false)
+                );
+        }
+
+        comments = await comments
+            .groupBy("parent.id")
+            .offset(offset)
+            .limit(25);
+
+        console.log(comments);
+
+        res.send(comments);
     },
 
     async findOne(req, res) {
         const id = parseInt(req.query.id, 10);
 
-        if (!isNaN(id)) {
-            const comment = await mg.query("comment").findOne({
-                id
-            }, ["announcement"]);
-
-            if (await mg.services.announcement.isAvailable(
-                get(comment, ["_related", "announcement"]),
-                req.user
-            )) {
-                if (
-                    comment.authorId === req.user.id ||
-                    !comment.hidden
-                ) {
-                    res.send(omit(
-                        comment,
-                        "_related"
-                    ));
-                    return;
-                }
-            }
-
-            res.throw(403, "Вам недоступен этот комментарий.");
+        if (isNaN(id)) {
+            res.throw(400, "Некорректный идентификатор");
             return;
         }
 
-        res.throw(400, "Некорректное поле id");
+        const comment = (await mg.knex
+            .select("parent.*")
+            .count("child.id as childrenCount")
+            .from("comment as parent")
+            .innerJoin(
+                "comment as children",
+                "children.replyTo",
+                "parent.id"
+            )
+            .groupBy("parent.id"))[0];
+
+        if (!comment) {
+            res.throw(400, "Комментария не существует");
+            return;
+        }
+
+        const announcement = await mg.query('announcement').findOne({
+            id: comment.announcementId
+        });
+
+        if (!(
+            await mg.services.announcement.isAvailable(
+                announcement,
+                req.user
+            ))) {
+            res.throw(403, "Вам недоступно это объявление");
+            return;
+        }
+
+        if (
+            comment.hidden &&
+            comment.authorId !== req.user.id &&
+            announcement.authorId !== req.user.id
+        ) {
+            res.throw(403, "Вам недоступен этот комментарий");
+            return;
+        }
+
+        res.send(comment);
     },
 
     async create(req, res) {
