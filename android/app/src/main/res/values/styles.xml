@@ -79,4 +79,11 @@
         <item name="android:buttonBarButtonStyle">@style/AppTextButtonStyle</item>
         <item name="android:colorBackground">@color/colorDarkVariant</item>
     </style>
+
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+    </style>
 </resources>

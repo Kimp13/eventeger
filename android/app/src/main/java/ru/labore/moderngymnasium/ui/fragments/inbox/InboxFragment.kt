@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -41,19 +40,19 @@ class InboxFragment(
         inboxRecyclerView.apply {
             val viewManager = LinearLayoutManager(requireActivity())
             val divider = DividerItemDecoration(requireContext(), viewManager.orientation)
-            ResourcesCompat.getDrawable(
-                resources,
-                R.drawable.inbox_recycler_view_divider,
-                null
-            )?.let {
-                divider.setDrawable(it)
-            }
+
+            divider.setDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.inbox_recycler_view_divider,
+                    null
+                )!!
+            )
 
             addItemDecoration(divider)
             setHasFixedSize(true)
 
             layoutManager = viewManager
-
             adapter = viewModel.getAdapter(controls)
 
             scrollBy(0, savedInstanceState?.getInt("scrollY") ?: 0)
@@ -90,19 +89,14 @@ class InboxFragment(
             AppRepository.Companion.UpdateParameters.DETERMINE,
         refresh: Boolean = false
     ) {
-        val act = activity
-
-        if (act != null)
-            viewModel.updateAnnouncements(
-                act,
-                forceFetch,
-                refresh
-            )
-
-
+        viewModel.updateAnnouncements(
+            requireActivity(),
+            forceFetch,
+            refresh
+        )
     }
 
-    private fun refreshUI() = launch {
+    private suspend fun refreshUI() {
         updateAnnouncements(
             AppRepository.Companion.UpdateParameters.UPDATE,
             true
@@ -112,43 +106,36 @@ class InboxFragment(
     }
 
     private suspend fun bindUI() {
-        if (viewModel.itemCount == 0) {
+        if (viewModel.itemCount == 0)
             updateAnnouncements(
                 AppRepository.Companion.UpdateParameters.DETERMINE,
                 true
             )
-        }
 
-        val params =
-            inboxProgressBar.layoutParams as ConstraintLayout.LayoutParams
-
-        inboxProgressBar.visibility = View.GONE
-        inboxProgressBarCaption.visibility = View.GONE
-
-        params.topToTop = ConstraintLayout.LayoutParams.UNSET
-        params.bottomToBottom = R.id.inboxFragmentLayout
-        params.bottomMargin = 50
+        viewModel.loading = false
 
         inboxRefreshLayout.setOnRefreshListener {
-            refreshUI()
+            launch {
+                refreshUI()
 
-            if (viewModel.itemCount == 0) {
-                if (noAnnouncementsTextView == null) {
-                    noAnnouncementsTextView = LayoutInflater
-                        .from(context)
-                        .inflate(
-                            R.layout.inbox_no_announcements_textview,
-                            inboxFragmentLayout
+                if (viewModel.itemCount == 0) {
+                    if (noAnnouncementsTextView == null) {
+                        noAnnouncementsTextView = LayoutInflater
+                            .from(context)
+                            .inflate(
+                                R.layout.inbox_no_announcements_textview,
+                                inboxFragmentLayout
+                            )
+                    }
+                } else if (noAnnouncementsTextView != null) {
+                    for (i in 0 until inboxFragmentLayout.childCount)
+                        if (
+                            inboxFragmentLayout.getChildAt(i) == noAnnouncementsTextView
                         )
-                }
-            } else if (noAnnouncementsTextView != null) {
-                for (i in 0 until inboxFragmentLayout.childCount)
-                    if (
-                        inboxFragmentLayout.getChildAt(i) == noAnnouncementsTextView
-                    )
-                        inboxFragmentLayout.removeViewAt(i)
+                            inboxFragmentLayout.removeViewAt(i)
 
-                noAnnouncementsTextView = null
+                    noAnnouncementsTextView = null
+                }
             }
         }
 
@@ -171,8 +158,8 @@ class InboxFragment(
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-
         viewModel.appRepository.unreadAnnouncementsPushListener = null
+
+        super.onDestroy()
     }
 }

@@ -409,6 +409,7 @@ class AppRepository(
             val entity = AnnouncementEntity(
                 (map["id"] ?: error("")).toInt(),
                 (map["authorId"] ?: error("")).toInt(),
+                0,
                 map["text"] ?: error(""),
                 ZonedDateTime.parse(map["createdAt"]),
                 now()
@@ -655,7 +656,7 @@ class AppRepository(
         commentEntityDao.upsertArray(fetchedComments)
     }
 
-    private suspend fun persistFetchedAnnouncement(
+    suspend fun persistFetchedAnnouncement(
         fetchedAnnouncement: AnnouncementEntity
     ) {
         fetchedAnnouncement.updatedAt = now()

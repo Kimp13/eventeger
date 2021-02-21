@@ -21,63 +21,68 @@ class DetailedAnnouncementRecyclerViewAdapter(
     private val announcement: AnnouncementEntity,
     private val comments: MutableList<CommentEntity>
 ) : BaseRecyclerViewAdapter() {
-    class CommentViewHolder(private val layout: ConstraintLayout) : BaseViewHolder(layout) {
-        override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-            if (parent is DetailedAnnouncementRecyclerViewAdapter) {
-                val pos = position - parent.additionalItems.size
-                val headline = layout.getChildAt(1) as TextView
-                val text = layout.getChildAt(2) as TextView
-                val comment = parent.comments[pos]
-                val author = parent.appRepository.users[comment.authorId]
+    companion object DetailedAnnouncement {
+        class CommentViewHolder(private val layout: ConstraintLayout) : BaseViewHolder(layout) {
+            override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+                if (parent is DetailedAnnouncementRecyclerViewAdapter) {
+                    val pos = position - parent.beginAdditionalItems.size
+                    val headline = layout.getChildAt(1) as TextView
+                    val text = layout.getChildAt(2) as TextView
+                    val comment = parent.comments[pos]
+                    val author = parent.appRepository.users[comment.authorId]
 
-                headline.text = if (author == null)
-                    parent.resources.getString(R.string.no_author)
-                else if (
-                    author.firstName != null &&
-                    author.lastName != null
-                )
-                    "${author.firstName} ${author.lastName}"
-                else author.firstName ?: parent.resources.getString(R.string.noname)
-
-                text.text = comment.text
-            }
-        }
-    }
-
-    class AnnouncementViewHolder(private val layout: ConstraintLayout) : BaseViewHolder(layout) {
-        override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-            if (parent is DetailedAnnouncementRecyclerViewAdapter) {
-                val authorName = layout.getChildAt(1) as TextView
-                val authorRank = layout.getChildAt(2) as TextView
-                val text = layout.getChildAt(3) as TextView
-                val author = parent.appRepository.users[parent.announcement.authorId]
-                val role = parent.appRepository.roles[author?.roleId]
-                val `class` = parent.appRepository.classes[author?.classId]
-
-                authorName.text = if (author == null) {
-                    authorRank.visibility = View.GONE
-                    parent.resources.getString(R.string.no_author)
-                } else {
-                    val caption = announcementEntityToCaption(
-                        author,
-                        parent.resources.getString(R.string.noname),
-                        role,
-                        `class`
+                    headline.text = if (author == null)
+                        parent.resources.getString(R.string.no_author)
+                    else if (
+                        author.firstName != null &&
+                        author.lastName != null
                     )
-                    val comma = caption.indexOf(',')
+                        "${author.firstName} ${author.lastName}"
+                    else author.firstName ?: parent.resources.getString(R.string.noname)
 
-                    if (comma == -1) {
-                        authorRank.visibility = View.GONE
-                        caption
-                    } else {
-                        authorRank.text = caption.substring(comma + 2)
-                        caption.substring(0, comma)
-                    }
+                    text.text = comment.text
                 }
-
-                text.text = parent.announcement.text
             }
         }
+
+        class AnnouncementViewHolder(private val layout: ConstraintLayout) :
+            BaseViewHolder(layout) {
+            override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+                if (parent is DetailedAnnouncementRecyclerViewAdapter) {
+                    val authorName = layout.getChildAt(1) as TextView
+                    val authorRank = layout.getChildAt(2) as TextView
+                    val text = layout.getChildAt(3) as TextView
+                    val author = parent.appRepository.users[parent.announcement.authorId]
+                    val role = parent.appRepository.roles[author?.roleId]
+                    val `class` = parent.appRepository.classes[author?.classId]
+
+                    authorName.text = if (author == null) {
+                        authorRank.visibility = View.GONE
+                        parent.resources.getString(R.string.no_author)
+                    } else {
+                        val caption = announcementEntityToCaption(
+                            author,
+                            parent.resources.getString(R.string.noname),
+                            role,
+                            `class`
+                        )
+                        val comma = caption.indexOf(',')
+
+                        if (comma == -1) {
+                            authorRank.visibility = View.GONE
+                            caption
+                        } else {
+                            authorRank.text = caption.substring(comma + 2)
+                            caption.substring(0, comma)
+                        }
+                    }
+
+                    text.text = parent.announcement.text
+                }
+            }
+        }
+
+        const val ANNOUNCEMENT_VIEW_HOLDER_ID = "announcement"
     }
 
     override fun createDefaultViewHolder(
@@ -85,35 +90,36 @@ class DetailedAnnouncementRecyclerViewAdapter(
     ) = CommentViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
-                R.layout.detailed_announcement_recycler_view,
+                R.layout.detailed_announcement_view_handler,
                 parent,
                 false
             ) as ConstraintLayout
     )
 
     override fun updateAdditionalItems() {
-        if (additionalItems.isEmpty()) {
-            additionalItems.add { parent ->
-                AnnouncementViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(
-                            R.layout.detailed_announcement_view,
-                            parent,
-                            false
-                        ) as ConstraintLayout
-                )
-            }
+        if (beginAdditionalItems.isEmpty()) {
+            beginAdditionalItems.add(
+                Base.AdditionalItem(
+                    ANNOUNCEMENT_VIEW_HOLDER_ID
+                ) { parent ->
+                    AnnouncementViewHolder(
+                        LayoutInflater.from(parent.context)
+                            .inflate(
+                                R.layout.detailed_announcement_view,
+                                parent,
+                                false
+                            ) as ConstraintLayout
+                    )
+                }
+            )
         }
     }
 
-    override fun getItemCount(): Int {
-        updateAdditionalItems()
-
-        return comments.size + additionalItems.size
-    }
+    override val defaultItemCount: Int
+        get() = comments.size
 
     fun prependComment() {
-        notifyItemInserted(additionalItems.size)
+        notifyItemInserted(beginAdditionalItems.size)
     }
 
     fun prependComment(comment: CommentEntity) {
@@ -128,13 +134,13 @@ class DetailedAnnouncementRecyclerViewAdapter(
     ) {
         if (previousSize > newSize) {
             notifyItemRangeRemoved(
-                additionalItems.size + newSize,
+                beginAdditionalItems.size + newSize,
                 previousSize - newSize
             )
         }
 
         notifyItemRangeChanged(
-            additionalItems.size,
+            beginAdditionalItems.size,
             min(newSize, previousSize)
         )
 
@@ -144,5 +150,15 @@ class DetailedAnnouncementRecyclerViewAdapter(
                 newSize - previousSize
             )
         }
+    }
+
+    fun pushComments(
+        previousSize: Int,
+        addedSize: Int
+    ) {
+        notifyItemRangeInserted(
+            previousSize + beginAdditionalItems.size,
+            addedSize
+        )
     }
 }

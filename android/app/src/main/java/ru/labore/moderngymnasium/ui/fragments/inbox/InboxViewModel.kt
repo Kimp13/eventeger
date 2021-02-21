@@ -21,13 +21,20 @@ class InboxViewModel(
     val itemCount
         get() = announcements.size
 
+    var loading: Boolean
+        get() =
+            viewAdapter.loading
+        set(value) {
+            viewAdapter.loading = value
+        }
+
     private var current: Job? = null
     private var reachedEnd = false
     private val announcements = mutableListOf<AnnouncementEntity>()
 
     init {
         appRepository.unreadAnnouncementsPushListener = {
-            announcements.add(viewAdapter.additionalItems.size, it)
+            announcements.add(viewAdapter.beginAdditionalItems.size, it)
             viewAdapter.prependAnnouncement()
         }
     }

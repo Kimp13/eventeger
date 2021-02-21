@@ -8,10 +8,10 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.google.android.material.card.MaterialCardView
+import androidx.core.view.children
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.AppRepository
+import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.ui.base.BaseRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseViewHolder
 import ru.labore.moderngymnasium.utils.announcementEntityToCaption
@@ -24,7 +24,7 @@ class InboxRecyclerViewAdapter(
     private val createClickHandler: () -> Unit,
     private val announcementClickHandler: (AnnouncementEntity) -> Unit = {}
 ) : BaseRecyclerViewAdapter() {
-    companion object {
+    companion object Inbox {
         private fun isWordCharacter(character: Char): Boolean =
             when (character.toInt()) {
                 in 0..47 -> false
@@ -58,78 +58,86 @@ class InboxRecyclerViewAdapter(
         }
 
         private const val shortTextCharCount = 200
-    }
 
-    class AnnouncementViewHolder(private val card: MaterialCardView) :
-        BaseViewHolder(card) {
-        override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-            if (parent is InboxRecyclerViewAdapter) {
-                val linearLayout = card.getChildAt(0) as LinearLayout
-                val constraintLayout = linearLayout.getChildAt(0) as ConstraintLayout
-                val authorView = constraintLayout.getChildAt(1) as TextView
-                val authorRankView = constraintLayout.getChildAt(2) as TextView
-                val textView = linearLayout.getChildAt(1) as TextView
-                val expandButton = linearLayout.getChildAt(2)
-                val pos = position - parent.additionalItems.size
-                val author = parent.appRepository.users[
-                        parent.announcements[pos].authorId
-                ]
-                val role = parent.appRepository.roles[author?.roleId]
-                val `class` = parent.appRepository.classes[author?.classId]
 
-                card.setOnClickListener {
-                    parent.announcementClickHandler(
-                        parent.announcements[pos]
-                    )
-                }
+        class AnnouncementViewHolder(private val layout: LinearLayout) :
+            BaseViewHolder(layout) {
+            override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+                if (parent is InboxRecyclerViewAdapter) {
+                    val constraintLayout = layout.getChildAt(0) as ConstraintLayout
+                    val authorView = constraintLayout.getChildAt(1) as TextView
+                    val authorRankView = constraintLayout.getChildAt(2) as TextView
+                    val textView = layout.getChildAt(1) as TextView
+                    val expandButton = layout.getChildAt(2)
+                    val commentButton = layout.children.last() as TextView
+                    val pos = position - parent.beginAdditionalItems.size
+                    val author = parent.appRepository.users[
+                            parent.announcements[pos].authorId
+                    ]
+                    val role = parent.appRepository.roles[author?.roleId]
+                    val `class` = parent.appRepository.classes[author?.classId]
 
-                authorView.text = if (author == null) {
-                    authorRankView.visibility = View.GONE
-                    parent.resources.getString(R.string.no_author)
-                } else {
-                    val caption = announcementEntityToCaption(
-                        author,
-                        parent.resources.getString(R.string.noname),
-                        role,
-                        `class`,
-                    )
-                    val comma = caption.indexOf(',')
+                    layout.setOnClickListener {
+                        parent.announcementClickHandler(
+                            parent.announcements[pos]
+                        )
+                    }
 
-                    if (comma == -1) {
+                    authorView.text = if (author == null) {
                         authorRankView.visibility = View.GONE
-                        caption
+                        parent.resources.getString(R.string.no_author)
                     } else {
-                        authorRankView.text = caption.substring(comma + 2)
-                        caption.substring(0, comma)
-                    }
-                }
+                        val caption = announcementEntityToCaption(
+                            author,
+                            parent.resources.getString(R.string.noname),
+                            role,
+                            `class`,
+                        )
+                        val comma = caption.indexOf(',')
 
-                if (parent.announcements[pos].text.length <= shortTextCharCount) {
-                    textView.text = parent.announcements[pos].text
-                    expandButton.visibility = View.GONE
-                } else {
-                    textView.text = trimText(parent.announcements[pos].text)
-                    expandButton.visibility = View.VISIBLE
-                    expandButton.setOnClickListener {
+                        if (comma == -1) {
+                            authorRankView.visibility = View.GONE
+                            caption
+                        } else {
+                            authorRankView.text = caption.substring(comma + 2)
+                            caption.substring(0, comma)
+                        }
+                    }
+
+                    if (parent.announcements[pos].text.length <= shortTextCharCount) {
                         textView.text = parent.announcements[pos].text
-                        it.visibility = View.GONE
+                        expandButton.visibility = View.GONE
+                    } else {
+                        textView.text = trimText(parent.announcements[pos].text)
+                        expandButton.visibility = View.VISIBLE
+                        expandButton.setOnClickListener {
+                            textView.text = parent.announcements[pos].text
+                            it.visibility = View.GONE
+                        }
+                    }
+
+                    val count = parent.announcements[pos].commentCount
+
+                    if (count > 0)
+                        commentButton.text = count.toString()
+                }
+            }
+        }
+
+        class CreateViewHolder(private val layout: ConstraintLayout) :
+            BaseViewHolder(layout) {
+            override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+                if (parent is InboxRecyclerViewAdapter) {
+                    val button = layout.getChildAt(0) as Button?
+
+                    button?.setOnClickListener {
+                        parent.createClickHandler()
                     }
                 }
             }
         }
-    }
 
-    class CreateViewHolder(private val layout: ConstraintLayout) :
-        BaseViewHolder(layout) {
-        override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-            if (parent is InboxRecyclerViewAdapter) {
-                val button = layout.getChildAt(0) as Button?
-
-                button?.setOnClickListener {
-                    parent.createClickHandler()
-                }
-            }
-        }
+        const val CREATE_VIEW_HOLDER_ID = "create"
     }
 
     override fun createDefaultViewHolder(
@@ -137,10 +145,10 @@ class InboxRecyclerViewAdapter(
     ) = AnnouncementViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
-                R.layout.inbox_recycler_view,
+                R.layout.inbox_view_handler,
                 parent,
                 false
-            ) as MaterialCardView
+            ) as LinearLayout
     )
 
     override fun updateAdditionalItems() {
@@ -153,30 +161,32 @@ class InboxRecyclerViewAdapter(
                 ?.get("create")
                 ?.isNotEmpty() == true
         ) {
-            if (additionalItems.isEmpty())
-                additionalItems.add { parent ->
-                    CreateViewHolder(
-                        LayoutInflater.from(parent.context)
-                            .inflate(
-                                R.layout.inbox_create_view,
-                                parent,
-                                false
-                            ) as ConstraintLayout
+            if (beginAdditionalItems.isEmpty())
+                beginAdditionalItems.add(
+                    Base.AdditionalItem(
+                        CREATE_VIEW_HOLDER_ID
                     )
-                }
-        } else if (additionalItems.size == 1) {
-            additionalItems.clear()
+                    { parent ->
+                        CreateViewHolder(
+                            LayoutInflater.from(parent.context)
+                                .inflate(
+                                    R.layout.inbox_create_view,
+                                    parent,
+                                    false
+                                ) as ConstraintLayout
+                        )
+                    }
+                )
+        } else if (beginAdditionalItems.size == 1) {
+            beginAdditionalItems.clear()
         }
     }
 
-    override fun getItemCount(): Int {
-        updateAdditionalItems()
-
-        return announcements.size + additionalItems.size
-    }
+    override val defaultItemCount: Int
+        get() = announcements.size
 
     fun prependAnnouncement() {
-        notifyItemInserted(additionalItems.size)
+        notifyItemInserted(beginAdditionalItems.size)
     }
 
     fun refreshAnnouncements(
@@ -185,13 +195,13 @@ class InboxRecyclerViewAdapter(
     ) {
         if (previousSize > newSize) {
             notifyItemRangeRemoved(
-                additionalItems.size + newSize,
+                beginAdditionalItems.size + newSize,
                 previousSize - newSize
             )
         }
 
         notifyItemRangeChanged(
-            additionalItems.size,
+            beginAdditionalItems.size,
             min(newSize, previousSize)
         )
 
@@ -208,7 +218,7 @@ class InboxRecyclerViewAdapter(
         addedSize: Int
     ) {
         notifyItemRangeInserted(
-            previousSize + additionalItems.size,
+            previousSize + beginAdditionalItems.size,
             addedSize
         )
     }

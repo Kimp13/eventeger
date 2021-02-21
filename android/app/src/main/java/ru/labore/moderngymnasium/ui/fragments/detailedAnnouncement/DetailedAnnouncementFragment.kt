@@ -4,18 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
+import kotlinx.android.synthetic.main.fragment_inbox.*
+import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
+import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.ui.base.ListElementFragment
-import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 
 class DetailedAnnouncementFragment(
     controls: Companion.ListElementFragmentControls,
     private val announcement: AnnouncementEntity
 ) : ListElementFragment(controls) {
     override val viewModel: DetailedAnnouncementViewModel by viewModels()
+    private var loading = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,8 +37,77 @@ class DetailedAnnouncementFragment(
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        launch {
+            bindUI()
+        }
+
         announcementDetailedBackButton.setOnClickListener {
             controls.finish()
         }
+
+        announcementDetailedRecyclerView.apply {
+            val viewManager = LinearLayoutManager(requireActivity())
+            val divider = DividerItemDecoration(requireContext(), viewManager.orientation)
+
+            divider.setDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.detailed_announcement_recycler_view_divider,
+                    null
+                )!!
+            )
+
+            addItemDecoration(divider)
+            setHasFixedSize(true)
+
+            layoutManager = viewManager
+            adapter = viewModel.getAdapter(announcement)
+
+            scrollBy(0, savedInstanceState?.getInt("scrollY") ?: 0)
+        }
+    }
+
+    private suspend fun updateComments(
+        forceFetch: AppRepository.Companion.UpdateParameters =
+            AppRepository.Companion.UpdateParameters.DETERMINE,
+        refresh: Boolean = false
+    ) {
+        viewModel.updateComments(
+            requireActivity(),
+            forceFetch,
+            refresh
+        )
+    }
+
+    private suspend fun refreshUI() {
+        updateComments(
+            AppRepository.Companion.UpdateParameters.UPDATE,
+            true
+        )
+
+        inboxRefreshLayout.isRefreshing = false
+    }
+
+    suspend fun bindUI() {
+        if (viewModel.itemCount == 0)
+            updateComments(
+                AppRepository.Companion.UpdateParameters.DETERMINE,
+                true
+            )
+
+        announcementDetailedRefresh.setOnRefreshListener {
+            launch {
+                refreshUI()
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(
+            "scrollY",
+            announcementDetailedRecyclerView.computeVerticalScrollOffset()
+        )
+
+        super.onSaveInstanceState(outState)
     }
 }

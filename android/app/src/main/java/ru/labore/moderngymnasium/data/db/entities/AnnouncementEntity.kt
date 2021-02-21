@@ -7,6 +7,7 @@ import org.threeten.bp.ZonedDateTime
 class AnnouncementEntity(
     id: Int,
     authorId: Int,
+    var commentCount: Int,
     val text: String,
     createdAt: ZonedDateTime,
     updatedAt: ZonedDateTime,
