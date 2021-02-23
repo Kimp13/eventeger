@@ -60,6 +60,14 @@ class AppNetwork(context: Context, gson: Gson) : Interceptor {
         offset: Int
     ) = utility.fetchAnnouncements(jwt, offset)
 
+    suspend fun createComment(
+        jwt: String,
+        announcementId: Int,
+        text: String,
+        hidden: Boolean,
+        replyTo: Int? = null
+    ) = utility.createComment(jwt, announcementId, text, hidden, replyTo)
+
     suspend fun createAnnouncement(
         jwt: String,
         text: String,

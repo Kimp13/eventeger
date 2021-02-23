@@ -21,7 +21,7 @@ class InboxViewModel(
     val itemCount
         get() = announcements.size
 
-    var loading: Boolean
+    private var loading: Boolean
         get() =
             viewAdapter.loading
         set(value) {
@@ -63,6 +63,8 @@ class InboxViewModel(
             AppRepository.Companion.UpdateParameters.DETERMINE,
         refresh: Boolean = false
     ) {
+        loading = true
+
         if (current == null || !current!!.isActive) {
             if (refresh || !reachedEnd) {
                 val offset = if (refresh) {
@@ -137,6 +139,19 @@ class InboxViewModel(
         } else {
             current?.join()
         }
+
+        loading = false
+    }
+
+    suspend fun setup(activity: Activity) {
+        if (itemCount == 0)
+            updateAnnouncements(
+                activity,
+                AppRepository.Companion.UpdateParameters.DETERMINE,
+                true
+            )
+        else
+            loading = false
     }
 
     private suspend fun getAnnouncements(

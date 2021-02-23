@@ -8,6 +8,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
 import kotlinx.android.synthetic.main.fragment_inbox.*
 import kotlinx.coroutines.launch
@@ -18,10 +19,9 @@ import ru.labore.moderngymnasium.ui.base.ListElementFragment
 
 class DetailedAnnouncementFragment(
     controls: Companion.ListElementFragmentControls,
-    private val announcement: AnnouncementEntity
+    internal val announcement: AnnouncementEntity
 ) : ListElementFragment(controls) {
     override val viewModel: DetailedAnnouncementViewModel by viewModels()
-    private var loading = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,46 +58,39 @@ class DetailedAnnouncementFragment(
             )
 
             addItemDecoration(divider)
-            setHasFixedSize(true)
 
             layoutManager = viewManager
-            adapter = viewModel.getAdapter(announcement)
+            adapter = viewModel.getAdapter(this@DetailedAnnouncementFragment)
 
             scrollBy(0, savedInstanceState?.getInt("scrollY") ?: 0)
+
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    if (height - scrollY <= 50)
+                        launch {
+                            viewModel.updateComments(
+                                requireActivity()
+                            )
+                        }
+                }
+            })
         }
     }
 
-    private suspend fun updateComments(
-        forceFetch: AppRepository.Companion.UpdateParameters =
-            AppRepository.Companion.UpdateParameters.DETERMINE,
-        refresh: Boolean = false
-    ) {
-        viewModel.updateComments(
-            requireActivity(),
-            forceFetch,
-            refresh
-        )
-    }
-
-    private suspend fun refreshUI() {
-        updateComments(
-            AppRepository.Companion.UpdateParameters.UPDATE,
-            true
-        )
-
-        inboxRefreshLayout.isRefreshing = false
-    }
-
-    suspend fun bindUI() {
-        if (viewModel.itemCount == 0)
-            updateComments(
-                AppRepository.Companion.UpdateParameters.DETERMINE,
-                true
-            )
+    private suspend fun bindUI() {
+        viewModel.setup(requireActivity())
 
         announcementDetailedRefresh.setOnRefreshListener {
             launch {
-                refreshUI()
+                viewModel.updateComments(
+                    requireActivity(),
+                    AppRepository.Companion.UpdateParameters.UPDATE,
+                    true
+                )
+
+                announcementDetailedRefresh.isRefreshing = false
             }
         }
     }

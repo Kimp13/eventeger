@@ -68,4 +68,12 @@
     <string name="started_at_fmt">Началось %1$s.%2$s.%3$d в %4$s:%5$s</string>
     <string name="ended_at_fmt">Кончилось %1$s.%2$s.%3$d в %4$s:%5$s</string>
     <string name="comment">Комментарий</string>
+    <string name="comments">Комментарии</string>
+    <string name="comment_settings">Настройки комментария</string>
+    <string name="send_comment">Отправить комментарий</string>
+    <string name="hidden">Скрытый</string>
+    <string name="hidden_comment">Скрытый комментарий</string>
+    <string name="write_comment">Написать комментарий</string>
+    <string name="comment_text">Текст комментария</string>
+    <string name="wait">Подождите...</string>
 </resources>

@@ -16,28 +16,35 @@ function parseAndSort(array) {
 
 module.exports = function jacketzip() {
     async function updateCache() {
-        mg.cache.classes = await mg.query("class").find();
-        mg.cache.roles = await mg.query("role").find(
-            {
-                _sort: "id",
-            },
+        mg.cache.roles = {};
+        mg.cache.classes = {};
+
+        const classes = await mg.query("class").find();
+        const roles = await mg.query("role").find(
+            {},
             ["permission"]
         );
 
-        for (const role of mg.cache.roles) {
-            role.permissions = parsePermissions(role._relations.permission);
+        let i;
 
-            if (role.permissions !== true && "announcement" in role.permissions) {
-                if ("create" in role.permissions.announcement) {
-                    parseAndSort(role.permissions.announcement.create);
+        for (i = 0; i < classes.length; i += 1)
+            mg.cache.classes[classes[i].id] = classes[i];
+
+        for (i = 0; i < roles.length; i += 1) {
+            mg.cache.roles[roles[i].id] = roles[i];
+            roles[i].permissions = parsePermissions(roles[i]._relations.permission);
+
+            if (roles[i].permissions !== true && "announcement" in roles[i].permissions) {
+                if ("create" in roles[i].permissions.announcement) {
+                    parseAndSort(roles[i].permissions.announcement.create);
                 }
 
-                if ("read" in role.permissions.announcement) {
-                    parseAndSort(role.permissions.announcement.read);
+                if ("read" in roles[i].permissions.announcement) {
+                    parseAndSort(roles[i].permissions.announcement.read);
                 }
             }
 
-            delete role._relations;
+            delete roles[i]._relations;
         }
     }
 

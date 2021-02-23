@@ -149,6 +149,19 @@ class AppRepository(
         getMap(editor)
     }
 
+    suspend fun createComment(
+        announcementId: Int,
+        text: String,
+        hidden: Boolean,
+        replyTo: Int? = null
+    ) = appNetwork.createComment(
+        user!!.jwt,
+        announcementId,
+        text,
+        hidden,
+        replyTo
+    )
+
     suspend fun createAnnouncement(
         text: String,
         recipients: HashMap<Int, HashSet<Int>>
@@ -470,27 +483,19 @@ class AppRepository(
             else -> false
         }
 
-        when {
-            isNeededToUpdate -> {
-                comments = appNetwork.fetchComments(
-                    user!!.jwt,
-                    announcementId,
-                    offset
-                )
+        if (isNeededToUpdate) {
+            comments = appNetwork.fetchComments(
+                user!!.jwt,
+                announcementId,
+                offset
+            )
 
-                persistFetchedComments(comments)
-            }
-            offset == 0 -> {
-                comments =
-                    commentEntityDao.getFirstComments(announcementId, DEFAULT_LIMIT)
-            }
-            else -> {
-                comments =
-                    commentEntityDao.getComments(announcementId, offset, DEFAULT_LIMIT)
-            }
+            persistFetchedComments(comments)
+        } else {
+            comments = commentEntityDao.getComments(announcementId, offset, DEFAULT_LIMIT)
         }
 
-        populateAuthoredEntities(comments)
+        populateAuthoredEntities(comments, forceFetch)
 
         return comments
     }

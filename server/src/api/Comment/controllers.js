@@ -11,7 +11,7 @@ export default {
             id
         });
 
-        if (!(await mg.query.announcement.isAvailable(
+        if (!(await mg.services.announcement.isAvailable(
             announcement,
             req.user
         ))) {
@@ -36,12 +36,12 @@ export default {
             .select("parent.*")
             .count("children.id as childrenCount")
             .from("comment as parent")
-            .innerJoin(
+            .leftJoin(
                 "comment as children",
                 "children.replyTo",
                 "parent.id"
             )
-            .where("parent.announcementId", announcementId);
+            .where("parent.announcementId", id);
 
         if (req.query.replyTo) {
             const replyToId = parseInt(req.query.replyTo, 10);
@@ -71,6 +71,8 @@ export default {
 
             comments = comments
                 .andWhere("replyTo", replyToId);
+        } else {
+            comments = comments.andWhere("parent.replyTo", null);
         }
 
         if (announcement.authorId !== req.user.id) {
@@ -82,14 +84,12 @@ export default {
                 );
         }
 
-        comments = await comments
-            .groupBy("parent.id")
-            .offset(offset)
-            .limit(25);
 
-        console.log(comments);
-
-        res.send(comments);
+            res.send(await comments
+                .groupBy("parent.id")
+                .orderBy("createdAt", "desc")
+                .limit(25)
+                .offset(offset));
     },
 
     async findOne(req, res) {
@@ -142,19 +142,19 @@ export default {
     },
 
     async create(req, res) {
-        if (!req.query.text) {
+        if (!req.body.text) {
             res.throw(400, "Нет текста объявления");
             return;
         }
 
-        const text = String(req.query.text);
+        const text = String(req.body.text);
 
         if (!text) {
             res.throw(400, "Некорректный текст объявления");
             return;
         }
 
-        const announcementId = parseInt(req.query.announcementId, 10);
+        const announcementId = parseInt(req.body.announcementId, 10);
 
         if (isNaN(announcementId)) {
             res.throw(400, "Некорректный id объявления");
@@ -175,11 +175,13 @@ export default {
 
         const createObj = {
             text,
-            hidden: Boolean(req.query.hidden)
+            hidden: Boolean(req.body.hidden),
+            announcementId,
+            authorId: req.user.id
         };
 
-        if (req.query.replyTo) {
-            const replyToId = parseInt(req.query.replyTo, 10);
+        if (req.body.replyTo) {
+            const replyToId = parseInt(req.body.replyTo, 10);
 
             if (isNaN(replyToId)) {
                 res.throw(400, "Некорректный id комментария-родителя");
@@ -203,6 +205,10 @@ export default {
             createObj.replyTo = replyToId;
         }
 
-        await mg.query('comment').create(createObj);
+        const something = await mg.query('comment').create(createObj);
+
+        res.send(await mg.query('comment').findOne({
+            id: something[0]
+        }));
     }
 }

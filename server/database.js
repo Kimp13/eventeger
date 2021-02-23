@@ -313,8 +313,6 @@ class KnexManageModel {
     if (this.specs.hasTimestamps) {
       const date = new Date();
 
-      date.setTime(date.getTime() + date.getTimezoneOffset() * 60000);
-
       set[updatedString] = date;
     }
 
@@ -331,8 +329,6 @@ class KnexManageModel {
   create(value = {}) {
     if (this.specs.hasTimestamps) {
       const date = new Date();
-
-      date.setTime(date.getTime() + date.getTimezoneOffset() * 60000);
 
       value[createdString] = date;
       value[updatedString] = date;

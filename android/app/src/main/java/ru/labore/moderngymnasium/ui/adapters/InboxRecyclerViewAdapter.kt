@@ -35,24 +35,20 @@ class InboxRecyclerViewAdapter(
             }
 
         private fun trimText(text: String): String {
-            if (text.length <= shortTextCharCount) {
+            if (text.length <= shortTextCharCount)
                 return text
-            }
 
             var i = shortTextCharCount
 
-            while (isWordCharacter(text[--i])) {
-                if (i == 0) {
+            while (isWordCharacter(text[--i]))
+                if (i == 0)
                     return "${text.substring(0, shortTextCharCount)}…"
-                }
-            }
 
             val indexAfterFirstLoop = i
-            while (isWordCharacter(text[--i])) {
-                if (i == 0) {
+
+            while (isWordCharacter(text[--i]))
+                if (i == 0)
                     return "${text.substring(indexAfterFirstLoop + 1)}…"
-                }
-            }
 
             return "${text.substring(0, i + 1)}…"
         }
@@ -145,15 +141,16 @@ class InboxRecyclerViewAdapter(
     ) = AnnouncementViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
-                R.layout.inbox_view_handler,
+                R.layout.inbox_view_holder,
                 parent,
                 false
             ) as LinearLayout
     )
 
-    override fun updateAdditionalItems() {
-        if (
-            appRepository
+    public override fun updateAdditionalItems() {
+        super.updateAdditionalItems()
+
+        if (appRepository
                 .user
                 ?.data
                 ?.permissions
@@ -161,7 +158,17 @@ class InboxRecyclerViewAdapter(
                 ?.get("create")
                 ?.isNotEmpty() == true
         ) {
-            if (beginAdditionalItems.isEmpty())
+            var absent = true
+            val size = beginAdditionalItems.size
+
+            for (i in 0 until size) {
+                if (beginAdditionalItems[i].id == CREATE_VIEW_HOLDER_ID) {
+                    absent = false
+                    break
+                }
+            }
+
+            if (absent) {
                 beginAdditionalItems.add(
                     Base.AdditionalItem(
                         CREATE_VIEW_HOLDER_ID
@@ -170,15 +177,24 @@ class InboxRecyclerViewAdapter(
                         CreateViewHolder(
                             LayoutInflater.from(parent.context)
                                 .inflate(
-                                    R.layout.inbox_create_view,
+                                    R.layout.inbox_create_view_holder,
                                     parent,
                                     false
                                 ) as ConstraintLayout
                         )
                     }
                 )
-        } else if (beginAdditionalItems.size == 1) {
-            beginAdditionalItems.clear()
+
+                notifyItemInserted(size)
+            }
+        } else {
+            for (i in 0 until beginAdditionalItems.size) {
+                if (beginAdditionalItems[i].id == CREATE_VIEW_HOLDER_ID) {
+                    beginAdditionalItems.removeAt(i)
+                    notifyItemRemoved(i)
+                    break
+                }
+            }
         }
     }
 
@@ -207,7 +223,7 @@ class InboxRecyclerViewAdapter(
 
         if (previousSize < newSize) {
             notifyItemRangeInserted(
-                itemCount,
+                beginAdditionalItems.size + previousSize,
                 newSize - previousSize
             )
         }

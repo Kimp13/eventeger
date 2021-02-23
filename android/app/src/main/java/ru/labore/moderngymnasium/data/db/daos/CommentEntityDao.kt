@@ -25,7 +25,7 @@ interface CommentEntityDao {
     @Query("""
         select * from comment
         where announcementId = :announcementId
-        order by createdAt asc
+        order by createdAt desc
         limit 1
         offset :offset
     """)
@@ -35,16 +35,7 @@ interface CommentEntityDao {
     @Query("""
         select * from comment
         where announcementId = :announcementId
-        order by createdAt asc
-        limit :limit
-    """)
-    suspend fun getFirstComments(announcementId: Int, limit: Int): Array<CommentEntity>
-
-    @Transaction
-    @Query("""
-        select * from comment
-        where announcementId = :announcementId
-        order by createdAt asc
+        order by createdAt desc
         limit :limit
         offset :offset
     """)

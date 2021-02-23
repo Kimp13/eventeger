@@ -2,46 +2,43 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp">
+    android:layout_height="wrap_content"
+    android:padding="10dp">
 
     <ImageView
         android:id="@+id/announcementDetailedImageView"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="20dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:contentDescription="@string/announcement"
-        android:src="@drawable/ic_baseline_announcement"
+        android:src="@drawable/ic_baseline_person_pin"
+        android:background="@drawable/clickable_background_borderless_inverse"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/colorPrimary" />
 
     <TextView
         android:id="@+id/announcementDetailedAuthorName"
+        style="@style/AnnouncementAuthorTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:layout_marginStart="15dp"
         app:layout_constraintStart_toEndOf="@id/announcementDetailedImageView"
         app:layout_constraintTop_toTopOf="@id/announcementDetailedImageView" />
 
     <TextView
         android:id="@+id/announcementDetailedAuthorRank"
+        style="@style/AnnouncementAuthorRankTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceBody2"
-        android:textColor="?android:attr/textColorSecondaryInverse"
-        app:layout_constraintBottom_toBottomOf="@id/announcementDetailedImageView"
-        app:layout_constraintStart_toStartOf="@id/announcementDetailedAuthorName" />
+        app:layout_constraintStart_toStartOf="@id/announcementDetailedAuthorName"
+        app:layout_constraintTop_toBottomOf="@id/announcementDetailedAuthorName" />
 
     <TextView
         android:id="@+id/announcementDetailedText"
+        style="@style/AnnouncementTextTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textAppearance="?attr/textAppearanceBody2"
-        android:textColor="?android:attr/textColorSecondaryInverse"
+        android:layout_marginTop="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/announcementDetailedImageView" />
 </androidx.constraintlayout.widget.ConstraintLayout>

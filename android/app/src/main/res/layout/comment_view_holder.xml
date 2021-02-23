@@ -2,15 +2,20 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorDarkVariant"
+    android:layout_height="wrap_content"
+    android:background="@drawable/comment_view_holder_background"
+    android:clickable="true"
+    android:focusable="true"
     android:padding="10dp">
 
     <ImageView
         android:id="@+id/commentImageView"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:contentDescription="@string/announcement"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/clickable_background_borderless_inverse"
+        android:contentDescription="@string/comment"
         android:src="@drawable/ic_baseline_person_pin"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -18,25 +23,39 @@
 
     <TextView
         android:id="@+id/commentAuthorName"
+        style="@style/AnnouncementAuthorTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:textAppearance="?attr/textAppearanceHeadline6"
-        android:textColor="?android:textColorPrimaryInverse"
+        android:layout_marginStart="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/commentImageView"
         app:layout_constraintTop_toTopOf="@id/commentImageView" />
 
     <TextView
-        android:id="@+id/commentText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:textAppearance="?attr/textAppearanceBody2"
-        android:textColor="?android:attr/textColorSecondaryInverse"
+        android:layout_marginStart="5dp"
+        style="@style/AnnouncementTextTextView"
+        app:layout_constraintStart_toEndOf="@id/commentAuthorName"
+        app:layout_constraintBaseline_toBaselineOf="@id/commentAuthorName" />
+
+    <TextView
+        android:id="@+id/commentText"
+        style="@style/AnnouncementTextTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/commentAuthorName"
         app:layout_constraintTop_toBottomOf="@id/commentAuthorName" />
+
+    <TextView
+        style="@style/IconTextButton"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:drawableStartCompat="@drawable/ic_baseline_comment_16"
+        app:layout_constraintStart_toStartOf="@id/commentText"
+        app:layout_constraintTop_toBottomOf="@id/commentText" />
 </androidx.constraintlayout.widget.ConstraintLayout>

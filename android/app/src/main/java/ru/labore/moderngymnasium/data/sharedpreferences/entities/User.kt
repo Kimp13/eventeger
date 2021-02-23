@@ -50,6 +50,7 @@ class User(
             constructor(wildcard: Boolean): super(wildcard)
 
             constructor(json: JsonObject): super(false) {
+                println(json.toString())
                 val entrySet: Set<Map.Entry<String?, JsonElement?>> = json.entrySet()
                 for ((key, value) in entrySet) {
                     if (key != null) {

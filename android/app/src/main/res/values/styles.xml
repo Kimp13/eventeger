@@ -1,5 +1,4 @@
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -12,6 +11,7 @@
         <item name="colorControlActivated">@color/colorAccent</item>
         <item name="cardViewStyle">@style/AppMaterialCardViewStyle</item>
         <item name="materialCardViewStyle">@style/AppMaterialCardViewStyle</item>
+        <item name="popupMenuStyle">@style/PopupMenu</item>
     </style>
 
     <style name="AppThemeWithoutActionBar" parent="AppTheme">s
@@ -58,9 +58,13 @@
         <item name="android:letterSpacing">.03</item>
     </style>
 
+    <style name="CreateCommentEditTextStyle" parent="AppEditTextStyle">
+        <item name="android:padding">10dp</item>
+    </style>
+
     <style name="AppEditTextStyle" parent="android:Widget.EditText">
         <item name="android:textColor">@drawable/edit_text_text_color</item>
-        <item name="android:textColorHint">@drawable/edit_text_text_color</item>
+        <item name="android:textColorHint">?android:attr/textColorSecondaryInverse</item>
         <item name="android:background">@drawable/edit_text_background</item>
         <item name="android:padding">20dp</item>
     </style>
@@ -85,5 +89,53 @@
         <item name="android:layout_height">1dp</item>
         <item name="android:layout_marginTop">5dp</item>
         <item name="android:layout_marginBottom">5dp</item>
+    </style>
+
+    <style name="AnnouncementAuthorTextView">
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+    </style>
+
+    <style name="AnnouncementAuthorRankTextView">
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        <item name="android:textColor">?android:textColorSecondaryInverse</item>
+    </style>
+
+    <style name="AnnouncementTextTextView">
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        <item name="android:textColor">?android:textColorSecondaryInverse</item>
+    </style>
+
+    <style name="IconTextButton">
+        <item name="android:background">@drawable/icon_text_button_background</item>
+        <item name="android:clickable">true</item>
+        <item name="android:drawablePadding">5dp</item>
+        <item name="drawableTint">@color/colorPrimary</item>
+        <item name="android:focusable">true</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:textColor">?android:attr/textColorSecondaryInverse</item>
+    </style>
+
+    <style name="CommentsHeaderTextView">
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CommentsCountTextView">
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        <item name="android:textColor">?android:attr/textColorSecondaryInverse</item>
+    </style>
+
+    <style name="ClickableInverseBackground">
+        <item name="android:background">@drawable/clickable_background_borderless_inverse</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="PopupMenu" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:popupBackground">@drawable/create_comment_popup_background</item>
     </style>
 </resources>

@@ -9,11 +9,9 @@ export default {
 
         if (classesPermission === true) {
             const retarr = [];
-            const classes = mg.cache.classes;
 
-            for (const classEntity of classes) {
-                retarr.push(classEntity.id);
-            }
+            for (const classId in mg.cache.classes)
+                retarr.push(parseInt(classId, 10));
 
             return retarr;
         } else {

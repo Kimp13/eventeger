@@ -34,6 +34,13 @@ class Utility(
             val event: Boolean = true
         )
 
+        data class CreateCommentBody(
+            val announcementId: Int,
+            val text: String,
+            val hidden: Boolean,
+            val replyTo: Int?
+        )
+
         data class TokenPayload(val token: String)
 
         data class CountResponse(val count: Int)
@@ -59,6 +66,12 @@ class Utility(
                 @Header("Authentication") jwt: String,
                 @Body body: AnnouncementTextAndRecipients
             )
+
+            @POST("comments/create")
+            suspend fun createComment(
+                @Header("Authorization") jwt: String,
+                @Body body: CreateCommentBody
+            ): CommentEntity
 
             @POST("announcements/create")
             suspend fun createAnnouncement(
@@ -152,6 +165,16 @@ class Utility(
         username: String,
         password: String
     ): User? = builder.signIn(UserCredentials(username, password))
+
+    suspend fun createComment(
+        jwt: String,
+        announcementId: Int,
+        text: String,
+        hidden: Boolean,
+        replyTo: Int? = null
+    ) = builder.createComment(jwt, CreateCommentBody(
+        announcementId, text, hidden, replyTo
+    ))
 
     suspend fun createAnnouncement(
         jwt: String,

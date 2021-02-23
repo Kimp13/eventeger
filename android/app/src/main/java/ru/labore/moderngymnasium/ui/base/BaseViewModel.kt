@@ -33,6 +33,8 @@ abstract class BaseViewModel(
         try {
             toTry()
         } catch(e: Exception) {
+            whenCaught()
+
             Toast.makeText(
                 activity,
                 when (e) {
@@ -65,8 +67,6 @@ abstract class BaseViewModel(
                 },
                 Toast.LENGTH_LONG
             ).show()
-
-            whenCaught()
         }
     }
 }

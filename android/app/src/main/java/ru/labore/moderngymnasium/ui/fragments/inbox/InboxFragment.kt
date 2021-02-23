@@ -21,7 +21,6 @@ class InboxFragment(
 ) : ListElementFragment(controls) {
     override val viewModel: InboxViewModel by viewModels()
     private var noAnnouncementsTextView: View? = null
-    private var loading = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -61,20 +60,25 @@ class InboxFragment(
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
 
+                    if (height - scrollY <= 50)
+                        launch {
+                            viewModel.updateAnnouncements(
+                                requireActivity()
+                            )
+                        }
+
                     if (layoutManager is LinearLayoutManager) {
                         val firstItemIndex = (layoutManager as LinearLayoutManager)
                             .findFirstCompletelyVisibleItemPosition()
 
                         viewModel.appRepository.unreadAnnouncements.let { list ->
                             if (firstItemIndex < list.size) {
-                                for (i in list.size - 1 downTo firstItemIndex) {
+                                for (i in list.size - 1 downTo firstItemIndex)
                                     list.removeAt(i)
-                                }
 
                                 requireActivity().let {
-                                    if (it is MainActivity) {
+                                    if (it is MainActivity)
                                         it.updateInboxBadge(list.size)
-                                    }
                                 }
                             }
                         }
@@ -84,71 +88,20 @@ class InboxFragment(
         }
     }
 
-    private suspend fun updateAnnouncements(
-        forceFetch: AppRepository.Companion.UpdateParameters =
-            AppRepository.Companion.UpdateParameters.DETERMINE,
-        refresh: Boolean = false
-    ) {
-        viewModel.updateAnnouncements(
-            requireActivity(),
-            forceFetch,
-            refresh
-        )
-    }
-
-    private suspend fun refreshUI() {
-        updateAnnouncements(
-            AppRepository.Companion.UpdateParameters.UPDATE,
-            true
-        )
-
-        inboxRefreshLayout.isRefreshing = false
-    }
-
     private suspend fun bindUI() {
-        if (viewModel.itemCount == 0)
-            updateAnnouncements(
-                AppRepository.Companion.UpdateParameters.DETERMINE,
-                true
-            )
-
-        viewModel.loading = false
+        viewModel.setup(requireActivity())
 
         inboxRefreshLayout.setOnRefreshListener {
             launch {
-                refreshUI()
+                viewModel.updateAnnouncements(
+                    requireActivity(),
+                    AppRepository.Companion.UpdateParameters.UPDATE,
+                    true
+                )
 
-                if (viewModel.itemCount == 0) {
-                    if (noAnnouncementsTextView == null) {
-                        noAnnouncementsTextView = LayoutInflater
-                            .from(context)
-                            .inflate(
-                                R.layout.inbox_no_announcements_textview,
-                                inboxFragmentLayout
-                            )
-                    }
-                } else if (noAnnouncementsTextView != null) {
-                    for (i in 0 until inboxFragmentLayout.childCount)
-                        if (
-                            inboxFragmentLayout.getChildAt(i) == noAnnouncementsTextView
-                        )
-                            inboxFragmentLayout.removeViewAt(i)
-
-                    noAnnouncementsTextView = null
-                }
+                inboxRefreshLayout.isRefreshing = false
             }
         }
-
-        if (viewModel.itemCount == 0) {
-            noAnnouncementsTextView = LayoutInflater
-                .from(context)
-                .inflate(
-                    R.layout.inbox_no_announcements_textview,
-                    inboxFragmentLayout
-                )
-        }
-
-        loading = false
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

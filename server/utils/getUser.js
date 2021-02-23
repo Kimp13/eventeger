@@ -9,13 +9,7 @@ module.exports = async jwt => {
         id: payload.id
       });
 
-      const role = mg.cache.roles[bs(
-        mg.cache.roles,
-        user.roleId,
-        function comparator(element, needle) {
-          return element.id - needle;
-        }
-      )];
+      const role = mg.cache.roles[user.roleId];
 
       user.permissions = role ? role.permissions : {};
 

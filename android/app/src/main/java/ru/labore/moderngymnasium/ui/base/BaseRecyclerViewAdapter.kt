@@ -33,7 +33,7 @@ abstract class BaseRecyclerViewAdapter
             }
         }
 
-        class LoadingViewHolder(private val layout: LinearLayout) : BaseViewHolder(layout) {
+        class LoadingViewHolder(layout: LinearLayout) : BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
 
             }
@@ -45,14 +45,29 @@ abstract class BaseRecyclerViewAdapter
 
     var loading: Boolean = true
         set(value) {
-            field = value
+            if (field != value) {
+                field = value
 
-            if (field) {
-                endAdditionalItems.forEach {
-                    if (it.id == LOADING_VIEW_HOLDER_ID)
-                        return
+                updateAdditionalItems()
+            }
+        }
+
+    protected abstract val defaultItemCount: Int
+    protected abstract fun createDefaultViewHolder(
+        parent: ViewGroup
+    ): BaseViewHolder
+
+    protected open fun updateAdditionalItems() {
+        if (loading) {
+            var absent = true
+
+            for (i in 0 until beginAdditionalItems.size)
+                if (beginAdditionalItems[i].id == LOADING_VIEW_HOLDER_ID) {
+                    absent = false
+                    break
                 }
 
+            if (absent) {
                 endAdditionalItems.add(
                     AdditionalItem(
                         LOADING_VIEW_HOLDER_ID
@@ -67,45 +82,51 @@ abstract class BaseRecyclerViewAdapter
                         )
                     }
                 )
-            } else {
-                endAdditionalItems.forEach {
-                    if (it.id == LOADING_VIEW_HOLDER_ID) {
-                        endAdditionalItems.remove(it)
-                        return
-                    }
+
+                notifyItemInserted(itemCount - 1)
+            }
+        } else {
+            for (i in 0 until endAdditionalItems.size) {
+                if (endAdditionalItems[i].id == LOADING_VIEW_HOLDER_ID) {
+                    endAdditionalItems.removeAt(i)
+                    notifyItemRemoved(
+                        beginAdditionalItems.size + defaultItemCount + i
+                    )
+                    break
                 }
             }
         }
+    }
 
-    protected abstract val defaultItemCount: Int
-    protected abstract fun updateAdditionalItems()
-    protected abstract fun createDefaultViewHolder(
-        parent: ViewGroup
-    ): BaseViewHolder
-
-    override fun getItemViewType(position: Int): Int =
-        if (position < beginAdditionalItems.size) {
+    override fun getItemViewType(position: Int): Int {
+        val ret = if (position < beginAdditionalItems.size) {
             position
         } else {
-            val i = itemCount - defaultItemCount - beginAdditionalItems.size
+            val i = position - defaultItemCount - beginAdditionalItems.size
 
-            if (i > 0)
+            if (i >= 0)
                 i + beginAdditionalItems.size
             else
                 DEFAULT_VIEW_POSITION
         }
 
+        return ret
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): RecyclerView.ViewHolder = when (viewType) {
-        DEFAULT_VIEW_POSITION -> createDefaultViewHolder(parent)
-        in 0 until beginAdditionalItems.size -> beginAdditionalItems[viewType](parent)
-        else -> endAdditionalItems[viewType - beginAdditionalItems.size](parent)
+    ): RecyclerView.ViewHolder {
+        return when (viewType) {
+            DEFAULT_VIEW_POSITION -> createDefaultViewHolder(parent)
+            in 0 until beginAdditionalItems.size -> beginAdditionalItems[viewType](parent)
+            else -> endAdditionalItems[viewType - beginAdditionalItems.size](parent)
+        }
     }
 
-    override fun getItemCount() =
-        beginAdditionalItems.size + defaultItemCount + endAdditionalItems.size
+    override fun getItemCount(): Int {
+        return beginAdditionalItems.size + defaultItemCount + endAdditionalItems.size
+    }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         (holder as BaseViewHolder).onBind(position, this)

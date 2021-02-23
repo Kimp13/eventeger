@@ -9,15 +9,12 @@ export default {
 
         const retarr = [];
 
-        if (permission === true) {
-            for (const role of mg.cache.roles) {
-                retarr.push(role.id);
-            }
-        } else if (Array.isArray(permission)) {
-            for (const roleId of permission) {
+        if (permission === true)
+            for (const roleId in mg.cache.roles)
                 retarr.push(parseInt(roleId, 10));
-            }
-        }
+        else if (Array.isArray(permission))
+            for (const roleId of permission)
+                retarr.push(parseInt(roleId, 10));
 
         return retarr;
     },
