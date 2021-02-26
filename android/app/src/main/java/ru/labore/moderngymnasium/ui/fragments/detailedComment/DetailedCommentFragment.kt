@@ -15,12 +15,12 @@ import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.db.entities.CommentEntity
-import ru.labore.moderngymnasium.ui.base.AuthoredEntityFragment
+import ru.labore.moderngymnasium.ui.base.DetailedAuthoredEntityFragment
 
 class DetailedCommentFragment(
     controls: Companion.ListElementFragmentControls,
     item: CommentEntity
-) : AuthoredEntityFragment(controls, item) {
+) : DetailedAuthoredEntityFragment(controls, item) {
     override val viewModel: DetailedCommentViewModel by viewModels()
 
     override fun onCreateView(
@@ -36,14 +36,6 @@ class DetailedCommentFragment(
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        launch {
-            bindUI()
-        }
-
-        commentDetailedBackButton.setOnClickListener {
-            controls.finish()
-        }
 
         commentDetailedRecyclerView.apply {
             val viewManager = LinearLayoutManager(requireActivity())
@@ -77,12 +69,30 @@ class DetailedCommentFragment(
                 }
             })
         }
+
+        bindUI()
+
+        commentDetailedBackButton.setOnClickListener {
+            controls.finish()
+        }
     }
 
-    private suspend fun bindUI() {
-        viewModel.setup(requireActivity())
+    private fun bindUI() {
+        launch {
+            viewModel.setup(requireActivity())
+        }
+    }
 
-        announcementDetailedRefresh.setOnRefreshListener {
+    override fun onPause() {
+        super.onPause()
+
+        commentDetailedRefresh.setOnRefreshListener(null)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        commentDetailedRefresh.setOnRefreshListener {
             launch {
                 viewModel.updateComments(
                     requireActivity(),
@@ -90,17 +100,8 @@ class DetailedCommentFragment(
                     true
                 )
 
-                announcementDetailedRefresh.isRefreshing = false
+                commentDetailedRefresh.isRefreshing = false
             }
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(
-            "scrollY",
-            announcementDetailedRecyclerView.computeVerticalScrollOffset()
-        )
-
-        super.onSaveInstanceState(outState)
     }
 }

@@ -2,21 +2,19 @@ package ru.labore.moderngymnasium.ui.adapters
 
 import android.text.format.DateUtils
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.children
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.CommentEntity
 import ru.labore.moderngymnasium.ui.base.BaseRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseViewHolder
+import ru.labore.moderngymnasium.ui.base.DetailedAuthoredEntityRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.fragments.detailedComment.DetailedCommentViewModel
-import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 
 class DetailedCommentRecyclerViewAdapter(
     override val viewModel: DetailedCommentViewModel
-) : AuthoredEntityRecyclerViewAdapter(viewModel) {
-    companion object DetailedAnnouncement {
+) : DetailedAuthoredEntityRecyclerViewAdapter(viewModel) {
+    companion object DetailedComment {
 
         class ParentCommentViewHolder(private val layout: ConstraintLayout) :
             BaseViewHolder(layout) {
@@ -27,7 +25,6 @@ class DetailedCommentRecyclerViewAdapter(
                     val text = layout.getChildAt(3) as TextView
                     val comment = parent.viewModel.fragment.item as CommentEntity
                     val author = parent.viewModel.appRepository.users[comment.authorId]
-                    val iconButton = layout.children.last() as TextView
 
                     headline.text = if (author == null)
                         parent.viewModel.app.resources.getString(R.string.no_author)
@@ -46,39 +43,39 @@ class DetailedCommentRecyclerViewAdapter(
                     )
 
                     text.text = comment.text
-
-                    if (comment.childrenCount > 0) {
-                        iconButton.visibility = View.VISIBLE
-                        iconButton.text = comment.childrenCount.toString()
-                    }
                 }
             }
         }
 
-        const val ANNOUNCEMENT_VIEW_HOLDER_ID = "announcement"
+        const val DETAILED_COMMENT_VIEW_HOLDER_ID = "detailed_comment"
     }
 
     public override fun updateAdditionalItems() {
-        beginAdditionalItems.forEach {
-            if (it.id == ANNOUNCEMENT_VIEW_HOLDER_ID)
-                return
+        var absent = true
+
+        for (i in 0 until beginAdditionalItems.size) {
+            if (beginAdditionalItems[i].id == DETAILED_COMMENT_VIEW_HOLDER_ID) {
+                absent = false
+                break
+            }
         }
 
-        beginAdditionalItems.add(
-            0,
-            Base.AdditionalItem(
-                ANNOUNCEMENT_VIEW_HOLDER_ID
-            ) { parent ->
-                ParentCommentViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(
-                            R.layout.detailed_comment_view_holder,
-                            parent,
-                            false
-                        ) as ConstraintLayout
-                )
-            }
-        )
+        if (absent)
+            beginAdditionalItems.add(
+                0,
+                Base.AdditionalItem(
+                    DETAILED_COMMENT_VIEW_HOLDER_ID
+                ) { parent ->
+                    ParentCommentViewHolder(
+                        LayoutInflater.from(parent.context)
+                            .inflate(
+                                R.layout.detailed_comment_view_holder,
+                                parent,
+                                false
+                            ) as ConstraintLayout
+                    )
+                }
+            )
 
         super.updateAdditionalItems()
     }

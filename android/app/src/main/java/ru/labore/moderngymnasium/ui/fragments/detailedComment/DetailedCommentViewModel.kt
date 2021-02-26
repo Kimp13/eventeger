@@ -2,25 +2,37 @@ package ru.labore.moderngymnasium.ui.fragments.detailedComment
 
 import android.app.Activity
 import android.app.Application
-import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.data.AppRepository
+import ru.labore.moderngymnasium.data.db.entities.AuthoredEntity
 import ru.labore.moderngymnasium.data.db.entities.CommentEntity
-import ru.labore.moderngymnasium.ui.adapters.DetailedAnnouncementRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.adapters.DetailedCommentRecyclerViewAdapter
-import ru.labore.moderngymnasium.ui.base.AuthoredEntityViewModel
+import ru.labore.moderngymnasium.ui.base.DetailedAuthoredEntityViewModel
 
 class DetailedCommentViewModel(
     app: Application
-) : AuthoredEntityViewModel(app) {
+) : DetailedAuthoredEntityViewModel(app) {
+    override lateinit var onItemClicked: (AuthoredEntity) -> Unit
+
     fun getAdapter(
         currentFragment: DetailedCommentFragment
     ): DetailedCommentRecyclerViewAdapter {
         fragment = currentFragment
+        (currentFragment.item as CommentEntity).let {
+            replyTo = it.id
+            announcementId = it.announcementId
+        }
 
         val newAdapter = DetailedCommentRecyclerViewAdapter(this)
         newAdapter.updateAdditionalItems()
+
+        onItemClicked = {
+            currentFragment.controls.push(DetailedCommentFragment(
+                currentFragment.controls,
+                it as CommentEntity
+            ))
+        }
 
         adapter = newAdapter
 
@@ -33,19 +45,18 @@ class DetailedCommentViewModel(
             AppRepository.Companion.UpdateParameters.DETERMINE,
         refresh: Boolean = false
     ) {
-        loading = true
-
         if (current == null || !current!!.isActive) {
             if (refresh || !reachedEnd) {
-                val offset = if (refresh) {
+                loading = true
+
+                val offset = if (refresh)
                     0
-                } else {
+                else
                     currentOffset
-                }
 
                 val newComments = hashMapOf<Int, CommentEntity>()
 
-                current = GlobalScope.async {
+                current = GlobalScope.launch {
                     makeRequest(
                         activity,
                         {
@@ -62,8 +73,6 @@ class DetailedCommentViewModel(
                             }
                         }
                     )
-
-                    loading = false
                 }
 
                 current?.join()
@@ -71,14 +80,14 @@ class DetailedCommentViewModel(
                 if (refresh) {
                     val previousSize = itemCount
 
-                    currentOffset = 0
                     reachedEnd = false
                     items.clear()
                     items.addAll(newComments.values.sortedByDescending {
                         it.createdAt
                     })
+                    currentOffset = items.size
 
-                    adapter.refreshItems(
+                    refreshItems(
                         previousSize,
                         itemCount
                     )
@@ -103,7 +112,7 @@ class DetailedCommentViewModel(
                         currentOffset += newComments.size
                         items.addAll(newComments.values)
 
-                        adapter.pushItems(
+                        pushItems(
                             previousSize,
                             itemCount
                         )
@@ -118,8 +127,6 @@ class DetailedCommentViewModel(
             fragment.item.commentCount = currentOffset
             appRepository.persistFetchedAuthoredEntity(fragment.item)
         }
-
-        loading = false
     }
 
     suspend fun setup(activity: Activity) {
@@ -136,5 +143,5 @@ class DetailedCommentViewModel(
     private suspend fun getComments(
         offset: Int,
         forceFetch: AppRepository.Companion.UpdateParameters
-    ) = appRepository.getComments(fragment.item.id, offset, forceFetch)
+    ) = appRepository.getComments(announcementId, offset, forceFetch, replyTo)
 }

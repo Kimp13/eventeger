@@ -24,17 +24,26 @@ interface CommentEntityDao {
 
     @Query("""
         select * from comment
-        where announcementId = :announcementId
+        where announcementId = :announcementId and replyTo is null
         order by createdAt desc
         limit 1
         offset :offset
     """)
     suspend fun getCommentAtOffset(announcementId: Int, offset: Int): CommentEntity?
 
+    @Query("""
+        select * from comment
+        where announcementId = :announcementId and replyTo = :replyTo
+        order by createdAt desc
+        limit 1
+        offset :offset
+    """)
+    suspend fun getCommentAtOffset(announcementId: Int, offset: Int, replyTo: Int): CommentEntity?
+
     @Transaction
     @Query("""
         select * from comment
-        where announcementId = :announcementId
+        where announcementId = :announcementId and replyTo is null
         order by createdAt desc
         limit :limit
         offset :offset
@@ -43,5 +52,20 @@ interface CommentEntityDao {
         announcementId: Int,
         offset: Int,
         limit: Int
+    ): Array<CommentEntity>
+
+    @Transaction
+    @Query("""
+        select * from comment
+        where announcementId = :announcementId and replyTo = :replyTo
+        order by createdAt desc
+        limit :limit
+        offset :offset
+    """)
+    suspend fun getComments(
+        announcementId: Int,
+        offset: Int,
+        limit: Int,
+        replyTo: Int
     ): Array<CommentEntity>
 }

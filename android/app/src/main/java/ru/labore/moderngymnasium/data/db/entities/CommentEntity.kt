@@ -12,7 +12,6 @@ class CommentEntity(
     val announcementId: Int,
     val replyTo: Int?,
     text: String,
-    val childrenCount: Int,
     createdAt: ZonedDateTime,
     updatedAt: ZonedDateTime
 ) : AuthoredEntity(

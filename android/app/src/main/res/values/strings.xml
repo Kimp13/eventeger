@@ -18,6 +18,7 @@
 
     <!-- Global strings -->
     <string name="app_name">&app_name;</string>
+    <string name="there_is_nothing_here_yet">There is nothing here yet 😞</string>
 
     <!-- Network-related strings -->
     <string name="session_timed_out">

@@ -1,4 +1,4 @@
-package ru.labore.moderngymnasium.ui.adapters
+package ru.labore.moderngymnasium.ui.base
 
 import android.graphics.Color
 import android.text.format.DateUtils
@@ -11,18 +11,15 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.CommentEntity
-import ru.labore.moderngymnasium.ui.base.AuthoredEntityViewModel
-import ru.labore.moderngymnasium.ui.base.BaseRecyclerViewAdapter
-import ru.labore.moderngymnasium.ui.base.BaseViewHolder
 
-abstract class AuthoredEntityRecyclerViewAdapter(
-    override val viewModel: AuthoredEntityViewModel
+abstract class DetailedAuthoredEntityRecyclerViewAdapter(
+    override val viewModel: DetailedAuthoredEntityViewModel
 ) : BaseRecyclerViewAdapter(viewModel) {
     companion object AuthoredEntityCompanion {
         class CommentViewHolder(private val layout: ConstraintLayout) :
             BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-                if (parent is AuthoredEntityRecyclerViewAdapter) {
+                if (parent is DetailedAuthoredEntityRecyclerViewAdapter) {
                     val pos = position - parent.beginAdditionalItems.size
                     val headline = layout.getChildAt(1) as TextView
                     val time = layout.getChildAt(2) as TextView
@@ -41,6 +38,10 @@ abstract class AuthoredEntityRecyclerViewAdapter(
                     else author.firstName
                         ?: parent.viewModel.app.resources.getString(R.string.noname)
 
+                    layout.setOnClickListener {
+                        parent.viewModel.onItemClicked(comment)
+                    }
+
                     time.text = DateUtils.getRelativeTimeSpanString(
                         comment.createdAt.toEpochSecond() * 1000,
                         parent.viewModel.appRepository.now().toEpochSecond() * 1000,
@@ -49,9 +50,9 @@ abstract class AuthoredEntityRecyclerViewAdapter(
 
                     text.text = comment.text
 
-                    if (comment.childrenCount > 0) {
+                    if (comment.commentCount > 0) {
                         iconButton.visibility = View.VISIBLE
-                        iconButton.text = comment.childrenCount.toString()
+                        iconButton.text = comment.commentCount.toString()
                     }
                 }
             }
@@ -60,7 +61,7 @@ abstract class AuthoredEntityRecyclerViewAdapter(
         class CreateCommentViewHolder(private val layout: LinearLayout) :
             BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-                if (parent is AuthoredEntityRecyclerViewAdapter) {
+                if (parent is DetailedAuthoredEntityRecyclerViewAdapter) {
                     val headerLayout = layout.getChildAt(0) as LinearLayout
                     val headerCount = headerLayout.children.last() as TextView
                     val editLayout = layout.children.last() as LinearLayout
@@ -71,14 +72,8 @@ abstract class AuthoredEntityRecyclerViewAdapter(
                     parent.commentSendButton = children.next()
                     parent.commentSendProgressBar = children.next()
 
-                    println(parent.viewModel.fragment.item.commentCount)
-
-                    headerCount.text = parent
-                        .viewModel
-                        .fragment
-                        .item
-                        .commentCount
-                        .toString()
+                    if (parent.viewModel.fragment.item.commentCount > 0)
+                        headerCount.text = parent.viewModel.fragment.item.commentCount.toString()
 
                     parent.initializeCommentSending()
                 }
@@ -108,6 +103,8 @@ abstract class AuthoredEntityRecyclerViewAdapter(
     )
 
     override fun updateAdditionalItems() {
+        super.updateAdditionalItems()
+
         beginAdditionalItems.forEach {
             if (it.id == CREATE_COMMENT_VIEW_HOLDER_ID)
                 return
@@ -128,8 +125,6 @@ abstract class AuthoredEntityRecyclerViewAdapter(
                 )
             }
         )
-        
-        super.updateAdditionalItems()
     }
 
     private fun initializeCommentSending(dropText: Boolean = true) {

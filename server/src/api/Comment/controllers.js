@@ -7,7 +7,7 @@ export default {
             return;
         }
 
-        const announcement = mg.query('announcement').findOne({
+        const announcement = await mg.query('announcement').findOne({
             id
         });
 
@@ -34,7 +34,7 @@ export default {
 
         let comments = mg.knex
             .select("parent.*")
-            .count("children.id as childrenCount")
+            .count("children.id as commentCount")
             .from("comment as parent")
             .leftJoin(
                 "comment as children",
@@ -70,7 +70,7 @@ export default {
             }
 
             comments = comments
-                .andWhere("replyTo", replyToId);
+                .andWhere("parent.replyTo", replyToId);
         } else {
             comments = comments.andWhere("parent.replyTo", null);
         }
@@ -84,12 +84,11 @@ export default {
                 );
         }
 
-
-            res.send(await comments
-                .groupBy("parent.id")
-                .orderBy("createdAt", "desc")
-                .limit(25)
-                .offset(offset));
+        res.send(await comments
+            .groupBy("parent.id")
+            .orderBy("createdAt", "desc")
+            .limit(25)
+            .offset(offset));
     },
 
     async findOne(req, res) {
@@ -102,7 +101,7 @@ export default {
 
         const comment = (await mg.knex
             .select("parent.*")
-            .count("child.id as childrenCount")
+            .count("child.id as commentCount")
             .from("comment as parent")
             .innerJoin(
                 "comment as children",

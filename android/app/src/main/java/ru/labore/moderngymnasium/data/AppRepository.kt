@@ -462,18 +462,24 @@ class AppRepository(
     suspend fun getComments(
         announcementId: Int,
         offset: Int,
-        forceFetch: UpdateParameters
+        forceFetch: UpdateParameters,
+        replyTo: Int? = null
     ): Array<CommentEntity> {
         if (user == null)
             return emptyArray()
+
+        println("$announcementId, $offset, $forceFetch, $replyTo")
 
         val comments: Array<CommentEntity>
 
         val isNeededToUpdate: Boolean = when (forceFetch) {
             UpdateParameters.UPDATE -> true
             UpdateParameters.DETERMINE -> {
-                val comment =
+                val comment = if (replyTo == null)
                     commentEntityDao.getCommentAtOffset(announcementId, offset)
+                else
+                    commentEntityDao.getCommentAtOffset(announcementId, offset, replyTo)
+
                 val now = now()
                 val hourBefore = now.minusHours(1)
 
@@ -487,12 +493,16 @@ class AppRepository(
             comments = appNetwork.fetchComments(
                 user!!.jwt,
                 announcementId,
-                offset
+                offset,
+                replyTo
             )
 
             persistFetchedComments(comments)
         } else {
-            comments = commentEntityDao.getComments(announcementId, offset, DEFAULT_LIMIT)
+            comments = if (replyTo == null)
+                commentEntityDao.getComments(announcementId, offset, DEFAULT_LIMIT)
+            else
+                commentEntityDao.getComments(announcementId, offset, DEFAULT_LIMIT, replyTo)
         }
 
         populateAuthoredEntities(comments, forceFetch)

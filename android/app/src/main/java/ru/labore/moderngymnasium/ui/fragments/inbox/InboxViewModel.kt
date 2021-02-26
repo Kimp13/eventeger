@@ -51,15 +51,14 @@ class InboxViewModel(
             AppRepository.Companion.UpdateParameters.DETERMINE,
         refresh: Boolean = false
     ) {
-        loading = true
-
         if (current == null || !current!!.isActive) {
             if (refresh || !reachedEnd) {
-                val offset = if (refresh) {
+                loading = true
+
+                val offset = if (refresh)
                     0
-                } else {
+                else
                     currentOffset
-                }
 
                 val newAnnouncements = hashMapOf<Int, AnnouncementEntity>()
 
@@ -84,15 +83,17 @@ class InboxViewModel(
 
                 current?.join()
 
+                println(newAnnouncements.values.size)
+
                 if (refresh) {
                     val previousSize = itemCount
 
-                    currentOffset = 0
                     reachedEnd = false
                     items.clear()
                     items.addAll(newAnnouncements.values)
+                    currentOffset = items.size
 
-                    adapter.refreshItems(
+                    refreshItems(
                         previousSize,
                         itemCount
                     )
@@ -117,7 +118,7 @@ class InboxViewModel(
                         currentOffset += newAnnouncements.size
                         items.addAll(newAnnouncements.values)
 
-                        adapter.pushItems(
+                        pushItems(
                             previousSize,
                             newAnnouncements.size
                         )
@@ -127,9 +128,8 @@ class InboxViewModel(
         } else {
             current?.join()
         }
-
-        loading = false
     }
+
 
     suspend fun setup(activity: Activity) {
         if (itemCount == 0)

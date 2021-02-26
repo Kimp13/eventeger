@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_inbox.*
-import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.ui.activities.MainActivity
@@ -30,10 +29,6 @@ class InboxFragment(
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        launch {
-            bindUI()
-        }
 
         inboxRecyclerView.apply {
             val viewManager = LinearLayoutManager(requireActivity())
@@ -85,9 +80,11 @@ class InboxFragment(
                 }
             })
         }
+
+        bindUI()
     }
 
-    private suspend fun bindUI() {
+    private fun bindUI() = launch {
         viewModel.setup(requireActivity())
 
         inboxRefreshLayout.setOnRefreshListener {

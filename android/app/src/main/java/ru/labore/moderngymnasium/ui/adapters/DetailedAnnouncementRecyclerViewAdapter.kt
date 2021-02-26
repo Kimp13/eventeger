@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import ru.labore.moderngymnasium.R
+import ru.labore.moderngymnasium.ui.base.DetailedAuthoredEntityRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseRecyclerViewAdapter
 import ru.labore.moderngymnasium.ui.base.BaseViewHolder
 import ru.labore.moderngymnasium.ui.fragments.detailedAnnouncement.DetailedAnnouncementViewModel
@@ -12,14 +13,14 @@ import ru.labore.moderngymnasium.utils.announcementEntityToCaption
 
 class DetailedAnnouncementRecyclerViewAdapter(
     override val viewModel: DetailedAnnouncementViewModel
-) : AuthoredEntityRecyclerViewAdapter(viewModel) {
+) : DetailedAuthoredEntityRecyclerViewAdapter(viewModel) {
     companion object DetailedAnnouncement {
 
         class AnnouncementViewHolder(private val layout: ConstraintLayout) :
             BaseViewHolder(layout) {
 
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
-                if (parent is AuthoredEntityRecyclerViewAdapter) {
+                if (parent is DetailedAuthoredEntityRecyclerViewAdapter) {
                     val authorName = layout.getChildAt(1) as TextView
                     val authorRank = layout.getChildAt(2) as TextView
                     val text = layout.getChildAt(3) as TextView
@@ -60,26 +61,31 @@ class DetailedAnnouncementRecyclerViewAdapter(
     }
 
     public override fun updateAdditionalItems() {
-        beginAdditionalItems.forEach {
-            if (it.id == ANNOUNCEMENT_VIEW_HOLDER_ID)
-                return
+        var absent = true
+
+        for (i in 0 until beginAdditionalItems.size) {
+            if (beginAdditionalItems[i].id == ANNOUNCEMENT_VIEW_HOLDER_ID) {
+                absent = false
+                break
+            }
         }
 
-        beginAdditionalItems.add(
-            0,
-            Base.AdditionalItem(
-                ANNOUNCEMENT_VIEW_HOLDER_ID
-            ) { parent ->
-                AnnouncementViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(
-                            R.layout.detailed_announcement_view_holder,
-                            parent,
-                            false
-                        ) as ConstraintLayout
-                )
-            }
-        )
+        if (absent)
+            beginAdditionalItems.add(
+                0,
+                Base.AdditionalItem(
+                    ANNOUNCEMENT_VIEW_HOLDER_ID
+                ) { parent ->
+                    AnnouncementViewHolder(
+                        LayoutInflater.from(parent.context)
+                            .inflate(
+                                R.layout.detailed_announcement_view_holder,
+                                parent,
+                                false
+                            ) as ConstraintLayout
+                    )
+                }
+            )
 
         super.updateAdditionalItems()
     }

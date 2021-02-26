@@ -2,24 +2,37 @@ package ru.labore.moderngymnasium.ui.fragments.detailedAnnouncement
 
 import android.app.Activity
 import android.app.Application
-import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.data.AppRepository
+import ru.labore.moderngymnasium.data.db.entities.AuthoredEntity
 import ru.labore.moderngymnasium.data.db.entities.CommentEntity
 import ru.labore.moderngymnasium.ui.adapters.DetailedAnnouncementRecyclerViewAdapter
-import ru.labore.moderngymnasium.ui.base.AuthoredEntityViewModel
+import ru.labore.moderngymnasium.ui.base.DetailedAuthoredEntityViewModel
+import ru.labore.moderngymnasium.ui.fragments.detailedComment.DetailedCommentFragment
 
 class DetailedAnnouncementViewModel(
     app: Application
-) : AuthoredEntityViewModel(app) {
+) : DetailedAuthoredEntityViewModel(app) {
+    override lateinit var onItemClicked: (AuthoredEntity) -> Unit
+
     fun getAdapter(
         currentFragment: DetailedAnnouncementFragment
     ): DetailedAnnouncementRecyclerViewAdapter {
         fragment = currentFragment
+        announcementId = currentFragment.item.id
 
         val newAdapter = DetailedAnnouncementRecyclerViewAdapter(this)
         newAdapter.updateAdditionalItems()
+
+        onItemClicked = {
+            currentFragment.controls.push(
+                DetailedCommentFragment(
+                    currentFragment.controls,
+                    it as CommentEntity
+                )
+            )
+        }
 
         adapter = newAdapter
 
@@ -32,19 +45,18 @@ class DetailedAnnouncementViewModel(
             AppRepository.Companion.UpdateParameters.DETERMINE,
         refresh: Boolean = false
     ) {
-        loading = true
-
         if (current == null || !current!!.isActive) {
             if (refresh || !reachedEnd) {
-                val offset = if (refresh) {
+                loading = true
+
+                val offset = if (refresh)
                     0
-                } else {
+                else
                     currentOffset
-                }
 
                 val newComments = hashMapOf<Int, CommentEntity>()
 
-                current = GlobalScope.async {
+                current = GlobalScope.launch {
                     makeRequest(
                         activity,
                         {
@@ -68,14 +80,15 @@ class DetailedAnnouncementViewModel(
                 if (refresh) {
                     val previousSize = itemCount
 
-                    currentOffset = 0
                     reachedEnd = false
                     items.clear()
                     items.addAll(newComments.values.sortedByDescending {
                         it.createdAt
                     })
 
-                    adapter.refreshItems(
+                    currentOffset = items.size
+
+                    refreshItems(
                         previousSize,
                         itemCount
                     )
@@ -100,7 +113,12 @@ class DetailedAnnouncementViewModel(
                         currentOffset += newComments.size
                         items.addAll(newComments.values)
 
-                        adapter.pushItems(
+                        if (currentOffset > fragment.item.commentCount) {
+                            fragment.item.commentCount = currentOffset
+                            appRepository.persistFetchedAuthoredEntity(fragment.item)
+                        }
+
+                        pushItems(
                             previousSize,
                             itemCount
                         )
@@ -110,13 +128,6 @@ class DetailedAnnouncementViewModel(
         } else {
             current?.join()
         }
-
-        if (currentOffset > fragment.item.commentCount) {
-            fragment.item.commentCount = currentOffset
-            appRepository.persistFetchedAuthoredEntity(fragment.item)
-        }
-
-        loading = false
     }
 
     suspend fun setup(activity: Activity) {
@@ -133,5 +144,5 @@ class DetailedAnnouncementViewModel(
     private suspend fun getComments(
         offset: Int,
         forceFetch: AppRepository.Companion.UpdateParameters
-    ) = appRepository.getComments(fragment.item.id, offset, forceFetch)
+    ) = appRepository.getComments(announcementId, offset, forceFetch)
 }

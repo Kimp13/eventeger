@@ -47,8 +47,9 @@ class AppNetwork(context: Context, gson: Gson) : Interceptor {
     suspend fun fetchComments(
         jwt: String,
         announcementId: Int,
-        offset: Int
-    ) = utility.fetchComments(jwt, announcementId, offset)
+        offset: Int,
+        replyTo: Int?
+    ) = utility.fetchComments(jwt, announcementId, offset, replyTo)
 
     suspend fun fetchAnnouncement(
         jwt: String,

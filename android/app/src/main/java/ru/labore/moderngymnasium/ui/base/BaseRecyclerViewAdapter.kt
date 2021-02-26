@@ -14,6 +14,7 @@ abstract class BaseRecyclerViewAdapter(
     companion object Base {
         const val DEFAULT_VIEW_POSITION = -1
         const val LOADING_VIEW_HOLDER_ID = "loading"
+        const val NOTHING_VIEW_HOLDER_ID = "nothing"
 
         class AdditionalItem(
             val id: String,
@@ -41,10 +42,16 @@ abstract class BaseRecyclerViewAdapter(
 
             }
         }
+
+        class NothingViewHolder(layout: LinearLayout) : BaseViewHolder(layout) {
+            override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
+
+            }
+        }
     }
 
     val beginAdditionalItems = arrayListOf<AdditionalItem>()
-    private val endAdditionalItems = arrayListOf<AdditionalItem>(
+    private val endAdditionalItems = arrayListOf(
         AdditionalItem(
             LOADING_VIEW_HOLDER_ID
         ) {
@@ -61,12 +68,9 @@ abstract class BaseRecyclerViewAdapter(
 
     var loading: Boolean = true
         set(value) {
+            field = value
 
-            if (field != value) {
-                field = value
-
-                updateAdditionalItems()
-            }
+            updateAdditionalItems()
         }
 
     protected abstract val defaultItemCount: Int
@@ -76,15 +80,20 @@ abstract class BaseRecyclerViewAdapter(
 
     protected open fun updateAdditionalItems() {
         if (loading) {
-            var absent = true
+            var loadingAbsent = true
 
-            for (i in 0 until beginAdditionalItems.size)
-                if (beginAdditionalItems[i].id == LOADING_VIEW_HOLDER_ID) {
-                    absent = false
-                    break
+            for (i in 0 until endAdditionalItems.size) {
+                when (endAdditionalItems[i].id) {
+                    LOADING_VIEW_HOLDER_ID -> loadingAbsent = false
+                    NOTHING_VIEW_HOLDER_ID -> {
+                        endAdditionalItems.removeAt(i)
+
+                        notifyItemRemoved(beginAdditionalItems.size + defaultItemCount + i)
+                    }
                 }
+            }
 
-            if (absent) {
+            if (loadingAbsent) {
                 endAdditionalItems.add(
                     AdditionalItem(
                         LOADING_VIEW_HOLDER_ID
@@ -103,16 +112,36 @@ abstract class BaseRecyclerViewAdapter(
                 notifyItemInserted(itemCount - 1)
             }
         } else {
-            println("Trying to remove!")
+            var nothingAbsent = true
 
             for (i in 0 until endAdditionalItems.size) {
-                if (endAdditionalItems[i].id == LOADING_VIEW_HOLDER_ID) {
-                    endAdditionalItems.removeAt(i)
-                    notifyItemRemoved(
-                        beginAdditionalItems.size + defaultItemCount + i
-                    )
-                    break
+                when (endAdditionalItems[i].id) {
+                    NOTHING_VIEW_HOLDER_ID -> nothingAbsent = false
+                    LOADING_VIEW_HOLDER_ID -> {
+                        endAdditionalItems.removeAt(i)
+
+                        notifyItemRemoved(beginAdditionalItems.size + defaultItemCount + i)
+                    }
                 }
+            }
+
+            if (nothingAbsent && defaultItemCount == 0) {
+                endAdditionalItems.add(
+                    AdditionalItem(
+                        NOTHING_VIEW_HOLDER_ID
+                    ) {
+                        NothingViewHolder(
+                            LayoutInflater.from(it.context)
+                                .inflate(
+                                    R.layout.nothing_view_holder,
+                                    it,
+                                    false
+                                ) as LinearLayout
+                        )
+                    }
+                )
+
+                notifyItemInserted(itemCount - 1)
             }
         }
     }

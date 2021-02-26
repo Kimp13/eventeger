@@ -4,10 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.*
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.network.exceptions.ClientConnectionException
@@ -15,25 +13,16 @@ import ru.labore.moderngymnasium.data.network.exceptions.ClientErrorException
 import ru.labore.moderngymnasium.ui.activities.LoginActivity
 import java.net.ConnectException
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
-abstract class BaseFragment : Fragment(), CoroutineScope {
+abstract class BaseFragment : Fragment() {
     protected abstract val viewModel: BaseViewModel
-    private lateinit var job: Job
 
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        job = Job()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        job.cancel()
-    }
+    fun launch(
+        context: CoroutineContext = EmptyCoroutineContext,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit
+    ) = viewLifecycleOwner.lifecycleScope.launch(context, start, block)
 
     protected fun makeRequest(
         toTry: suspend () -> Unit,
@@ -42,6 +31,8 @@ abstract class BaseFragment : Fragment(), CoroutineScope {
         try {
             toTry()
         } catch(e: Exception) {
+            whenCaught()
+
             Toast.makeText(
                 activity,
                 when (e) {
@@ -72,8 +63,6 @@ abstract class BaseFragment : Fragment(), CoroutineScope {
                          },
                 Toast.LENGTH_LONG
             ).show()
-
-            whenCaught()
         }
     }
 }

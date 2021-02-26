@@ -15,21 +15,27 @@ import androidx.core.view.children
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
-import ru.labore.moderngymnasium.ui.adapters.AuthoredEntityRecyclerViewAdapter
+import ru.labore.moderngymnasium.data.db.entities.AuthoredEntity
+import ru.labore.moderngymnasium.data.db.entities.CommentEntity
 import ru.labore.moderngymnasium.utils.hideKeyboard
 import ru.labore.moderngymnasium.utils.showKeyboard
+import kotlin.properties.Delegates
 
-abstract class AuthoredEntityViewModel(
+abstract class DetailedAuthoredEntityViewModel(
     app: Application
 ) : BaseRecyclerViewModel(app) {
-    lateinit var fragment: AuthoredEntityFragment
-    protected var isHidden = false
-    protected var currentText = ""
+    lateinit var fragment: DetailedAuthoredEntityFragment
+    var announcementId by Delegates.notNull<Int>()
+    var replyTo: Int? = null
+    private var isHidden = false
+    private var currentText = ""
         set(value) {
             field = value
 
-            (adapter as AuthoredEntityRecyclerViewAdapter).setCommentText(value)
+            (adapter as DetailedAuthoredEntityRecyclerViewAdapter).setCommentText(value)
         }
+
+    abstract var onItemClicked: (AuthoredEntity) -> Unit
 
     fun promptCommentVisibility(anchor: View) {
         val popup = PopupMenu(fragment.requireContext(), anchor)
@@ -116,10 +122,16 @@ abstract class AuthoredEntityViewModel(
     fun sendComment() {
         GlobalScope.launch {
             makeRequest(fragment.requireActivity(), {
+                val id = if (fragment.item is CommentEntity)
+                    (fragment.item as CommentEntity).announcementId
+                else
+                    fragment.item.id
+
                 val comment = appRepository.createComment(
-                    fragment.item.id,
+                    id,
                     currentText,
-                    isHidden
+                    isHidden,
+                    replyTo
                 )
 
                 comment.createdAt = appRepository.now().minusSeconds(1)
@@ -131,12 +143,12 @@ abstract class AuthoredEntityViewModel(
                 appRepository.persistFetchedAuthoredEntity(fragment.item)
 
                 fragment.requireActivity().runOnUiThread {
-                    (adapter as AuthoredEntityRecyclerViewAdapter)
+                    (adapter as DetailedAuthoredEntityRecyclerViewAdapter)
                         .onSuccessfulCreation(comment)
                 }
             }, {
                 fragment.requireActivity().runOnUiThread {
-                    (adapter as AuthoredEntityRecyclerViewAdapter)
+                    (adapter as DetailedAuthoredEntityRecyclerViewAdapter)
                         .onUnsuccessfulCreation(currentText)
                 }
             })

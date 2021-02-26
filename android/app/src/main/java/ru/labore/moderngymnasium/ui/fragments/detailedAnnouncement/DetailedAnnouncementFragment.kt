@@ -10,20 +10,18 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
+import kotlinx.android.synthetic.main.fragment_comment_detailed.*
 import kotlinx.android.synthetic.main.fragment_inbox.*
 import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.AppRepository
-import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
 import ru.labore.moderngymnasium.data.db.entities.AuthoredEntity
-import ru.labore.moderngymnasium.ui.base.AuthoredEntityFragment
-import ru.labore.moderngymnasium.ui.base.BaseViewModel
-import ru.labore.moderngymnasium.ui.base.ListElementFragment
+import ru.labore.moderngymnasium.ui.base.DetailedAuthoredEntityFragment
 
 class DetailedAnnouncementFragment(
     controls: Companion.ListElementFragmentControls,
     item: AuthoredEntity
-) : AuthoredEntityFragment(controls, item) {
+) : DetailedAuthoredEntityFragment(controls, item) {
     override val viewModel: DetailedAnnouncementViewModel by viewModels()
 
     override fun onCreateView(
@@ -39,14 +37,6 @@ class DetailedAnnouncementFragment(
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        launch {
-            bindUI()
-        }
-
-        announcementDetailedBackButton.setOnClickListener {
-            controls.finish()
-        }
 
         announcementDetailedRecyclerView.apply {
             val viewManager = LinearLayoutManager(requireActivity())
@@ -80,10 +70,20 @@ class DetailedAnnouncementFragment(
                 }
             })
         }
+
+        announcementDetailedBackButton.setOnClickListener {
+            controls.finish()
+        }
+
+        launch {
+            bindUI()
+        }
     }
 
-    private suspend fun bindUI() {
-        viewModel.setup(requireActivity())
+    private fun bindUI() {
+        launch {
+            viewModel.setup(requireActivity())
+        }
 
         announcementDetailedRefresh.setOnRefreshListener {
             launch {
@@ -105,5 +105,27 @@ class DetailedAnnouncementFragment(
         )
 
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        announcementDetailedRefresh.setOnRefreshListener(null)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        announcementDetailedRefresh.setOnRefreshListener {
+            launch {
+                viewModel.updateComments(
+                    requireActivity(),
+                    AppRepository.Companion.UpdateParameters.UPDATE,
+                    true
+                )
+
+                announcementDetailedRefresh.isRefreshing = false
+            }
+        }
     }
 }

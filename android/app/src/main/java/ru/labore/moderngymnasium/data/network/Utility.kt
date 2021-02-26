@@ -95,7 +95,8 @@ class Utility(
             suspend fun fetchComments(
                 @Header("Authorization") jwt: String,
                 @Query("announcementId") announcementId: Int,
-                @Query("offset") offset: Int
+                @Query("offset") offset: Int,
+                @Query("replyTo") replyTo: Int?
             ): Array<CommentEntity>
 
             @GET("announcements/getMine")
@@ -209,8 +210,9 @@ class Utility(
     suspend fun fetchComments(
         jwt: String,
         announcementId: Int,
-        offset: Int
-    ) = builder.fetchComments(jwt, announcementId, offset)
+        offset: Int,
+        replyTo: Int?
+    ) = builder.fetchComments(jwt, announcementId, offset, replyTo)
 
     suspend fun fetchAnnouncement(
         jwt: String,
