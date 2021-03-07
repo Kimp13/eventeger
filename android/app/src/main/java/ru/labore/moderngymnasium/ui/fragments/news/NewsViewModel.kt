@@ -5,5 +5,4 @@ import ru.labore.moderngymnasium.ui.base.BaseViewModel
 
 class NewsViewModel(
     application: Application
-) : BaseViewModel(application) {
-}
+) : BaseViewModel(application)

@@ -9,5 +9,5 @@ abstract class BaseViewHolder(
     abstract fun onBind(
         position: Int,
         parent: BaseRecyclerViewAdapter
-    ): Unit
+    )
 }

@@ -15,7 +15,6 @@ import androidx.core.view.children
 import androidx.core.view.get
 import androidx.fragment.app.viewModels
 import kotlinx.android.synthetic.main.fragment_create.*
-import kotlinx.coroutines.launch
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import ru.labore.moderngymnasium.R

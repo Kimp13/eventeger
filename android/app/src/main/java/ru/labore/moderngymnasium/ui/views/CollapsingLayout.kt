@@ -23,7 +23,7 @@ open class CollapsingLayout(
         const val ANIMATION_DURATION = 300L
     }
 
-    protected val toolbar: ConstraintLayout
+    protected val toolbar: LinearLayout
     protected var collapsed = false
     private val animator = ValueAnimator()
     private val shevronAnimator = ObjectAnimator()
@@ -84,7 +84,7 @@ open class CollapsingLayout(
                 R.layout.collapsing_layout,
                 this,
                 false
-            ) as ConstraintLayout
+            ) as LinearLayout
 
     protected open fun initializeToolbar() {
         toolbar.setOnClickListener {

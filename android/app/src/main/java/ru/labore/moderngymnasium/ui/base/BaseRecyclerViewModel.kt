@@ -1,7 +1,6 @@
 package ru.labore.moderngymnasium.ui.base
 
 import android.app.Application
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#FFFFFF</color>
-    <color name="primaryVariant">#B3FFFFFF</color>
+    <color name="primary">?android:attr/textColorPrimaryInverse</color>
+    <color name="primaryVariant">?android:attr/textColorSecondaryInverse</color>
     <color name="accent">#60A475</color>
     <color name="inverse">#393088</color>
     <color name="inverseVariant">#373168</color>

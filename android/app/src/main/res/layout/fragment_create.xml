@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/createFragmentRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorDarkVariant"
+    android:background="?attr/colorSurface"
     android:orientation="vertical"
     tools:context=".ui.fragments.create.CreateFragment">
 
@@ -15,22 +15,22 @@
         android:id="@+id/createFragmentToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark">
+        android:background="?attr/colorPrimary">
 
         <Button
             android:id="@+id/createAnnouncementBackButton"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginEnd="20dp"
+            android:layout_width="@dimen/miniImageSize"
+            android:layout_height="@dimen/miniImageSize"
+            android:layout_marginEnd="@dimen/megaSize"
             android:background="@drawable/close_button_background" />
 
         <TextView
             android:id="@+id/createAnnouncementTopLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="@dimen/size"
             android:text="@string/new_announcement"
-            android:textColor="?android:attr/textColorPrimaryInverse"
+            android:textColor="?attr/colorPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
@@ -50,7 +50,7 @@
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="@dimen/size"
                 custom:label="@string/announcement_text">
 
                 <EditText
@@ -58,8 +58,8 @@
                     style="@style/AppEditTextStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="@dimen/megaSize"
+                    android:layout_marginEnd="@dimen/megaSize"
                     android:hint="@string/enter_text"
                     android:importantForAutofill="no"
                     android:inputType="textMultiLine" />
@@ -69,7 +69,7 @@
             <ru.labore.moderngymnasium.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="@dimen/size"
                 custom:label="@string/recipients">
 
                 <ProgressBar
@@ -91,15 +91,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp" />
+                    android:paddingLeft="@dimen/size"
+                    android:paddingRight="@dimen/size" />
             </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
 
             <ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout
                 android:id="@+id/createEvent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="@dimen/size"
                 custom:label="@string/event">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -111,8 +111,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:paddingTop="5dp"
-                        android:paddingBottom="5dp"
+                        android:paddingTop="@dimen/miniSize"
+                        android:paddingBottom="@dimen/miniSize"
                         android:text="@string/start"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                         android:textColor="?android:attr/textColorPrimaryInverse"
@@ -148,8 +148,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:paddingTop="5dp"
-                        android:paddingBottom="5dp"
+                        android:paddingTop="@dimen/miniSize"
+                        android:paddingBottom="@dimen/miniSize"
                         android:text="@string/end"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                         android:textColor="?android:attr/textColorPrimaryInverse"
@@ -178,4 +178,4 @@
             </ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout>
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+</FrameLayout>

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="@dimen/size">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,46 +22,46 @@
             style="@style/CommentsCountTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp" />
+            android:layout_marginStart="@dimen/miniSize" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/size"
         android:orientation="horizontal">
 
         <ImageView
             style="@style/ClickableInverseBackground"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/miniImageSize"
+            android:layout_height="@dimen/miniImageSize"
             android:layout_gravity="top"
             android:contentDescription="@string/comment_settings"
             android:src="@drawable/ic_baseline_settings"
-            app:tint="@color/colorPrimary" />
+            app:tint="?attr/colorOnPrimary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
+            android:layout_marginStart="@dimen/size"
+            android:layout_marginEnd="@dimen/size"
             android:layout_weight="1"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorPrimaryInverse" />
+            android:textColor="?attr/colorOnPrimary" />
 
         <ImageView
             style="@style/ClickableInverseBackground"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/miniImageSize"
+            android:layout_height="@dimen/miniImageSize"
             android:layout_gravity="bottom"
             android:contentDescription="@string/send_comment"
             android:src="@drawable/ic_baseline_send"
-            app:tint="@color/colorPrimary" />
+            app:tint="?attr/colorOnPrimary" />
 
         <ProgressBar
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/miniImageSize"
+            android:layout_height="@dimen/miniImageSize"
             android:layout_gravity="bottom"
             android:indeterminate="true"
             android:visibility="gone" />

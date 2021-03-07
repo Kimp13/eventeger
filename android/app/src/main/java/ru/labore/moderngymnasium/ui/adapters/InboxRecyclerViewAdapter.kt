@@ -4,9 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.LinearLayout
+import android.widget.FrameLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.db.entities.AnnouncementEntity
@@ -49,16 +49,20 @@ class InboxRecyclerViewAdapter(
 
         private const val shortTextCharCount = 200
 
-        class AnnouncementViewHolder(private val layout: LinearLayout) :
+        class AnnouncementViewHolder(private val layout: RelativeLayout) :
             BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
                 if (parent is InboxRecyclerViewAdapter) {
-                    val constraintLayout = layout.getChildAt(0) as ConstraintLayout
-                    val authorView = constraintLayout.getChildAt(1) as TextView
-                    val authorRankView = constraintLayout.getChildAt(2) as TextView
-                    val textView = layout.getChildAt(1) as TextView
-                    val expandButton = layout.getChildAt(2)
-                    val commentButton = layout.children.last() as TextView
+                    val iterator = layout.children.iterator().apply {
+                        next()
+                    }
+
+                    val authorView = iterator.next() as TextView
+                    val authorRankView = iterator.next() as TextView
+                    val textView = iterator.next() as TextView
+                    val expandButton = iterator.next() as TextView
+                    val commentButton = iterator.next() as TextView
+
                     val announcement = parent.viewModel.items[
                             position - parent.beginAdditionalItems.size
                     ] as AnnouncementEntity
@@ -115,7 +119,7 @@ class InboxRecyclerViewAdapter(
             }
         }
 
-        class CreateViewHolder(private val layout: ConstraintLayout) :
+        class CreateViewHolder(private val layout: FrameLayout) :
             BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
                 if (parent is InboxRecyclerViewAdapter) {
@@ -139,7 +143,7 @@ class InboxRecyclerViewAdapter(
                 R.layout.inbox_view_holder,
                 parent,
                 false
-            ) as LinearLayout
+            ) as RelativeLayout
     )
 
     public override fun updateAdditionalItems() {
@@ -175,7 +179,7 @@ class InboxRecyclerViewAdapter(
                                     R.layout.inbox_create_view_holder,
                                     parent,
                                     false
-                                ) as ConstraintLayout
+                                ) as FrameLayout
                         )
                     }
                 )

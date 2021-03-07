@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="20dp">
+    android:padding="@dimen/megaSize">
 
     <TextView
         android:layout_width="match_parent"
@@ -10,6 +10,6 @@
         android:gravity="center_horizontal"
         android:text="@string/there_is_nothing_here_yet"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="?android:attr/textColorPrimaryInverse"
+        android:textColor="?attr/colorOnPrimary"
         android:textStyle="bold" />
 </LinearLayout>

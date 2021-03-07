@@ -25,7 +25,7 @@ class ParentCheckbox(
         set(value) {
             if (field != value) {
                 field = value
-                updateCheckbox(false, false)
+                updateCheckbox(updateState = false, notify = false)
             }
         }
 

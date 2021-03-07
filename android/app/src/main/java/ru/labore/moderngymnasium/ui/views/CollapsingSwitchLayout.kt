@@ -1,10 +1,9 @@
 package ru.labore.moderngymnasium.ui.views
 
 import android.content.Context
-import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
@@ -22,14 +21,14 @@ class CollapsingSwitchLayout(
     private lateinit var switch: SwitchCompat
     var switchListener: ((Boolean) -> Unit)? = null
 
-    override fun inflateToolbar(): ConstraintLayout {
+    override fun inflateToolbar(): LinearLayout {
         return LayoutInflater
             .from(context)
             .inflate(
                 R.layout.collapsing_switch_layout,
                 this,
                 false
-            ) as ConstraintLayout
+            ) as LinearLayout
     }
 
     private fun expand() {

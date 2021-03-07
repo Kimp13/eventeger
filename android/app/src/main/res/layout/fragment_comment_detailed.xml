@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/commentDetailedRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorDarkVariant"
+    android:background="?attr/colorSurface"
     android:orientation="vertical"
     tools:context=".ui.fragments.detailedAnnouncement.DetailedAnnouncementFragment">
 
@@ -13,17 +12,13 @@
         android:id="@+id/commentDetailedToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
-        app:layout_constraintBottom_toTopOf="@id/commentDetailedRefresh"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:background="?attr/colorPrimary">
 
         <Button
             android:id="@+id/commentDetailedBackButton"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginEnd="20dp"
+            android:layout_width="@dimen/deciImageSize"
+            android:layout_height="@dimen/deciImageSize"
+            android:layout_marginEnd="@dimen/megaSize"
             android:background="@drawable/close_button_background" />
 
         <TextView
@@ -31,8 +26,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/comment"
-            android:textColor="?android:attr/textColorPrimaryInverse"
-            android:textSize="22sp"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="20sp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
 
@@ -40,11 +35,7 @@
         android:id="@+id/commentDetailedRefresh"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/commentDetailedToolbar"
-        app:layout_constraintVertical_weight="1">
+        android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/commentDetailedRecyclerView"
@@ -52,4 +43,4 @@
             android:layout_height="match_parent" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

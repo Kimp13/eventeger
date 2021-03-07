@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
@@ -16,7 +17,7 @@ abstract class DetailedAuthoredEntityRecyclerViewAdapter(
     override val viewModel: DetailedAuthoredEntityViewModel
 ) : BaseRecyclerViewAdapter(viewModel) {
     companion object AuthoredEntityCompanion {
-        class CommentViewHolder(private val layout: ConstraintLayout) :
+        class CommentViewHolder(private val layout: RelativeLayout) :
             BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
                 if (parent is DetailedAuthoredEntityRecyclerViewAdapter) {
@@ -99,7 +100,7 @@ abstract class DetailedAuthoredEntityRecyclerViewAdapter(
                 R.layout.comment_view_holder,
                 parent,
                 false
-            ) as ConstraintLayout
+            ) as RelativeLayout
     )
 
     override fun updateAdditionalItems() {

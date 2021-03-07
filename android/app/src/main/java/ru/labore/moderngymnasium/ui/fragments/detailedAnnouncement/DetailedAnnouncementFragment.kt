@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
 import kotlinx.android.synthetic.main.fragment_comment_detailed.*
 import kotlinx.android.synthetic.main.fragment_inbox.*
-import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.db.entities.AuthoredEntity

@@ -1,11 +1,12 @@
 package ru.labore.moderngymnasium.ui.base
 
 import android.content.Intent
-import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.launch
 import ru.labore.moderngymnasium.R
 import ru.labore.moderngymnasium.data.AppRepository
 import ru.labore.moderngymnasium.data.network.exceptions.ClientConnectionException

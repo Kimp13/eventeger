@@ -2,6 +2,7 @@ package ru.labore.moderngymnasium.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import ru.labore.moderngymnasium.R
@@ -16,7 +17,7 @@ class DetailedAnnouncementRecyclerViewAdapter(
 ) : DetailedAuthoredEntityRecyclerViewAdapter(viewModel) {
     companion object DetailedAnnouncement {
 
-        class AnnouncementViewHolder(private val layout: ConstraintLayout) :
+        class AnnouncementViewHolder(private val layout: RelativeLayout) :
             BaseViewHolder(layout) {
 
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
@@ -82,7 +83,7 @@ class DetailedAnnouncementRecyclerViewAdapter(
                                 R.layout.detailed_announcement_view_holder,
                                 parent,
                                 false
-                            ) as ConstraintLayout
+                            ) as RelativeLayout
                     )
                 }
             )

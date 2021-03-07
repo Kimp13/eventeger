@@ -2,6 +2,7 @@ package ru.labore.moderngymnasium.ui.adapters
 
 import android.text.format.DateUtils
 import android.view.LayoutInflater
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import ru.labore.moderngymnasium.R
@@ -16,7 +17,7 @@ class DetailedCommentRecyclerViewAdapter(
 ) : DetailedAuthoredEntityRecyclerViewAdapter(viewModel) {
     companion object DetailedComment {
 
-        class ParentCommentViewHolder(private val layout: ConstraintLayout) :
+        class ParentCommentViewHolder(private val layout: RelativeLayout) :
             BaseViewHolder(layout) {
             override fun onBind(position: Int, parent: BaseRecyclerViewAdapter) {
                 if (parent is DetailedCommentRecyclerViewAdapter) {
@@ -72,7 +73,7 @@ class DetailedCommentRecyclerViewAdapter(
                                 R.layout.detailed_comment_view_holder,
                                 parent,
                                 false
-                            ) as ConstraintLayout
+                            ) as RelativeLayout
                     )
                 }
             )

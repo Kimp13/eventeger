@@ -15,7 +15,6 @@ import ru.labore.moderngymnasium.utils.hideKeyboard
 import java.net.ConnectException
 
 class LoginActivity : BaseActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -24,22 +23,42 @@ class LoginActivity : BaseActivity() {
             val username = usernameField.text
             val password = passwordField.text
             val regex = Regex("[^0-9a-zA-Z\$#*_]")
-            var isCorrect = true
-
-            if (username.isEmpty()) {
-                Toast.makeText(this, getString(R.string.enter_username), Toast.LENGTH_SHORT).show()
-                isCorrect = false
-            } else if (regex.containsMatchIn(username)) {
-                Toast.makeText(this, getString(R.string.username_incorrect), Toast.LENGTH_SHORT)
-                    .show()
-                isCorrect = false
-            } else if (password.isEmpty()) {
-                Toast.makeText(this, getString(R.string.enter_password), Toast.LENGTH_SHORT).show()
-                isCorrect = false
-            } else if (password.length < 8) {
-                Toast.makeText(this, getString(R.string.password_too_short), Toast.LENGTH_SHORT)
-                    .show()
-                isCorrect = false
+            val isCorrect = when {
+                username.isEmpty() -> {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.enter_username),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    false
+                }
+                regex.containsMatchIn(username) -> {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.username_incorrect),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    false
+                }
+                password.isEmpty() -> {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.enter_password),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    false
+                }
+                password.length < 8 -> {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.password_too_short),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    false
+                }
+                else -> {
+                    true
+                }
             }
 
             if (isCorrect) {
@@ -64,7 +83,7 @@ class LoginActivity : BaseActivity() {
                             is ConnectException -> getString(R.string.server_unavailable)
                             is ClientConnectionException -> getString(R.string.no_internet)
                             is ClientErrorException -> getString(R.string.invalid_credentials)
-                            else -> "Look into the console."
+                            else -> "An unknown error occurred"
                         }
 
                         apiRequestButton.isEnabled = true

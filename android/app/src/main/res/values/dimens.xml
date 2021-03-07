@@ -1,3 +1,16 @@
 <resources>
-    <dimen name="bottom_nav_vertical_bias">0.95</dimen>
+    <dimen name="bottomNavElevation">@dimen/kiloSize</dimen>
+    <dimen name="bottomNavHorizontalPadding">@dimen/miniSize</dimen>
+    <dimen name="iconButtonPadding">@dimen/miniSize</dimen>
+    <dimen name="microSize">4dp</dimen>
+    <dimen name="miniSize">6dp</dimen>
+    <dimen name="size">10dp</dimen>
+    <dimen name="kiloSize">16dp</dimen>
+    <dimen name="megaSize">20dp</dimen>
+    <dimen name="microImageSize">18dp</dimen>
+    <dimen name="miniImageSize">24dp</dimen>
+    <dimen name="deciImageSize">30dp</dimen>
+    <dimen name="imageSize">36dp</dimen>
+    <dimen name="kiloImageSize">48dp</dimen>
+    <dimen name="megaImageSize">60dp</dimen>
 </resources>

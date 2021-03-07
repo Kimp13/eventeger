@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/colorPrimaryDark"/>
-    <padding android:top="5dp" android:bottom="5dp" />
+    <solid android:color="?attr/colorPrimary"/>
+    <padding android:top="@dimen/miniSize" android:bottom="@dimen/miniSize" />
 </shape>
