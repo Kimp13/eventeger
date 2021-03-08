@@ -29,6 +29,7 @@ export default {
   },
 
   getMap: async (req, res) => {
+  
     res.send(await mg.services.role.getUsersCreateMap(req.user));
   },
 

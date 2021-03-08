@@ -1,10 +1,12 @@
 package ru.labore.moderngymnasium.ui.views
 
 import android.content.Context
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
+import ru.labore.moderngymnasium.R
 
 class LabelledCheckbox(
     context: Context,
@@ -31,18 +33,20 @@ class LabelledCheckbox(
 
         orientation = HORIZONTAL
 
-        label = TextView(context)
-        checkbox = CheckBox(context)
-        label.layoutParams = LayoutParams(
-            0,
-            LayoutParams.WRAP_CONTENT,
-            1F
-        )
-        checkbox.layoutParams = LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT,
-            0F
-        )
+        label = LayoutInflater
+            .from(context)
+            .inflate(
+                R.layout.labelled_checkbox_label,
+                this,
+                false
+            ) as TextView
+        checkbox = LayoutInflater
+            .from(context)
+            .inflate(
+                R.layout.labelled_checkbox,
+                this,
+                false
+            ) as CheckBox
 
         label.text = labelText
 

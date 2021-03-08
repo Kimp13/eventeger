@@ -28,16 +28,15 @@ export default {
     },
 
     async findRolesClasses(roleId, user) {
+        if (!(roleId in mg.cache.roleClassMap))
+            return [];
+
         const classesIds = this.findUserClassesIds(user);
         const retarr = [];
 
-        for (let i = 0; i < classesIds.length; i += 1) {
-            if (
-                roleId in mg.cache.roleClassMap &&
-                mg.cache.roleClassMap[roleId].has(classesIds[i])
-            )
+        for (let i = 0; i < classesIds.length; i += 1)
+            if (mg.cache.roleClassMap[roleId].has(classesIds[i]))
                 retarr.push(classesIds[i]);
-        }
 
         return retarr;
     },

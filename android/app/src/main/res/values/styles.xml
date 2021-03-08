@@ -11,8 +11,8 @@
         <item name="editTextStyle">@style/AppEditTextStyle</item>
         <item name="buttonStyle">@style/AppButtonStyle</item>
         <item name="materialButtonStyle">@style/AppButtonStyle</item>
-        <item name="android:textColor">?attr/colorOnSecondary</item>
-        <item name="colorControlNormal">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="colorControlNormal">?attr/colorOnPrimary</item>
         <item name="colorControlActivated">?attr/colorAccent</item>
         <item name="cardViewStyle">@style/AppMaterialCardViewStyle</item>
         <item name="materialCardViewStyle">@style/AppMaterialCardViewStyle</item>
@@ -69,7 +69,7 @@
 
     <style name="AppEditTextStyle" parent="android:Widget.EditText">
         <item name="android:textColor">@drawable/edit_text_text_color</item>
-        <item name="android:textColorHint">?attr/colorPrimaryVariant</item>
+        <item name="android:textColorHint">?attr/colorOnPrimary</item>
         <item name="android:background">@drawable/edit_text_background</item>
         <item name="android:padding">@dimen/kiloSize</item>
     </style>

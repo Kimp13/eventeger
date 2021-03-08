@@ -3,41 +3,50 @@
 
     export async function preload(_, session) {
         if (session.user.isAuthenticated) {
-            const map = await getPreloadApiResponse(
-                `${session.apiUrl}/roles/mine`,
-                {},
-                this
-            );
+            try {
+                const map = await getPreloadApiResponse(
+                    `${session.apiUrl}/roles/mine`,
+                    {},
+                    this
+                );
 
-            const classesSet = new Set();
-            const rolesArray = [];
+                const classesSet = new Set();
+                const rolesArray = [];
 
-            for (const roleId in map) {
-                rolesArray.push(roleId);
+                for (const roleId in map) {
+                    rolesArray.push(roleId);
 
-                for (const classId in map[roleId]) {
-                    classesSet.add(classId);
+                    for (const classId of map[roleId]) {
+                        classesSet.add(classId);
+                    }
                 }
+
+                const [roles, classes] = await Promise.all([
+                    getPreloadApiResponse(
+                        `${session.apiUrl}/roles/`,
+                        { id: rolesArray },
+                        this
+                    ),
+                    getPreloadApiResponse(
+                        `${session.apiUrl}/class/`,
+                        { id: Array.from(classesSet) },
+                        this
+                    ),
+                ]);
+
+                return {
+                    map,
+                    roles,
+                    classes,
+                };
+            } catch(e) {
+                return {
+                    map: {},
+                    roles: [],
+                    classes: [],
+                    error: e,
+                };
             }
-
-            const [roles, classes] = await Promise.all([
-                getPreloadApiResponse(
-                    `${session.apiUrl}/roles/`,
-                    { id: rolesArray },
-                    this
-                ),
-                getPreloadApiResponse(
-                    `${session.apiUrl}/class/`,
-                    { id: Array.from(classesSet) },
-                    this
-                ),
-            ]);
-
-            return {
-                map,
-                roles,
-                classes,
-            };
         } else {
             this.redirect(301, "/auth");
         }
@@ -118,7 +127,7 @@
                     ],
                 };
 
-                for (let i = 1; i < classes.length; i += 1) {
+                for (let i = 1; i < roleArray.length; i += 1) {
                     if (roleArray[i].grade !== previousGrade) {
                         classesArray.push(graded);
 

@@ -435,7 +435,7 @@ class AppRepository(
             unreadAnnouncements.add(0, entity)
             unreadAnnouncementsPushListener?.invoke(entity)
 
-            if (notify && !isAppForeground) {
+            if (notify) {
                 notificationBuilder
                     .setContentTitle(
                         announcementEntityToCaption(

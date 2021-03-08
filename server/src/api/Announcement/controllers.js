@@ -252,9 +252,11 @@ export default {
                     sort(map[roleId], compFunction);
 
                     for (const classId of map[roleId]) {
-                        if (
-                            search(usersMap[roleId], parseInt(classId, 10), compFunction) < 0
-                        ) {
+                        if (search(
+                            usersMap[roleId],
+                            parseInt(classId, 10),
+                            compFunction
+                        ) < 0) {
                             res.throw(
                                 403,
                                 "Вы не можете отправлять объвления таким получателям."
@@ -272,7 +274,7 @@ export default {
             }
         }
 
-        const { announcementId, recipients } = await mg.knex.transaction((t) =>
+        const { announcementId } = await mg.knex.transaction((t) =>
             mg
                 .query("announcement")
                 .create({
@@ -301,46 +303,52 @@ export default {
                         .insert(recipientsArray)
                         .into("announcementClassRole")
                         .then(() => ({
-                            announcementId: announcement[0],
-                            recipients: recipientsArray,
+                            announcementId: announcement[0]
                         }));
                 })
         );
 
-        const userIds = new Set();
+        const keys = Object.keys(map);
+        const _userIds = await mg.knex
+            .select('id')
+            .from('user')
+            .where(function () {
+                this
+                    .whereIn('roleId', mg.cache.roleSuitable[keys[0]])
+                    .andWhere(function () {
+                        for (const classId of map[keys[0]]) {
+                            this
+                                .orWhere('classId', classId)
+                                .orWhereIn(
+                                    'roleId',
+                                    mg.cache.classSuitable[keys[0]]
+                                );
+                        }
+                    });
 
-        for (const recipient of recipients) {
-            for (const role of mg.cache.roles) {
-                const permission = getPermission(role.permissions, [
-                    "announcement",
-                    "create",
-                ]);
-
-                if (
-                    permission === true ||
-                    (Array.isArray(permission) &&
-                        search(permission, recipient.roleId, function compare(a, b) {
-                            return a - b;
-                        }))
-                ) {
-                    const users = await mg.query("user").find(
-                        {
-                            classId: recipient.classId,
-                        },
-                        {},
-                        ["id"]
-                    );
-
-                    for (const user of users) {
-                        userIds.add(user.id);
-                    }
+                for (let i = 1; i < keys.length; i++) {
+                    this
+                        .orWhereIn('roleId', mg.cache.roleSuitable[keys[i]])
+                        .andWhere(function () {
+                            for (const classId of map[keys[i]]) {
+                                this
+                                    .orWhere('classId', classId)
+                                    .orWhereIn(
+                                        'roleId',
+                                        mg.cache.classSuitable[keys[i]]
+                                    );
+                            }
+                        });
                 }
-            }
-        }
+            });
+        const userIds = [];
+
+        for (let i = 0; i < _userIds.length; i++)
+            userIds.push(_userIds[i].id);
 
         const tokens = await mg.query("pushOptions").find(
             {
-                userId_in: Array.from(userIds),
+                userId_in: userIds,
             },
             [],
             ["subscription", "gcm"]

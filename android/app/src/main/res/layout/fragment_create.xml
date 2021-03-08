@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -19,8 +18,8 @@
 
         <Button
             android:id="@+id/createAnnouncementBackButton"
-            android:layout_width="@dimen/miniImageSize"
-            android:layout_height="@dimen/miniImageSize"
+            android:layout_width="@dimen/deciImageSize"
+            android:layout_height="@dimen/deciImageSize"
             android:layout_marginEnd="@dimen/megaSize"
             android:background="@drawable/close_button_background" />
 
@@ -30,15 +29,16 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/size"
             android:text="@string/new_announcement"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="22sp"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="20sp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
 
     <ScrollView
         android:id="@+id/createFragmentScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
             android:id="@+id/createFragmentParametersLayout"
@@ -102,7 +102,7 @@
                 android:layout_marginBottom="@dimen/size"
                 custom:label="@string/event">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -110,72 +110,65 @@
                         android:id="@+id/createStartHeader"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerInParent="true"
                         android:gravity="center"
                         android:paddingTop="@dimen/miniSize"
                         android:paddingBottom="@dimen/miniSize"
                         android:text="@string/start"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="?android:attr/textColorPrimaryInverse"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:textColor="?attr/colorOnPrimary" />
 
                     <Button
                         android:id="@+id/createStartDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/start_date"
-                        app:layout_constraintEnd_toStartOf="@id/createStartTime"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/createStartHeader" />
+                        android:layout_below="@id/createStartHeader"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="@dimen/megaSize"
+                        android:text="@string/start_date" />
 
                     <Button
                         android:id="@+id/createStartTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/start_time"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/createStartDate"
-                        app:layout_constraintTop_toBottomOf="@id/createStartHeader" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                        android:layout_below="@id/createStartHeader"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginEnd="@dimen/megaSize"
+                        android:text="@string/start_time" />
 
                     <TextView
                         android:id="@+id/createEndHeader"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_below="@id/createStartDate"
+                        android:layout_centerInParent="true"
                         android:gravity="center"
                         android:paddingTop="@dimen/miniSize"
                         android:paddingBottom="@dimen/miniSize"
                         android:text="@string/end"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="?android:attr/textColorPrimaryInverse"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:textColor="?attr/colorOnPrimary" />
 
                     <Button
                         android:id="@+id/createEndDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/end_date"
-                        app:layout_constraintEnd_toStartOf="@id/createEndTime"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/createEndHeader" />
+                        android:layout_below="@id/createEndHeader"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="@dimen/megaSize"
+                        android:text="@string/end_date" />
 
                     <Button
                         android:id="@+id/createEndTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/end_time"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/createEndDate"
-                        app:layout_constraintTop_toBottomOf="@id/createEndHeader" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        android:layout_below="@id/createEndHeader"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginEnd="@dimen/megaSize"
+                        android:text="@string/end_time" />
+                </RelativeLayout>
             </ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout>
         </LinearLayout>
     </ScrollView>
-</FrameLayout>
+</LinearLayout>

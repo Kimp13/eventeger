@@ -360,15 +360,15 @@ class CreateFragment(
 
             viewModel.appRepository.announceMap.entries.forEach { roleMap ->
                 val role = roles[roleMap.key]
-                val checkboxLayout: View
-                val context = context
 
-                if (role != null && context != null) {
+                if (role != null && roleMap.value.size > 0) {
+                    val checkboxLayout: View
+
                     if (roleMap.value.size == 1) {
                         val onlyClass = classes[roleMap.value[0]]!!
 
                         checkboxLayout = LabelledCheckbox(
-                            context,
+                            act,
                             "${role.name}, ${
                                 onlyClass.grade
                             }${
@@ -399,7 +399,7 @@ class CreateFragment(
                         }
 
                         checkboxLayout = ParentCheckbox(
-                            context,
+                            act,
                             "Роль: ${role.name}"
                         )
 
@@ -410,7 +410,7 @@ class CreateFragment(
                                 val onlyClass = classes[it.value[0]]!!
 
                                 childCheckbox = LabelledCheckbox(
-                                    context,
+                                    act,
                                     "${
                                         onlyClass.grade
                                     }${
@@ -427,13 +427,13 @@ class CreateFragment(
                                 }
                             } else {
                                 childCheckbox = ParentCheckbox(
-                                    context,
+                                    act,
                                     "${it.key}-я параллель"
                                 )
 
                                 it.value.forEach { classId ->
                                     val leafCheckbox = LabelledCheckbox(
-                                        context,
+                                        act,
                                         "${classes[classId]!!.letter} класс"
                                     )
 

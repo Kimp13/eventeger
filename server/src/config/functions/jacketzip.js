@@ -1,5 +1,6 @@
 const serviceAccount = require("../../../firebase/modern-gymnasium-firebase-adminsdk-okjez-8ffd3d1395.json");
 const parsePermissions = require("../../../utils/permissionArrayToObject");
+const getPermission = require("../../../utils/getPermission");
 const admin = require("firebase-admin");
 const webpush = require("web-push");
 const tim = require("timsort");
@@ -18,8 +19,10 @@ module.exports = function jacketzip() {
     async function updateCache() {
         mg.cache.roles = {};
         mg.cache.classes = {};
+        mg.cache.roleSuitable = {};
+        mg.cache.classSuitable = {};
 
-        const classes = await mg.query("class").find();
+        const classes = await mg.knex.select('*').from('class');
         const roles = await mg.query("role").find(
             {},
             ["permission"]
@@ -27,20 +30,65 @@ module.exports = function jacketzip() {
 
         let i;
 
-        for (i = 0; i < classes.length; i += 1)
+        for (i = 0; i < classes.length; i++) {
+            mg.cache.classSuitable[classes[i].id] = [];
             mg.cache.classes[classes[i].id] = classes[i];
+        }
 
-        for (i = 0; i < roles.length; i += 1) {
+        for (i = 0; i < roles.length; i++) {
+            mg.cache.roleSuitable[roles[i].id] = [];
+        }
+
+        for (i = 0; i < roles.length; i++) {
             mg.cache.roles[roles[i].id] = roles[i];
-            roles[i].permissions = parsePermissions(roles[i]._relations.permission);
+            roles[i].permissions = parsePermissions(
+                roles[i]._relations.permission
+            );
 
-            if (roles[i].permissions !== true && "announcement" in roles[i].permissions) {
-                if ("create" in roles[i].permissions.announcement) {
-                    parseAndSort(roles[i].permissions.announcement.create);
+            const annCreate = getPermission(
+                roles[i].permissions,
+                ["announcement", "create"]
+            );
+            const annRead = getPermission(
+                roles[i].permissions,
+                ["announcement", "read"]
+            );
+            const classMultiple = getPermission(
+                roles[i].permissions,
+                ["class", "multiple"]
+            );
+
+            if (Array.isArray(annCreate)) {
+                parseAndSort(roles[i].permissions.announcement.create);
+            }
+
+            if (annRead === true) {
+                for (let j = 0; j < roles.length; j++) {
+                    mg.cache.roleSuitable[roles[j].id].push(roles[i].id);
                 }
+            } else if (Array.isArray(annRead)) {
+                parseAndSort(roles[i].permissions.announcement.read);
 
-                if ("read" in roles[i].permissions.announcement) {
-                    parseAndSort(roles[i].permissions.announcement.read);
+                for (
+                    const roleId
+                    of roles[i].permissions.announcement.create
+                ) {
+                    mg.cache.roleSuitable[roleId].push(roles[i].id);
+                }
+            }
+
+            if (classMultiple === true) {
+                for (let j = 0; j < classes.length; j++) {
+                    mg.cache.classSuitable[classes[j].id].push(roles[i].id);
+                }
+            } else if (Array.isArray(classMultiple)) {
+                parseAndSort(roles[i].permissions.class.multiple);
+
+                for (
+                    const classId
+                    of roles[i].permissions.class.multiple
+                ) {
+                    mg.cache.classSuitable[classId].push(roles[i].id);
                 }
             }
 
@@ -48,14 +96,16 @@ module.exports = function jacketzip() {
         }
     }
 
+
     // Creating admin user. UNCOMMENT FOR INITIAL SETUP
     // mg.query("user").create({
-    //     firstName: "Георгий",
-    //     lastName: "Бердников",
-    //     username: "asdfasdf",
-    //     password: "asdfasdf",
+    //     firstName: "Объект",
+    //     lastName: "Тестовый",
+    //     username: "asasasas",
+    //     password: "asasasas",
+    //     classId: 8
     // });
-    //
+    
 
     // Initializing cache
     mg.cache.roleClassMap = {};
