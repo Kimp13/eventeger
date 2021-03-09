@@ -1,4 +1,4 @@
-<!DOCTYPE resources [<!ENTITY app_name "Modern Gymnasium"><!ENTITY sign_in  "Sign In"><!ENTITY app_id   "ru.labore.moderngymnasium">]>
+<!DOCTYPE resources [<!ENTITY app_name "Eventeger"><!ENTITY sign_in  "Sign In"><!ENTITY app_id   "ru.labore.eventeger">]>
 
 <resources>
     <!-- Utility strings -->
@@ -17,7 +17,7 @@
     </string>
 
     <!-- Global strings -->
-    <string name="app_name">&app_name;</string>
+    <string name="app_name" translatable="false">&app_name;</string>
     <string name="there_is_nothing_here_yet">There is nothing here yet 😞</string>
 
     <!-- Network-related strings -->

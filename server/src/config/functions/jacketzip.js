@@ -1,4 +1,4 @@
-const serviceAccount = require("../../../firebase/modern-gymnasium-firebase-adminsdk-okjez-8ffd3d1395.json");
+const serviceAccount = require("../../../firebase/eventeger-40e9b-firebase-adminsdk-2u1bm-68241d4499.json");
 const parsePermissions = require("../../../utils/permissionArrayToObject");
 const getPermission = require("../../../utils/getPermission");
 const admin = require("firebase-admin");

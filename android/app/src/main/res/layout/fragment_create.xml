@@ -47,7 +47,7 @@
             android:orientation="vertical">
 
             <!-- Announcement text -->
-            <ru.labore.moderngymnasium.ui.views.CollapsingLayout
+            <ru.labore.eventeger.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/size"
@@ -63,10 +63,10 @@
                     android:hint="@string/enter_text"
                     android:importantForAutofill="no"
                     android:inputType="textMultiLine" />
-            </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
+            </ru.labore.eventeger.ui.views.CollapsingLayout>
 
             <!-- Recipients -->
-            <ru.labore.moderngymnasium.ui.views.CollapsingLayout
+            <ru.labore.eventeger.ui.views.CollapsingLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/size"
@@ -93,9 +93,9 @@
                     android:orientation="vertical"
                     android:paddingLeft="@dimen/size"
                     android:paddingRight="@dimen/size" />
-            </ru.labore.moderngymnasium.ui.views.CollapsingLayout>
+            </ru.labore.eventeger.ui.views.CollapsingLayout>
 
-            <ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout
+            <ru.labore.eventeger.ui.views.CollapsingSwitchLayout
                 android:id="@+id/createEvent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -168,7 +168,7 @@
                         android:layout_marginEnd="@dimen/megaSize"
                         android:text="@string/end_time" />
                 </RelativeLayout>
-            </ru.labore.moderngymnasium.ui.views.CollapsingSwitchLayout>
+            </ru.labore.eventeger.ui.views.CollapsingSwitchLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

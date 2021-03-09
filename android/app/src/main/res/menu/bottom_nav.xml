@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/menuFragmentNews"
+        android:id="@id/news"
         android:icon="@drawable/ic_baseline_event_note"
         android:title="@string/news" />
     <item
-        android:id="@+id/menuFragmentAnnouncements"
+        android:id="@id/inbox"
         android:icon="@drawable/ic_baseline_inbox"
         android:title="@string/announcements" />
 </menu>

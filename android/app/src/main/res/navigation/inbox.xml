@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/inbox"
+    app:startDestination="@id/announcementsFragment">
+
+    <fragment
+        android:id="@+id/announcementsFragment"
+        android:name="ru.labore.eventeger.ui.fragments.inbox.InboxFragment"
+        android:label="@string/announcements"
+        tools:layout="@layout/fragment_inbox">
+        <action
+            android:id="@+id/action_announcements_to_create"
+            app:destination="@id/createFragment" />
+        <action
+            android:id="@+id/action_announcements_to_detailed"
+            app:destination="@id/announcementDetailedFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createFragment"
+        android:name="ru.labore.eventeger.ui.fragments.create.CreateFragment"
+        android:label="@string/announce"
+        tools:layout="@layout/fragment_create" />
+
+    <fragment
+        android:id="@+id/announcementDetailedFragment"
+        android:name="ru.labore.eventeger.ui.fragments.detailedAnnouncement.DetailedAnnouncementFragment"
+        android:label="@string/announcement"
+        tools:layout="@layout/fragment_announcement_detailed">
+        <action
+            android:id="@+id/action_announcement_detailed_to_comment"
+            app:destination="@id/commentDetailedFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/commentDetailedFragment"
+        android:name="ru.labore.eventeger.ui.fragments.detailedComment.DetailedCommentFragment"
+        android:label="@string/comment"
+        tools:layout="@layout/fragment_comment_detailed">
+        <action
+            android:id="@+id/action_comment_detailed_to_comment"
+            app:destination="@id/commentDetailedFragment" />
+    </fragment>
+</navigation>
