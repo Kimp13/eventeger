@@ -39,7 +39,7 @@ abstract class DetailedAuthoredEntityRecyclerViewAdapter(
                         ?: parent.viewModel.app.resources.getString(R.string.noname)
 
                     layout.setOnClickListener {
-                        parent.viewModel.onItemClicked(comment)
+                        parent.viewModel.fragment.onItemClicked(comment)
                     }
 
                     time.text = DateUtils.getRelativeTimeSpanString(

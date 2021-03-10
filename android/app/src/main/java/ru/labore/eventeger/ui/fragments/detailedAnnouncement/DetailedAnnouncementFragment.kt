@@ -7,14 +7,14 @@ import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_announcement_detailed.*
 import ru.labore.eventeger.R
 import ru.labore.eventeger.data.AppRepository
-import ru.labore.eventeger.data.db.entities.AnnouncementEntity
+import ru.labore.eventeger.data.db.entities.AuthoredEntity
 import ru.labore.eventeger.ui.base.DetailedAuthoredEntityFragment
 import ru.labore.eventeger.ui.base.ITEM_KEY
 
@@ -50,14 +50,7 @@ class DetailedAnnouncementFragment : DetailedAuthoredEntityFragment() {
             addItemDecoration(divider)
 
             layoutManager = viewManager
-            adapter = viewModel.getAdapter(
-                item as AnnouncementEntity
-            ) {
-                findNavController().navigate(
-                    R.id.action_announcement_detailed_to_comment,
-                    bundleOf(ITEM_KEY to it)
-                )
-            }
+            adapter = viewModel.getAdapter(this@DetailedAnnouncementFragment)
 
             scrollBy(0, savedInstanceState?.getInt("scrollY") ?: 0)
 
@@ -78,6 +71,13 @@ class DetailedAnnouncementFragment : DetailedAuthoredEntityFragment() {
         launch {
             bindUI()
         }
+    }
+
+    override fun onItemClicked(item: AuthoredEntity) {
+        findNavController().navigate(
+            R.id.action_announcement_detailed_to_comment,
+            bundleOf(ITEM_KEY to item)
+        )
     }
 
     private fun bindUI() {

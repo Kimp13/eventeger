@@ -16,4 +16,6 @@ abstract class DetailedAuthoredEntityFragment() : BaseFragment() {
 
         item = arguments?.getParcelable(ITEM_KEY)!!
     }
+
+    abstract fun onItemClicked(item: AuthoredEntity)
 }

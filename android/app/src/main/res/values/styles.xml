@@ -25,17 +25,21 @@
     </style>
 
     <style name="AppThemeWithActionBar" parent="AppTheme">
-        <item name="actionBarStyle">@style/AppActionBar</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.ActionBar</item>
     </style>
 
-    <style name="AppActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
+    <style name="ActionBarOverlay">
+        <item name="colorOnPrimary">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="ThemeOverlay.ActionBar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
         <item name="background">?attr/colorSurface</item>
-        <item name="titleTextColor">?attr/colorOnSurface</item>
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
     </style>
 
     <style name="AppToolbar" parent="Widget.MaterialComponents.Toolbar">
-        <item name="background">?attr/colorSurface</item>
-        <item name="titleTextColor">?attr/colorOnSurface</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
     <style name="AppMaterialCardViewStyle" parent="Widget.MaterialComponents.CardView">

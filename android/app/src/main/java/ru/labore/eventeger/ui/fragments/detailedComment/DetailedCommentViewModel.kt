@@ -11,19 +11,18 @@ import ru.labore.eventeger.ui.adapters.DetailedCommentRecyclerViewAdapter
 import ru.labore.eventeger.ui.base.DetailedAuthoredEntityViewModel
 
 class DetailedCommentViewModel(app: Application) : DetailedAuthoredEntityViewModel(app) {
-    override lateinit var onItemClicked: (AuthoredEntity) -> Unit
+    fun getAdapter(newFragment: DetailedCommentFragment) =
+        DetailedCommentRecyclerViewAdapter(this).apply {
+            (newFragment.item as CommentEntity).let {
+                replyTo = it.id
+                announcementId = it.announcementId
+            }
 
-    fun getAdapter(
-        newItem: CommentEntity,
-        itemClicked: (AuthoredEntity) -> Unit
-    ) = DetailedCommentRecyclerViewAdapter(this).apply {
-        replyTo = newItem.id
-        announcementId = newItem.announcementId
-        adapter = this
-        onItemClicked = itemClicked
+            fragment = newFragment
+            adapter = this
 
-        updateAdditionalItems()
-    }
+            updateAdditionalItems()
+        }
 
     suspend fun updateComments(
         activity: Activity,

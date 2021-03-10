@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
 import androidx.core.view.get
 import androidx.fragment.app.viewModels
@@ -159,7 +160,6 @@ class CreateFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        createFragmentToolbar.inflateMenu(R.menu.create_toolbar_menu)
         createEvent.switchListener = {
             println(it)
             isEvent = it
@@ -193,15 +193,14 @@ class CreateFragment : BaseFragment() {
             createRecipientsProgressBar?.visibility = View.GONE
         }
 
-        createFragmentToolbar.setOnMenuItemClickListener {
-            createFragmentToolbar.menu[0].actionView = progressBar
+        createFragmentSubmitButton.setOnClickListener {
+            it.visibility = View.GONE
+            createFragmentProgressBar.visibility = View.VISIBLE
 
             createAnnouncement {
-                createFragmentToolbar.menu.clear()
-                createFragmentToolbar.inflateMenu(R.menu.create_toolbar_menu)
+                it.visibility = View.VISIBLE
+                createFragmentProgressBar.visibility = View.GONE
             }
-
-            true
         }
 
         createFragmentScrollView?.setOnClickListener { hideKeyboard() }

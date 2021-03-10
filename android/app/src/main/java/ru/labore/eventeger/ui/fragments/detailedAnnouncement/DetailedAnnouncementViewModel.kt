@@ -6,7 +6,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ru.labore.eventeger.data.AppRepository
 import ru.labore.eventeger.data.db.entities.AnnouncementEntity
-import ru.labore.eventeger.data.db.entities.AuthoredEntity
 import ru.labore.eventeger.data.db.entities.CommentEntity
 import ru.labore.eventeger.ui.adapters.DetailedAnnouncementRecyclerViewAdapter
 import ru.labore.eventeger.ui.base.DetailedAuthoredEntityViewModel
@@ -14,19 +13,17 @@ import ru.labore.eventeger.ui.base.DetailedAuthoredEntityViewModel
 class DetailedAnnouncementViewModel(
     app: Application
 ) : DetailedAuthoredEntityViewModel(app) {
-    override lateinit var onItemClicked: (AuthoredEntity) -> Unit
     lateinit var item: AnnouncementEntity
 
-    fun getAdapter(
-        newItem: AnnouncementEntity,
-        itemClicked: (AuthoredEntity) -> Unit
-    ) = DetailedAnnouncementRecyclerViewAdapter(this).apply {
-        item = newItem
-        onItemClicked = itemClicked
-        adapter = this
+    fun getAdapter(newFragment: DetailedAnnouncementFragment) =
+        DetailedAnnouncementRecyclerViewAdapter(this).apply {
+            item = newFragment.item as AnnouncementEntity
+            adapter = this
+            fragment = newFragment
+            announcementId = item.id
 
-        updateAdditionalItems()
-    }
+            updateAdditionalItems()
+        }
 
     suspend fun updateComments(
         activity: Activity,

@@ -1,174 +1,153 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/createFragmentRootLayout"
+    android:id="@+id/createFragmentScrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
-    android:orientation="vertical"
     tools:context=".ui.fragments.create.CreateFragment">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/createFragmentToolbar"
+    <LinearLayout
+        android:id="@+id/createFragmentParametersLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/createAnnouncementBackButton"
-            android:layout_width="@dimen/deciImageSize"
-            android:layout_height="@dimen/deciImageSize"
-            android:layout_marginEnd="@dimen/megaSize"
-            android:background="@drawable/close_button_background" />
-
-        <TextView
-            android:id="@+id/createAnnouncementTopLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/size"
-            android:text="@string/new_announcement"
-            android:textColor="?attr/colorOnPrimary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </androidx.appcompat.widget.Toolbar>
-
-    <ScrollView
-        android:id="@+id/createFragmentScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:id="@+id/createFragmentParametersLayout"
+        <!-- Announcement text -->
+        <ru.labore.eventeger.ui.views.CollapsingLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginBottom="@dimen/size"
+            custom:label="@string/announcement_text">
 
-            <!-- Announcement text -->
-            <ru.labore.eventeger.ui.views.CollapsingLayout
+            <EditText
+                android:id="@+id/createAnnouncementEditText"
+                style="@style/AppEditTextStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/size"
-                custom:label="@string/announcement_text">
+                android:layout_marginStart="@dimen/megaSize"
+                android:layout_marginEnd="@dimen/megaSize"
+                android:hint="@string/enter_text"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine" />
+        </ru.labore.eventeger.ui.views.CollapsingLayout>
 
-                <EditText
-                    android:id="@+id/createAnnouncementEditText"
-                    style="@style/AppEditTextStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/megaSize"
-                    android:layout_marginEnd="@dimen/megaSize"
-                    android:hint="@string/enter_text"
-                    android:importantForAutofill="no"
-                    android:inputType="textMultiLine" />
-            </ru.labore.eventeger.ui.views.CollapsingLayout>
+        <!-- Recipients -->
+        <ru.labore.eventeger.ui.views.CollapsingLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/size"
+            custom:label="@string/recipients">
 
-            <!-- Recipients -->
-            <ru.labore.eventeger.ui.views.CollapsingLayout
+            <ProgressBar
+                android:id="@+id/createRecipientsProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:indeterminate="true" />
+
+            <TextView
+                android:id="@+id/createRecipientsLoading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/size"
-                custom:label="@string/recipients">
+                android:gravity="center_horizontal"
+                android:text="@string/loading" />
 
-                <ProgressBar
-                    android:id="@+id/createRecipientsProgressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:indeterminate="true" />
+            <LinearLayout
+                android:id="@+id/createAnnouncementRoleChoose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="@dimen/size"
+                android:paddingRight="@dimen/size" />
+        </ru.labore.eventeger.ui.views.CollapsingLayout>
+
+        <ru.labore.eventeger.ui.views.CollapsingSwitchLayout
+            android:id="@+id/createEvent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/size"
+            custom:label="@string/event">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
                 <TextView
-                    android:id="@+id/createRecipientsLoading"
+                    android:id="@+id/createStartHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:text="@string/loading" />
+                    android:layout_alignParentTop="true"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:paddingTop="@dimen/miniSize"
+                    android:paddingBottom="@dimen/miniSize"
+                    android:text="@string/start"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                    android:textColor="?attr/colorOnPrimary" />
 
-                <LinearLayout
-                    android:id="@+id/createAnnouncementRoleChoose"
+                <Button
+                    android:id="@+id/createStartDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/createStartHeader"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="@dimen/megaSize"
+                    android:text="@string/start_date" />
+
+                <Button
+                    android:id="@+id/createStartTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/createStartHeader"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="@dimen/megaSize"
+                    android:text="@string/start_time" />
+
+                <TextView
+                    android:id="@+id/createEndHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingLeft="@dimen/size"
-                    android:paddingRight="@dimen/size" />
-            </ru.labore.eventeger.ui.views.CollapsingLayout>
+                    android:layout_below="@id/createStartDate"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:paddingTop="@dimen/miniSize"
+                    android:paddingBottom="@dimen/miniSize"
+                    android:text="@string/end"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                    android:textColor="?attr/colorOnPrimary" />
 
-            <ru.labore.eventeger.ui.views.CollapsingSwitchLayout
-                android:id="@+id/createEvent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/size"
-                custom:label="@string/event">
+                <Button
+                    android:id="@+id/createEndDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/createEndHeader"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="@dimen/megaSize"
+                    android:text="@string/end_date" />
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                <Button
+                    android:id="@+id/createEndTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/createEndHeader"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="@dimen/megaSize"
+                    android:text="@string/end_time" />
+            </RelativeLayout>
+        </ru.labore.eventeger.ui.views.CollapsingSwitchLayout>
 
-                    <TextView
-                        android:id="@+id/createStartHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentTop="true"
-                        android:layout_centerInParent="true"
-                        android:gravity="center"
-                        android:paddingTop="@dimen/miniSize"
-                        android:paddingBottom="@dimen/miniSize"
-                        android:text="@string/start"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="?attr/colorOnPrimary" />
+        <Button
+            android:id="@+id/createFragmentSubmitButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/announce" />
 
-                    <Button
-                        android:id="@+id/createStartDate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/createStartHeader"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginStart="@dimen/megaSize"
-                        android:text="@string/start_date" />
-
-                    <Button
-                        android:id="@+id/createStartTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/createStartHeader"
-                        android:layout_alignParentEnd="true"
-                        android:layout_marginEnd="@dimen/megaSize"
-                        android:text="@string/start_time" />
-
-                    <TextView
-                        android:id="@+id/createEndHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/createStartDate"
-                        android:layout_centerInParent="true"
-                        android:gravity="center"
-                        android:paddingTop="@dimen/miniSize"
-                        android:paddingBottom="@dimen/miniSize"
-                        android:text="@string/end"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="?attr/colorOnPrimary" />
-
-                    <Button
-                        android:id="@+id/createEndDate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/createEndHeader"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginStart="@dimen/megaSize"
-                        android:text="@string/end_date" />
-
-                    <Button
-                        android:id="@+id/createEndTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/createEndHeader"
-                        android:layout_alignParentEnd="true"
-                        android:layout_marginEnd="@dimen/megaSize"
-                        android:text="@string/end_time" />
-                </RelativeLayout>
-            </ru.labore.eventeger.ui.views.CollapsingSwitchLayout>
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+        <include
+            android:id="@+id/createFragmentProgressBar"
+            layout="@layout/loading_view_holder"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

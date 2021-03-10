@@ -15,7 +15,6 @@ import androidx.core.view.children
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ru.labore.eventeger.R
-import ru.labore.eventeger.data.db.entities.AuthoredEntity
 import ru.labore.eventeger.data.db.entities.CommentEntity
 import ru.labore.eventeger.utils.hideKeyboard
 import ru.labore.eventeger.utils.showKeyboard
@@ -34,8 +33,6 @@ abstract class DetailedAuthoredEntityViewModel(
 
             (adapter as DetailedAuthoredEntityRecyclerViewAdapter).setCommentText(value)
         }
-
-    abstract var onItemClicked: (AuthoredEntity) -> Unit
 
     fun promptCommentVisibility(anchor: View) {
         val popup = PopupMenu(fragment.requireContext(), anchor)
