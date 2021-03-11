@@ -33,15 +33,10 @@ export default {
         }
 
         let comments = mg.knex
-            .select("parent.*")
-            .count("children.id as commentCount")
-            .from("comment as parent")
-            .leftJoin(
-                "comment as children",
-                "children.replyTo",
-                "parent.id"
-            )
-            .where("parent.announcementId", id);
+            .select("comment.*")
+            .distinct("comment.id")
+            .from("comment")
+            .where("comment.announcementId", id);
 
         if (req.query.replyTo) {
             const replyToId = parseInt(req.query.replyTo, 10);
@@ -70,25 +65,58 @@ export default {
             }
 
             comments = comments
-                .andWhere("parent.replyTo", replyToId);
+                .andWhere("comment.replyTo", replyToId);
         } else {
-            comments = comments.andWhere("parent.replyTo", null);
+            comments = comments.andWhere("comment.replyTo", null);
         }
 
         if (announcement.authorId !== req.user.id) {
             comments = comments
                 .andWhere(builder =>
                     builder
-                        .where("parent.authorId", req.user.id)
-                        .orWhere("parent.hidden", false)
+                        .where("comment.authorId", req.user.id)
+                        .orWhere("comment.hidden", false)
                 );
         }
 
-        res.send(await comments
-            .groupBy("parent.id")
-            .orderBy("createdAt", "desc")
+        comments = await comments
+            .orderBy("id", "desc")
             .limit(25)
-            .offset(offset));
+            .offset(offset);
+
+        const commentsIds = [];
+
+        for (let i = 0; i < comments.length; i++) {
+            commentsIds.push(comments[i].id);
+        }
+
+        const replies = await mg.knex
+            .select("replyTo")
+            .count("* as count")
+            .from("comment")
+            .whereIn("replyTo", commentsIds)
+            .orderBy("replyTo", "desc")
+            .groupBy("replyTo");
+
+        let i = 0, j = 0;
+
+        for (;
+            i < comments.length && j < replies.length;
+            i++) {
+            if (comments[i].id === replies[j].replyTo) {
+                comments[i].commentsCount = replies[j++].count;
+            } else {
+                comments[i].commentsCount = 0;
+            }
+        }
+
+        for (;
+            i < comments.length;
+            i++) {
+            comments[i].commentsCount = 0;
+        }
+
+        res.send(comments);
     },
 
     async findOne(req, res) {

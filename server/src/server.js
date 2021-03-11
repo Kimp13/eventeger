@@ -381,4 +381,4 @@ readFile(path.join(chunksPath, 'mgSpecs.json'))
   .then(() => access(bootstrapPath, fs.F_OK))
   .then(require(bootstrapPath))
   .then(main)
-  .catch(main);
+  .catch(console.log);

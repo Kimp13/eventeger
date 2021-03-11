@@ -43,14 +43,20 @@ export default {
                 offset = 0;
             }
 
-            const rolesIds = getPermission(req.user.permissions, ["announcement", "read"]);
+            const rolesIds = getPermission(
+                req.user.permissions,
+                ["announcement", "read"]
+            );
 
             if (rolesIds === false) {
                 res.throw(403, "У Вас нет прав на чтение объявлений");
                 return;
             }
 
-            const classesIds = getPermission(req.user.permissions, ["class", "multiple"]);
+            const classesIds = getPermission(
+                req.user.permissions,
+                ["class", "multiple"]
+            );
 
             if (classesIds === false && req.user.classId === null) {
                 res.throw(403, "У Вас нет прав на чтение объявлений");
@@ -59,23 +65,12 @@ export default {
 
             let announcements = mg.knex
                 .select("announcement.*")
-                .count("comment.id as commentCount")
+                .distinct("announcement.id")
                 .from("announcement")
                 .innerJoin(
                     "announcementClassRole",
                     "announcementClassRole.announcementId",
                     "announcement.id"
-                )
-                .innerJoin(
-                    "comment",
-                    "comment.announcementId",
-                    "announcement.id"
-                )
-                .where(builder =>
-                    builder
-                        .where("comment.hidden", 0)
-                        .orWhere("comment.authorId", req.user.id)
-                        .orWhere("announcement.authorId", req.user.id)
                 );
 
             if (Array.isArray(classesIds)) {
@@ -98,12 +93,62 @@ export default {
                 );
             }
 
-            res.send(
-                await announcements
-                    .groupBy("comment.announcementId")
-                    .offset(offset)
-                    .limit(25)
-            );
+            announcements = await announcements
+                .orderBy("announcement.id", "desc")
+                .offset(offset)
+                .limit(25);
+
+            const announcementsIds = [];
+            const authoredAnnouncementsIds = [];
+
+            for (let i = 0; i < announcements.length; i++) {
+                announcementsIds.push(announcements[i].id);
+
+                if (announcements[i].authorId === req.user.id) {
+                    authoredAnnouncementsIds.push(announcements[i].id);
+                }
+            }
+
+            const comments = await mg.knex
+                .select("comment.announcementId")
+                .count("comment.id as count")
+                .from("comment")
+                .whereIn("comment.announcementId", announcementsIds)
+                .andWhere("comment.replyTo", null)
+                .andWhere(function () {
+                    this.where("comment.hidden", 0)
+                        .orWhere("comment.authorId", req.user.id)
+                        .orWhereIn(
+                            "comment.announcementId",
+                            authoredAnnouncementsIds
+                        )
+                })
+                .orderBy("comment.announcementId", "desc")
+                .groupBy("comment.announcementId");
+
+            let i = 0, j = 0;
+
+            for (;
+                i < announcements.length && j < comments.length;
+                i++) {
+                if (announcements[i].id === comments[j].announcementId) {
+                    announcements[i].commentsCount = comments[j++].count;
+                } else {
+                    announcements[i].commentsCount = 0;
+                }
+
+                announcements[i].isEvent = announcements[i].isEvent === 1;
+            }
+
+            for (;
+                i < announcements.length;
+                i++) {
+                announcements[i].commentsCount = 0;
+
+                announcements[i].isEvent = announcements[i].isEvent === 1;
+            }
+
+            res.send(announcements);
         }
     },
 
